@@ -218,6 +218,8 @@
         CCACHE_SLOPPINESS = "random_seed";
         CCACHE_UMASK = 777;
 
+        NIX_HARDENING_ENABLE = "";
+
         shellHook = ''
           curdir="$(pwd)"
           if [ ! -f "$curdir/compile_commands.json" ] &&
