@@ -1,5 +1,9 @@
+name = "uwu"
+
 [kernel]
 kernel = "arch/x86_64/boot/bzImage"
+rev = "dd7af14795682986f6f77705f8c9c8dade7adcf6"
+version = "v6.13"
 
 [xfstests]
 rev = "v2024.12.01"

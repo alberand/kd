@@ -34,10 +34,10 @@ The following commands are available:
     # Generate minimal ISO config
     $ kd config iso
 
-The `build` command will create a Nix Flake in `~/.kd/kfeature`. Edit this flake
+The `build` command will create a Nix Flake in `./.kd/kfeature`. Edit this flake
 as you wish.
 
-The `run` command runs flake in the `~/.kd/kfeature`.
+The `run` command runs flake in the `./.kd/kfeature`.
 
 The `.kd.toml` config in the working directory (the one with .envrc) can be used
 to modify VM configuration without diving into Nix language.

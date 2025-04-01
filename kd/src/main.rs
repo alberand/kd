@@ -8,7 +8,7 @@ use std::io::{ErrorKind, Write};
 mod utils;
 use utils::{KdError, KdErrorKind};
 mod config;
-use config::Config;
+use config::{Config, KernelConfigOption};
 
 // kd config CONFIG_XFS_FS=y
 // kd build [vm|iso]
@@ -120,13 +120,14 @@ fn all_good() -> bool {
 
 fn init(name: &str) -> Result<(), KdError> {
     // TODO this need to be checked in all good
-    let mut path = dirs::home_dir().expect("Failed to find home dir");
+    let mut path = PathBuf::new(); //dirs::home_dir().expect("Failed to find home dir");
     path.push(".kd");
     path.push(name);
     if let Err(error) = std::fs::create_dir_all(&path) {
-        return Err(KdError::new(KdErrorKind::FlakeInitError, "can not create flake dir".to_string()));
+        return Err(KdError::new(KdErrorKind::FlakeInitError, error.to_string()));
     }
-    std::env::set_current_dir(&path);
+    // TODO handle
+    let _ = std::env::set_current_dir(&path);
     println!("Creating new environment '{}'", name);
     let output = Command::new("nix")
        .arg("flake")
@@ -143,58 +144,114 @@ fn init(name: &str) -> Result<(), KdError> {
     Ok(())
 }
 
+fn version_to_modversion(version: &str) -> Result<String, KdError> {
+    if !version.starts_with("v") {
+        return Err(KdError::new(KdErrorKind::BadKernelVersion, "doesn't start with 'v'".to_string()))
+    }
+
+    if let Some(version) = version.strip_prefix("v") {
+        if version.chars().take_while(|ch| *ch == '.').count() == 2 {
+            return Ok(version.to_string())
+        }
+        return Ok(format!("\"{version}.0\""))
+    }
+
+    Err(KdError::new(KdErrorKind::BadKernelVersion, "no version after 'v'".to_string()))
+}
+
+/// TODO all this parsing should be just done nrix
 fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
-    std::env::set_current_dir(wd);
-
-    let xfstests: String = if let Some(subconfig) = &config.xfstests {
-        let output = if let Some(rev) = &subconfig.rev {
-            nurl(subconfig.repo, &rev).expect("Failed to parse xfstests source repo")
-        } else {
-            println!("no rev");
-            String::from("")
-        };
-
-        output
-    } else {
-        String::from("")
-    };
-
-    let xfsprogs: String = if let Some(subconfig) = &config.xfsprogs {
-        let output = if let Some(rev) = &subconfig.rev {
-            nurl(&subconfig.repo, &rev).expect("Failed to parse xfsprogs source repo")
-        } else {
-            String::from("")
-        };
-
-        output
-    } else {
-        String::from("")
-    };
-
+    // TODO handle
+    let _ = std::env::set_current_dir(wd);
 
     let mut tera = Tera::default();
+    let mut context = Context::new();
+    let mut options = vec![];
+    let mut kernel_options = vec![];
+    let mut kernel_config_options: Vec<String> = vec![];
+    let set_value = |name: &str, value: &str| { format!("{name} = {value};") };
+
+    if let Some(subconfig) = &config.xfstests {
+        if let Some(rev) = &subconfig.rev {
+            if let Some(repo) = &subconfig.repo {
+                let src = nurl(&repo, &rev).expect("Failed to parse xfstests source repo");
+                options.push(set_value("programs.xfstests.src", &src));
+            }
+        };
+    };
+
+    if let Some(subconfig) = &config.xfsprogs {
+        if let Some(rev) = &subconfig.rev {
+            if let Some(repo) = &subconfig.repo {
+                let src = nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
+                options.push(set_value("programs.xfsprogs.src", &src));
+            }
+        };
+    };
+
+    if let Some(subconfig) = &config.kernel {
+        if subconfig.image.is_some() && (subconfig.version.is_some() || subconfig.rev.is_some()
+            || subconfig.repo.is_some() || subconfig.config.is_some()) {
+            println!("None of the options in [kernel] would take effect if 'image' is set");
+        }
+
+        if subconfig.repo.is_some() && subconfig.rev.is_none() && subconfig.version.is_none() {
+            println!("While using 'repo' rev/version need to be set");
+            std::process::exit(1);
+        }
+
+        if subconfig.rev.is_some() && subconfig.version.is_none() {
+            println!("Revision can not be used without 'version'");
+            std::process::exit(1);
+        }
+
+        if let Some(_) = &subconfig.image {
+            // pass
+        } else if let Some(version) = &subconfig.version {
+            if let Some(rev) = &subconfig.rev {
+                let repo = if let Some(repo) = &subconfig.repo {
+                    repo
+                } else {
+                    "git@github.com:torvalds/linux.git"
+                };
+                let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
+                kernel_options.push(set_value("version", &format!("\"{}\"", version)));
+                kernel_options.push(set_value("modDirVersion",
+                        &version_to_modversion(&version)?));
+                kernel_options.push(set_value("src", &src));
+            }
+        } else {
+            println!("Either kernel image or version/rev has to be set");
+            std::process::exit(1);
+        };
+    };
 
     let source = r#"
         {pkgs}: with pkgs; {
-            programs.xfstests.src = {{ xfstests }};
-            programs.xfsprogs.src = {{ xfsprogs }};
+            {% for option in options %}
+                {{ option }}
+            {% endfor%}
+            {% if kernel_options %}
             kernel = {
-              version = "v6.13";
-              modDirVersion = "6.13.0";
-              src = {{ kernel }};
-              kconfig = with pkgs.lib.kernel; {
-                XFS_FS = yes;
-                FS_VERITY = yes;
-              };
+                {% for option in kernel_options %}
+                    {{ option }}
+                {% endfor%}
+                {% if kernel_config_options %}
+                kconfig = with pkgs.lib.kernel; {
+                  {% for option in kernel_config_options %}
+                      "{{ option.name }}" = {{ option.value }};
+                  {% endfor%}
+                };
+                {% endif %}
             };
+            {% endif %}
         }
     "#;
     tera.add_raw_template("top", source).unwrap();
 
-    let mut context = Context::new();
-    context.insert("xfstests", &xfstests);
-    context.insert("xfsprogs", &xfsprogs);
-    context.insert("kernel", "");
+    context.insert("options", &options);
+    context.insert("kernel_options", &kernel_options);
+    context.insert("kernel_config_options", &kernel_config_options);
 
     let formatted = format_nix(tera.render("top", &context).unwrap()).unwrap();
 
@@ -214,8 +271,9 @@ fn main() {
     let config = if let Some(config) = cli.config {
         Config::load(Some(config)).unwrap()
     } else {
-        let path = Some(PathBuf::from(r"~/.config/kd/config"));
-        let result = Config::load(path);
+        let mut path = std::env::current_dir().expect("Don't have access to current working dir");
+        path.push(".kd.toml");
+        let result = Config::load(Some(path));
         match result {
             Ok(config) => config,
             Err(ref error) if error.kind() == ErrorKind::NotFound => {
@@ -224,15 +282,14 @@ fn main() {
             Err(_) => Config::default()
         }
     };
+
     match &cli.command {
         Some(Commands::Init { name }) => {
             init(name.as_str()).expect("Failed to initialize environment");
         },
         Some(Commands::Build { target }) => {
-            println!("build command {:?}", target);
             let mut path = dirs::home_dir().expect("Failed to find home dir");
             path.push(".kd");
-            path.push(name);
             generate_uconfig(&path, &config).expect("Failed to generate user environment");
         },
         Some(Commands::Run) => {

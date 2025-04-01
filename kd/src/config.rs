@@ -5,16 +5,18 @@ use std::path::PathBuf;
 use toml;
 
 #[derive(Serialize, Deserialize)]
-pub struct KernelConfig {
-    pub kernel: String,
+pub struct KernelConfigOption {
+    pub name: String,
+    pub value: String,
 }
 
-impl Default for KernelConfig {
-    fn default() -> Self {
-        Self {
-            kernel: String::from(""),
-        }
-    }
+#[derive(Serialize, Deserialize, Default)]
+pub struct KernelConfig {
+    pub image: Option<String>,
+    pub version: Option<String>,
+    pub rev: Option<String>,
+    pub repo: Option<String>,
+    pub config: Option<toml::value::Table>,
 }
 
 fn default_xfstests() -> Option<String> {
@@ -50,6 +52,7 @@ pub struct DummyConfig {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
+    pub name: String,
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
     pub xfsprogs: Option<XfsprogsConfig>,
