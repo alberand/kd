@@ -58,9 +58,6 @@ pub struct Config {
 
 impl Config {
     pub fn load(path: Option<PathBuf>) -> Result<Self, Error> {
-        if path.is_none() {
-            return Ok(Config::default());
-        }
         let path = path.unwrap();
 
         if !path.exists() {
