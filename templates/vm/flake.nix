@@ -19,7 +19,7 @@
     kd.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs = {
-    _self,
+    self,
     nixpkgs,
     flake-utils,
     kd,
@@ -32,7 +32,7 @@
       vm = kd.lib.${system}.mkEnv {
         name = "demo";
         root = builtins.toString ./.;
-        uconfig = import ./uconfig.nix;
+        uconfig = pkgs.lib.optional (builtins.fileExists ./uconfig.nix) import ./uconfig.nix;
       };
     in {
       packages = {

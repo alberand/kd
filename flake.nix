@@ -44,6 +44,8 @@
         stdenv = pkgs.clangStdenv;
       };
     in {
+      inherit lib;
+
       devShells.default = default.shell;
 
       packages = {
