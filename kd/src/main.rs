@@ -120,7 +120,9 @@ fn all_good() -> bool {
 
 fn init(name: &str) -> Result<(), KdError> {
     // TODO this need to be checked in all good
-    let mut path = PathBuf::new(); //dirs::home_dir().expect("Failed to find home dir");
+    let workdir = std::env::current_dir().expect("Can not detect current working directory");
+    let mut target = PathBuf::from(&workdir);
+    let mut path = PathBuf::from(&workdir); //dirs::home_dir().expect("Failed to find home dir");
     path.push(".kd");
     path.push(name);
     if let Err(error) = std::fs::create_dir_all(&path) {
@@ -137,9 +139,13 @@ fn init(name: &str) -> Result<(), KdError> {
        .output()
        .expect("Failed to execute command");
     if !output.status.success() {
-        //panic!("Failed to create Flake: {}", String::from_utf8_lossy(&output.stderr));
+        println!("{}", String::from_utf8_lossy(&output.stderr));
         return Err(KdError::new(KdErrorKind::FlakeInitError, "Failed to created Flake".to_string()));
     }
+
+    target.push(".kd.toml");
+    std::fs::rename("kd.sample.toml", target).expect("Failed to copy sample .kd.toml config");
+    println!("Update your .kd.toml configuration");
 
     Ok(())
 }
@@ -168,7 +174,7 @@ fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
     let mut context = Context::new();
     let mut options = vec![];
     let mut kernel_options = vec![];
-    let mut kernel_config_options: Vec<String> = vec![];
+    let kernel_config_options: Vec<String> = vec![];
     let set_value = |name: &str, value: &str| { format!("{name} = {value};") };
 
     if let Some(subconfig) = &config.xfstests {
@@ -287,7 +293,7 @@ fn main() {
         Some(Commands::Init { name }) => {
             init(name.as_str()).expect("Failed to initialize environment");
         },
-        Some(Commands::Build { target }) => {
+        Some(Commands::Build { target: _ }) => {
             let mut path = dirs::home_dir().expect("Failed to find home dir");
             path.push(".kd");
             generate_uconfig(&path, &config).expect("Failed to generate user environment");

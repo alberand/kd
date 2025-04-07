@@ -1,0 +1,16 @@
+# By default git.kernel.org repositories will be used. If not set the latest
+# version will be used (for now has to be updated by maintainer of kd).
+# [kernel]
+# rev = "eb01a1c8b1007bcad534730d38a8dda4c005c15e"
+# config = {
+#	CONFIG_XFS = "yes",
+#	CONFIG_XFS_QUOTA = "yes",
+# }
+
+# [xfstests]
+# rev = "eb01a1c8b1007bcad534730d38a8dda4c005c15e"
+# args = "-s xfs_4k generic/110"
+
+# [xfsprogs]
+# repo = "git@github.com:alberand/xfsprogs.git"
+# rev = "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
