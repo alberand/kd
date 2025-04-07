@@ -1,4 +1,5 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+use std::fmt;
 use std::io::{ErrorKind, Write};
 use std::path::PathBuf;
 use std::process::Command;
@@ -33,17 +34,36 @@ struct Cli {
     command: Option<Commands>,
 }
 
+#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
+enum Target {
+    Vm,
+    Iso,
+}
+
+impl fmt::Display for Target {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Target::Vm => write!(f, "vm"),
+            Target::Iso => write!(f, "iso"),
+        }
+    }
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// Initialize development environment
     Init {
-        #[arg(short, long)]
+        #[arg(required = true, help = "Environment name")]
         name: String,
     },
 
     Build {
         /// lists test values
-        target: String,
+        #[arg(
+            default_value_t = Target::Vm,
+            value_enum
+        )]
+        target: Target,
     },
 
     Run,
@@ -323,19 +343,23 @@ fn main() {
         Some(Commands::Init { name }) => {
             init(name.as_str()).expect("Failed to initialize environment");
         }
-        Some(Commands::Build { target: _ }) => {
+        Some(Commands::Build { target }) => {
             if config.name == "" {
                 println!("Please, run 'kd init' first. Can not find .kd.toml");
                 std::process::exit(1);
             }
 
-            let env_path = PathBuf::from(path)
-                .join(".kd")
-                .join(&config.name);
+            let env_path = PathBuf::from(path).join(".kd").join(&config.name);
             let uconfig_path = PathBuf::from(env_path.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &config).expect("Failed to generate user environment");
 
-            let package = format!("path:{}#vm", env_path.to_str().expect("Can not convert env path to string"));
+            let package = format!(
+                "path:{}#{}",
+                env_path
+                    .to_str()
+                    .expect("Can not convert env path to string"),
+                target
+            );
             Command::new("nix")
                 .arg("build")
                 .arg(&package)
