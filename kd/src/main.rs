@@ -1,9 +1,9 @@
 use clap::{Parser, Subcommand};
+use std::io::{ErrorKind, Write};
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use tera::{Context, Tera};
-use std::io::{ErrorKind, Write};
 
 mod utils;
 use utils::{KdError, KdErrorKind};
@@ -91,11 +91,7 @@ fn format_nix(code: String) -> Result<String, std::string::FromUtf8Error> {
 }
 
 fn all_good() -> bool {
-    let commands = vec![
-        "nix",
-        "nurl",
-        "alejandra",
-    ];
+    let commands = vec!["nix", "nurl", "alejandra"];
 
     for command in commands {
         let status = Command::new(command)
@@ -122,9 +118,7 @@ fn init(name: &str) -> Result<(), KdError> {
     // TODO this need to be checked in all good
     let workdir = std::env::current_dir().expect("Can not detect current working directory");
     let mut target = PathBuf::from(&workdir);
-    let mut path = PathBuf::from(&workdir); //dirs::home_dir().expect("Failed to find home dir");
-    path.push(".kd");
-    path.push(name);
+    let path = PathBuf::from(&workdir).join(".kd").join(name);
     if let Err(error) = std::fs::create_dir_all(&path) {
         return Err(KdError::new(KdErrorKind::FlakeInitError, error.to_string()));
     }
@@ -132,19 +126,23 @@ fn init(name: &str) -> Result<(), KdError> {
     let _ = std::env::set_current_dir(&path);
     println!("Creating new environment '{}'", name);
     let output = Command::new("nix")
-       .arg("flake")
-       .arg("init")
-       .arg("--template")
-       .arg("github:alberand/kd#x86_64-linux.default")
-       .output()
-       .expect("Failed to execute command");
+        .arg("flake")
+        .arg("init")
+        .arg("--template")
+        .arg("github:alberand/kd#x86_64-linux.default")
+        .output()
+        .expect("Failed to execute command");
     if !output.status.success() {
         println!("{}", String::from_utf8_lossy(&output.stderr));
-        return Err(KdError::new(KdErrorKind::FlakeInitError, "Failed to created Flake".to_string()));
+        return Err(KdError::new(
+            KdErrorKind::FlakeInitError,
+            "Failed to created Flake".to_string(),
+        ));
     }
 
     target.push(".kd.toml");
-    std::fs::rename("kd.sample.toml", target).expect("Failed to copy sample .kd.toml config");
+    let mut writer = std::fs::File::create(target).expect("Failed to create .kd.toml config");
+    writeln!(writer, "name = \"{}\"", name).expect("Failed to write env name to .kd.toml");
     println!("Update your .kd.toml configuration");
 
     Ok(())
@@ -152,30 +150,33 @@ fn init(name: &str) -> Result<(), KdError> {
 
 fn version_to_modversion(version: &str) -> Result<String, KdError> {
     if !version.starts_with("v") {
-        return Err(KdError::new(KdErrorKind::BadKernelVersion, "doesn't start with 'v'".to_string()))
+        return Err(KdError::new(
+            KdErrorKind::BadKernelVersion,
+            "doesn't start with 'v'".to_string(),
+        ));
     }
 
     if let Some(version) = version.strip_prefix("v") {
         if version.chars().take_while(|ch| *ch == '.').count() == 2 {
-            return Ok(version.to_string())
+            return Ok(version.to_string());
         }
-        return Ok(format!("\"{version}.0\""))
+        return Ok(format!("\"{version}.0\""));
     }
 
-    Err(KdError::new(KdErrorKind::BadKernelVersion, "no version after 'v'".to_string()))
+    Err(KdError::new(
+        KdErrorKind::BadKernelVersion,
+        "no version after 'v'".to_string(),
+    ))
 }
 
 /// TODO all this parsing should be just done nrix
-fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
-    // TODO handle
-    let _ = std::env::set_current_dir(wd);
-
+fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let mut tera = Tera::default();
     let mut context = Context::new();
     let mut options = vec![];
     let mut kernel_options = vec![];
-    let kernel_config_options: Vec<String> = vec![];
-    let set_value = |name: &str, value: &str| { format!("{name} = {value};") };
+    let mut kernel_config_options: Vec<KernelConfigOption> = vec![];
+    let set_value = |name: &str, value: &str| format!("{name} = {value};");
 
     if let Some(subconfig) = &config.xfstests {
         if let Some(rev) = &subconfig.rev {
@@ -183,6 +184,17 @@ fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
                 let src = nurl(&repo, &rev).expect("Failed to parse xfstests source repo");
                 options.push(set_value("programs.xfstests.src", &src));
             }
+        };
+
+        if let Some(hooks) = &subconfig.hooks {
+            let path = PathBuf::from(hooks);
+            if !path.exists() {
+                let cwd = std::env::current_dir().expect("Failed to retrieve current working dir");
+                println!("Failed to find '{:?}' dir (cwd is {:?})", path, cwd);
+                std::process::exit(1);
+            }
+            let path = path.to_str().expect("Failed to retrieve hooks path");
+            options.push(set_value("programs.xfstests.hooks", path));
         };
     };
 
@@ -196,8 +208,12 @@ fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
     };
 
     if let Some(subconfig) = &config.kernel {
-        if subconfig.image.is_some() && (subconfig.version.is_some() || subconfig.rev.is_some()
-            || subconfig.repo.is_some() || subconfig.config.is_some()) {
+        if subconfig.image.is_some()
+            && (subconfig.version.is_some()
+                || subconfig.rev.is_some()
+                || subconfig.repo.is_some()
+                || subconfig.config.is_some())
+        {
             println!("None of the options in [kernel] would take effect if 'image' is set");
         }
 
@@ -222,13 +238,24 @@ fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
                 };
                 let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
                 kernel_options.push(set_value("version", &format!("\"{}\"", version)));
-                kernel_options.push(set_value("modDirVersion",
-                        &version_to_modversion(&version)?));
+                kernel_options.push(set_value(
+                    "modDirVersion",
+                    &version_to_modversion(&version)?,
+                ));
                 kernel_options.push(set_value("src", &src));
             }
         } else {
             println!("Either kernel image or version/rev has to be set");
             std::process::exit(1);
+        };
+
+        if let Some(config) = &subconfig.config {
+            for (key, value) in config.iter() {
+                kernel_config_options.push(KernelConfigOption {
+                    name: key.to_string(),
+                    value: value.to_string(),
+                });
+            }
         };
     };
 
@@ -263,6 +290,11 @@ fn generate_uconfig(wd: &PathBuf, config: &Config) -> Result<(), KdError> {
 
     println!("{}", formatted);
 
+    println!("user config {:?}", &path);
+    let mut file = std::fs::File::create(path).expect("Failed to create user config uconfig.nix");
+    file.write_all(formatted.as_bytes())
+        .expect("Failed to write out uconfig.nix data");
+
     Ok(())
 }
 
@@ -274,33 +306,38 @@ fn main() {
         std::process::exit(1);
     }
 
+    let path = std::env::current_dir().expect("Don't have access to current working dir");
     let config = if let Some(config) = cli.config {
         Config::load(Some(config)).unwrap()
     } else {
-        let mut path = std::env::current_dir().expect("Don't have access to current working dir");
-        path.push(".kd.toml");
-        let result = Config::load(Some(path));
+        let config_path = PathBuf::from(path.clone()).join(".kd.toml");
+        let result = Config::load(Some(config_path));
         match result {
             Ok(config) => config,
-            Err(ref error) if error.kind() == ErrorKind::NotFound => {
-                Config::default()
-            },
-            Err(_) => Config::default()
+            Err(ref error) if error.kind() == ErrorKind::NotFound => Config::default(),
+            Err(_) => Config::default(),
         }
     };
 
     match &cli.command {
         Some(Commands::Init { name }) => {
             init(name.as_str()).expect("Failed to initialize environment");
-        },
+        }
         Some(Commands::Build { target: _ }) => {
-            let mut path = dirs::home_dir().expect("Failed to find home dir");
-            path.push(".kd");
-            generate_uconfig(&path, &config).expect("Failed to generate user environment");
-        },
+            if config.name == "" {
+                println!("Please, run 'kd init' first. Can not find .kd.toml");
+                std::process::exit(1);
+            }
+
+            let uconfig_path = PathBuf::from(path)
+                .join(".kd")
+                .join(&config.name)
+                .join("uconfig.nix");
+            generate_uconfig(&uconfig_path, &config).expect("Failed to generate user environment");
+        }
         Some(Commands::Run) => {
             println!("Run command");
-        },
+        }
         None => {}
     }
 }

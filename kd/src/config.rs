@@ -3,6 +3,7 @@ use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::PathBuf;
 use toml;
+use toml::Table;
 
 #[derive(Serialize, Deserialize)]
 pub struct KernelConfigOption {
@@ -16,7 +17,7 @@ pub struct KernelConfig {
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,
-    pub config: Option<toml::value::Table>,
+    pub config: Option<Table>,
 }
 
 fn default_xfstests() -> Option<String> {
