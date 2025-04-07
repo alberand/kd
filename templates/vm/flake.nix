@@ -29,11 +29,14 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-      vm = kd.lib.${system}.mkEnv {
-        name = "demo";
-        root = builtins.toString ./.;
-        uconfig = pkgs.lib.optional (builtins.fileExists ./uconfig.nix) import ./uconfig.nix;
-      };
+      vm =
+        kd.lib.${system}.mkEnv {
+          name = "demo";
+          root = builtins.toString ./.;
+        }
+        // pkgs.lib.optionalAttrs (builtins.pathExists ./uconfig.nix) {
+          uconfig = pkgs.callPackage (import ./uconfig.nix) {};
+        };
     in {
       packages = {
         inherit (vm) kconfig kconfig-iso headers kernel iso vm;
