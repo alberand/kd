@@ -329,11 +329,20 @@ fn main() {
                 std::process::exit(1);
             }
 
-            let uconfig_path = PathBuf::from(path)
+            let env_path = PathBuf::from(path)
                 .join(".kd")
-                .join(&config.name)
-                .join("uconfig.nix");
+                .join(&config.name);
+            let uconfig_path = PathBuf::from(env_path.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &config).expect("Failed to generate user environment");
+
+            let package = format!("path:{}#vm", env_path.to_str().expect("Can not convert env path to string"));
+            Command::new("nix")
+                .arg("build")
+                .arg(&package)
+                .spawn()
+                .expect("Failed to spawn 'nix build'")
+                .wait()
+                .expect("'nix build' wasn't running");
         }
         Some(Commands::Run) => {
             println!("Run command");
