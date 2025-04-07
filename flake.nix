@@ -18,6 +18,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
   outputs = {
@@ -25,14 +26,16 @@
     nixpkgs,
     flake-utils,
     nixos-generators,
+    rust-overlay,
   }:
     flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (system: let
       pkgs = import nixpkgs {
         inherit system;
-        oerlays = [
+        overlays = [
           (_final: prev: {
             xfstests-configs = (import ./xfstests/configs.nix) {pkgs = prev;};
           })
+          (import rust-overlay)
         ];
       };
       lib = import ./lib.nix {

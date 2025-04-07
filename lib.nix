@@ -186,6 +186,8 @@
             # vmtest deps
             nurl
             nixfmt-classic
+
+            (callPackage (import ./kd/derivation.nix) {})
           ]
           ++ packages
           ++ [
