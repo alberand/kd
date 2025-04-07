@@ -308,7 +308,6 @@
     };
 
     iso = mkIso {
-      inherit pkgs;
       uconfig =
         {
           networking.hostName = "${name}";
