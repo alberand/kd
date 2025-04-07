@@ -316,11 +316,6 @@
           };
 
           programs.xfstests = {
-            src = pkgs.fetchgit {
-              url = "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git";
-              rev = "v2024.12.22";
-              sha256 = "sha256-xZkCZVvlcnqsUnGGxSFqOHoC73M9ijM5sQnnRqamOk8=";
-            };
             test-dev = "/dev/sda";
             scratch-dev = "/dev/sdb";
             arguments = "-R xunit -s xfs_4k generic/110";

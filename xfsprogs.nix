@@ -61,7 +61,11 @@ in {
 
     src = mkOption {
       type = types.nullOr types.package;
-      default = null;
+      default = pkgs.fetchgit {
+        url = "git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git";
+        rev = "v6.13.0";
+        sha256 = "sha256-R9Njh1fl0TDiomjbMd/gQyv+KwVF0tbU6rruwfwjSy4=";
+      };
     };
 
     kernelHeaders = mkOption {
@@ -74,7 +78,10 @@ in {
   config = mkIf cfg.enable {
     nixpkgs.overlays = [
       (xfsprogs-overlay {
-        inherit (cfg) src;
+        src =
+          if (cfg.src != null)
+          then cfg.src
+          else prev.src;
         version = "git";
       })
     ];
