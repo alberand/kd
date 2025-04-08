@@ -274,7 +274,7 @@ in
     passAsFile = ["kernelConfig"];
 
     depsBuildBuild = [stdenv.cc];
-    nativeBuildInputs = [perl gmp libmpc mpfr bison flex bison flex pahole];
+    nativeBuildInputs = [perl gmp libmpc mpfr bison flex pahole];
 
     makeFlags =
       lib.optionals (stdenv.hostPlatform.linux-kernel ? makeFlags)
@@ -364,17 +364,17 @@ in
       # The result is a set of two attributes
       moduleStructuredConfig =
         (lib.evalModules {
-          modules =
-            [
-              (import ./kernel_config.nix)
-              {
-                settings = kconfig //
-                  defaultConfig //
-                  (lib.optionalAttrs (debug) debugConfig) //
-                  (lib.optionalAttrs (iso) isoConfig);
-                _file = "structuredExtraConfig";
-              }
-            ];
+          modules = [
+            (import ./kernel_config.nix)
+            {
+              settings =
+                kconfig
+                // defaultConfig
+                // (lib.optionalAttrs debug debugConfig)
+                // (lib.optionalAttrs iso isoConfig);
+              _file = "structuredExtraConfig";
+            }
+          ];
         })
         .config;
 
