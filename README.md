@@ -25,15 +25,6 @@ The following commands are available:
     # Run VM
     $ kd run
 
-    # Deploy ISO to libvirtd machine
-    $ kd deploy [path]
-
-    # Generate minimal QEMU config
-    $ kd config vm
-
-    # Generate minimal ISO config
-    $ kd config iso
-
 The `build` command will create a Nix Flake in `./.kd/kfeature`. Edit this flake
 as you wish.
 
