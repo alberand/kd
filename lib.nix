@@ -279,19 +279,19 @@
     };
     useConfig = builtins.hasAttr "kernel" uconfig;
     version =
-      if useConfig
+      if useConfig && builtins.hasAttr "version" uconfig.kernel
       then uconfig.kernel.version
       else sources.options.kernel.version.default;
     modDirVersion =
-      if useConfig
+      if useConfig && builtins.hasAttr "modDirVersion" uconfig.kernel
       then uconfig.kernel.modDirVersion
       else sources.options.kernel.modDirVersion.default;
     src =
-      if useConfig
+      if useConfig && builtins.hasAttr "src" uconfig.kernel
       then uconfig.kernel.src
       else sources.options.kernel.src.default;
     kkconfig =
-      if useConfig
+      if useConfig && builtins.hasAttr "kconfig" uconfig.kernel
       then uconfig.kernel.kconfig
       else sources.options.kernel.kconfig.default;
   in rec {
