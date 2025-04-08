@@ -35,7 +35,7 @@
           root = builtins.toString ./.;
         }
         // pkgs.lib.optionalAttrs (builtins.pathExists ./uconfig.nix) {
-          uconfig = pkgs.callPackage (import ./uconfig.nix) {};
+          uconfig = pkgs.callPackage (import ./uconfig.nix) {inherit pkgs;};
         };
     in {
       packages = {

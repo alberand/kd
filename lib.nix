@@ -3,7 +3,7 @@
   nixos-generators,
   nixpkgs,
 }: rec {
-  mkVM = {uconfig ? {}}:
+  mkVM = {uconfig}:
     nixos-generators.nixosGenerate {
       inherit pkgs;
       system = "x86_64-linux";
@@ -32,7 +32,7 @@
       format = "vm";
     };
 
-  mkIso = {uconfig ? {}}:
+  mkIso = {uconfig}:
     builtins.getAttr "iso" {
       iso = nixos-generators.nixosGenerate {
         system = "x86_64-linux";
@@ -43,7 +43,6 @@
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
           ({
-            config,
             pkgs,
             ...
           }: {
@@ -65,7 +64,7 @@
       };
     };
 
-  mkVmTest = {uconfig ? {}}:
+  mkVmTest = {uconfig}:
     builtins.getAttr "vmtest" rec {
       nixos = mkVM {
         inherit uconfig;
