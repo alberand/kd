@@ -40,20 +40,19 @@
           ./xfsprogs.nix
           ./system.nix
           ./input.nix
+          ({...}: uconfig)
           ({
             config,
             pkgs,
             ...
-          }:
-            {
-              # Don't shutdown system as libvirtd will remove the VM
-              programs.xfstests.autoshutdown = false;
+          }: {
+            # Don't shutdown system as libvirtd will remove the VM
+            programs.xfstests.autoshutdown = false;
 
-              # Enable network
-              networking.networkmanager.enable = true;
-              networking.useDHCP = pkgs.lib.mkForce true;
-            }
-            // uconfig)
+            # Enable network
+            networking.networkmanager.enable = true;
+            networking.useDHCP = pkgs.lib.mkForce true;
+          })
         ];
         format = "iso";
       };
@@ -313,7 +312,7 @@
           networking.hostName = "${name}";
           kernel = {
             inherit src version modDirVersion;
-            kconfig = kconfig-iso;
+            kconfig = kconfig-iso.structuredConfig;
           };
 
           programs.xfstests = {
