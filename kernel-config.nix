@@ -9,6 +9,7 @@
   flex,
   pahole,
   buildPackages,
+  nixpkgs,
 }: {
   src,
   version,
@@ -268,7 +269,8 @@ in
     inherit version src;
     pname = "linux-config";
 
-    generateConfig = ./generate-config.pl;
+    ignoreConfigErrors = false;
+    generateConfig = (nixpkgs + "/pkgs/os-specific/linux/kernel/generate-config.pl");
 
     kernelConfig = passthru.moduleStructuredConfig.intermediateNixConfig;
     passAsFile = ["kernelConfig"];
@@ -365,7 +367,7 @@ in
       moduleStructuredConfig =
         (lib.evalModules {
           modules = [
-            (import ./kernel_config.nix)
+            (nixpkgs + "/nixos/modules/system/boot/kernel_config.nix")
             {
               settings =
                 kconfig

@@ -257,11 +257,12 @@
   mkEnv = {
     name,
     root,
+    nixpkgs,
     stdenv ? pkgs.stdenv,
     uconfig ? {},
   }: let
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {
-      inherit stdenv;
+      inherit stdenv nixpkgs;
     };
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv;

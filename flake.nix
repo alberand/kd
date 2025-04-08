@@ -42,6 +42,7 @@
         inherit pkgs nixos-generators;
       };
       default = lib.mkEnv {
+        inherit nixpkgs;
         name = "demo";
         root = builtins.toString ./.;
         stdenv = pkgs.clangStdenv;
