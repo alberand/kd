@@ -26,7 +26,7 @@
     UNWINDER_FRAME_POINTER = yes;
 
     # Support kernel compressed with X
-    KERNEL_GLIB = yes;
+    # KERNEL_GLIB = yes;
     # Don't attach -dirty version (We won't be able to boot other kernel)
     LOCALVERSION_AUTO = no;
 
@@ -86,7 +86,6 @@
 
     # No graphics
     DRM = no;
-    DRM_I915 = no;
 
     # No sound
     SOUND = no;
@@ -121,9 +120,9 @@
     NET_CORE = yes;
     INET = yes;
     CGROUPS = yes;
-    SIGNALFD = no;
-    TIMERFD = no;
-    EPOLL = no;
+    SIGNALFD = yes;
+    TIMERFD = yes;
+    EPOLL = yes;
     FHANDLE = yes;
     CRYPTO_USER_API_HASH = yes;
     DMIID = yes;
@@ -193,29 +192,15 @@
     USB_UAS = module;
     BLK_DEV_LOOP = yes;
     CRYPTO_ZSTD = yes;
-    INITRAMFS_COMPRESSION_ZSTD = yes;
     SATA_AHCI = yes;
     SATA_NV = yes;
-    ISO9660 = yes;
-    AHCI = yes;
     SATA_VIA = yes;
     SATA_SIS = yes;
     SATA_ULI = yes;
     ATA_PIIX = yes;
     PATA_MARVELL = yes;
-    NVME = module;
-    SD_MOD = yes;
-    SR_MOD = yes;
     MMC = yes;
     MMC_BLOCK = yes;
-    UHCI_HCD = yes;
-    EHCI_HCD = yes;
-    EHCI_PCI = yes;
-    OHCI_HCD = yes;
-    OHCI_PCI = yes;
-    XHCI_HCD = yes;
-    XHCI_PCI = yes;
-    USBHID = yes;
     HID_GENERIC = yes;
     HID_LENOVO = yes;
     HID_APPLE = yes;
@@ -225,13 +210,6 @@
     HID_MICROSOFT = yes;
     HID_CHERRY = yes;
     HID_CORSAIR = yes;
-    PCIPS2 = yes;
-    ATKBD = yes;
-    I8042 = yes;
-    RTC_CMOS = yes;
-    LOOP = yes;
-    OVERLAY = yes;
-    DM_MOD = yes;
     # NVME
     NVME_CORE = yes;
     BLK_DEV_NVME = yes;
@@ -240,8 +218,6 @@
     USB_PCI = yes;
     USB_SUPPORT = yes;
     USB_UHCI_HCD = yes;
-    USB_EHCI_HCD = yes;
-    USB_EHCI_PCI = yes;
     USB_OHCI_HCD = yes;
     USB_XHCI_PCI = yes;
     USB_XHCI_HCD = yes;
@@ -255,13 +231,10 @@
     WATCHDOG_CORE = yes;
     I6300ESB_WDT = yes;
     DAX = yes;
-    DAX_DRIVER = yes;
     FS_DAX = yes;
     MEMORY_HOTPLUG = yes;
     MEMORY_HOTREMOVE = yes;
     ZONE_DEVICE = yes;
-    FUFE_FS = yes;
-    VIRTIO_FS = yes;
     SERIO_PCIPS2 = yes;
   };
 in
