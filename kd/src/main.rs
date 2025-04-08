@@ -249,8 +249,8 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
 
         if let Some(_) = &subconfig.image {
             // pass
-        } else if let Some(version) = &subconfig.version {
-            if let Some(rev) = &subconfig.rev {
+        } else if let Some(rev) = &subconfig.rev {
+            if let Some(version) = &subconfig.version {
                 let repo = if let Some(repo) = &subconfig.repo {
                     repo
                 } else {
@@ -263,10 +263,10 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                     &version_to_modversion(&version)?,
                 ));
                 kernel_options.push(set_value("src", &src));
+            } else {
+                println!("If rev is set version need to be set to the latest kernel release");
+                std::process::exit(1);
             }
-        } else {
-            println!("Either kernel image or version/rev has to be set");
-            std::process::exit(1);
         };
 
         if let Some(config) = &subconfig.config {
