@@ -39,7 +39,7 @@
         ];
       };
       lib = import ./lib.nix {
-        inherit pkgs nixos-generators;
+        inherit pkgs nixos-generators nixpkgs;
       };
       default = lib.mkEnv {
         inherit nixpkgs;

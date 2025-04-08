@@ -1,6 +1,7 @@
 {
   pkgs,
   nixos-generators,
+  nixpkgs,
 }: rec {
   mkVM = {uconfig ? {}}:
     nixos-generators.nixosGenerate {
@@ -15,7 +16,7 @@
         ./dummy.nix
         ./system.nix
         ./vm.nix
-        ./input.nix
+        (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
         ({...}: uconfig)
         ({...}: {
           programs.dummy = {
@@ -39,7 +40,7 @@
           ./xfstests/xfstests.nix
           ./xfsprogs.nix
           ./system.nix
-          ./input.nix
+          (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
           ({
             config,
@@ -267,7 +268,7 @@
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv;
     };
-    sources = import ./input.nix {
+    sources = (pkgs.callPackage (import ./input.nix) { inherit nixpkgs; }) {
       inherit pkgs;
       config = {};
     };
