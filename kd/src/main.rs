@@ -289,13 +289,13 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                 {% for option in kernel_options %}
                     {{ option }}
                 {% endfor%}
-                {% if kernel_config_options %}
-                kconfig = with pkgs.lib.kernel; {
-                  {% for option in kernel_config_options %}
-                      "{{ option.name }}" = {{ option.value }};
-                  {% endfor%}
-                };
-                {% endif %}
+            };
+            {% endif %}
+            {% if kernel_config_options %}
+            kernel.kconfig = with pkgs.lib.kernel; {
+              {% for option in kernel_config_options %}
+                  "{{ option.name }}" = {{ option.value }};
+              {% endfor%}
             };
             {% endif %}
         }
