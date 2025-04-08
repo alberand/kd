@@ -272,8 +272,8 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
         if let Some(config) = &subconfig.config {
             for (key, value) in config.iter() {
                 kernel_config_options.push(KernelConfigOption {
-                    name: key.to_string(),
-                    value: value.to_string(),
+                    name: key.strip_prefix("CONFIG_").expect("Option doesn't start with CONFIG_").to_string(),
+                    value: value.to_string().replace("\"", ""),
                 });
             }
         };
@@ -294,7 +294,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             {% if kernel_config_options %}
             kernel.kconfig = with pkgs.lib.kernel; {
               {% for option in kernel_config_options %}
-                  "{{ option.name }}" = {{ option.value }};
+                  {{ option.name }} = {{ option.value }};
               {% endfor%}
             };
             {% endif %}
