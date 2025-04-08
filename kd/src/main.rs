@@ -370,6 +370,20 @@ fn main() {
         }
         Some(Commands::Run) => {
             println!("Run command");
+            let env_path = PathBuf::from(path).join(".kd").join(&config.name);
+            let package = format!(
+                "path:{}#vm",
+                env_path
+                    .to_str()
+                    .expect("Can not convert env path to string")
+            );
+            Command::new("nix")
+                .arg("run")
+                .arg(&package)
+                .spawn()
+                .expect("Failed to spawn 'nix run'")
+                .wait()
+                .expect("'nix run' wasn't running");
         }
         None => {}
     }
