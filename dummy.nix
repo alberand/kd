@@ -71,10 +71,10 @@ in {
         '';
       script = ''
         function get_config {
-          ${pkgs.tomlq}/bin/tq --file ${cfg.sharedir}/vmtest.toml $@
+          ${pkgs.tomlq}/bin/tq --file ${cfg.sharedir}/kd.toml $@
         }
 
-        if [ ! -f "${cfg.sharedir}/vmtest.toml" ]; then
+        if [ ! -f "${cfg.sharedir}/kd.toml" ]; then
           exit 0
         fi
 

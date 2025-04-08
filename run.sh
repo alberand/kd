@@ -8,7 +8,7 @@ if [[ $? -ne 0 ]]; then
     exit 1;
 fi
 
-LOCAL_CONFIG=".vmtest.toml"
+LOCAL_CONFIG=".kd.toml"
 SHARE_DIR="${SHARE_DIR:-/tmp/vmtest}"
 KERNEL="$KERNEL"
 MODULE="$MODULE"
@@ -168,7 +168,7 @@ function init_share() {
 	rm -rf "$SHARE_DIR/modules"
 	rm -rf "$SHARE_DIR/results"
 	rm -rf "$SHARE_DIR/dummy.sh"
-	rm -rf "$SHARE_DIR/vmtest.toml"
+	rm -rf "$SHARE_DIR/kd.toml"
 	rm -rf "$SHARE_DIR/totest"
 	rm -rf "$SHARE_DIR/xfstests-config"
 	mkdir -p $SHARE_DIR
@@ -257,12 +257,12 @@ add_module $MODULE
 set_totest "$TOTEST" "$TEST_CONFIG"
 
 
-cp "$(pwd)/$config" "$SHARE_DIR/vmtest.toml"
+cp "$(pwd)/$LOCAL_CONFIG" "$SHARE_DIR/kd.toml"
 
 if [[ -f "$SIMPLE_TEST" ]]; then
 	eecho "$SIMPLE_TEST will be used as simple test"
 	cp "$SIMPLE_TEST" "$SHARE_DIR/dummy.sh"
 fi
 
-NODE_NAME=${NODE_NAME:-vmtest}
+NODE_NAME=${NODE_NAME:-demo}
 # After this line nix will insert more bash code. Don't exit

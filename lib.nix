@@ -76,9 +76,9 @@
 
   mkLinuxShell = {
     root,
+    name,
     sharedir ? "/tmp/vmtest",
     packages ? [],
-    name ? "vmtest",
   }:
     builtins.getAttr "shell" {
       shell = pkgs.mkShell {
