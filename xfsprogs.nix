@@ -55,7 +55,7 @@ in {
   options.programs.xfsprogs = {
     enable = mkEnableOption {
       name = "xfsprogs";
-      default = false;
+      default = true;
       example = true;
     };
 
