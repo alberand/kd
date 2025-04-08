@@ -31,11 +31,12 @@
       };
       vm =
         kd.lib.${system}.mkEnv {
+          inherit nixpkgs;
           name = "demo";
           root = builtins.toString ./.;
         }
         // pkgs.lib.optionalAttrs (builtins.pathExists ./uconfig.nix) {
-          uconfig = pkgs.callPackage (import ./uconfig.nix) {inherit pkgs;};
+          uconfig = (import ./uconfig.nix) {inherit pkgs;};
         };
     in {
       packages = {
