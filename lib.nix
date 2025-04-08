@@ -53,6 +53,12 @@
             # Enable network
             networking.networkmanager.enable = true;
             networking.useDHCP = pkgs.lib.mkForce true;
+
+            programs.xfstests = {
+              enable = true;
+              test-dev = pkgs.lib.mkDefault "/dev/sda";
+              scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
+            };
           })
         ];
         format = "iso";
@@ -268,7 +274,7 @@
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv;
     };
-    sources = (pkgs.callPackage (import ./input.nix) { inherit nixpkgs; }) {
+    sources = (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;}) {
       inherit pkgs;
       config = {};
     };
@@ -318,8 +324,6 @@
           };
 
           programs.xfstests = {
-            test-dev = "/dev/sda";
-            scratch-dev = "/dev/sdb";
             arguments = "-R xunit -s xfs_4k generic/110";
             upload-results = true;
           };
