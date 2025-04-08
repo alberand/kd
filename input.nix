@@ -12,12 +12,12 @@ in {
   options.kernel = {
     version = mkOption {
       type = types.str;
-      default = "v6.13";
+      default = "v6.14";
     };
 
     modDirVersion = mkOption {
       type = types.str;
-      default = "6.13.0";
+      default = "6.14.0";
     };
 
     src = mkOption {
@@ -25,8 +25,8 @@ in {
       default = pkgs.fetchFromGitHub {
         owner = "torvalds";
         repo = "linux";
-        rev = "v6.13";
-        hash = "sha256-FD22KmTFrIhED5X3rcjPTot1UOq1ir1zouEpRWZkRC0=";
+        rev = "v6.14";
+        hash = "sha256-5Fkx6y9eEKuQVbDkYh3lxFQrXCK4QJkAZcIabj0q/YQ=";
       };
     };
 
