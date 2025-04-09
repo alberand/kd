@@ -197,13 +197,30 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let mut kernel_options = vec![];
     let mut kernel_config_options: Vec<KernelConfigOption> = vec![];
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
+    let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
     if let Some(subconfig) = &config.xfstests {
         if let Some(rev) = &subconfig.rev {
-            if let Some(repo) = &subconfig.repo {
-                let src = nurl(&repo, &rev).expect("Failed to parse xfstests source repo");
-                options.push(set_value("programs.xfstests.src", &src));
-            }
+            let repo = if let Some(repo) = &subconfig.repo {
+                repo
+            } else {
+                &config::XfstestsConfig::default().repo.unwrap()
+            };
+
+            let src = nurl(&repo, &rev).expect("Failed to parse xfstests source repo");
+            options.push(set_value("programs.xfstests.src", &src));
+        };
+
+        if let Some(args) = &subconfig.args {
+            options.push(set_value_str("programs.xfstests.arguments", &args));
+        };
+
+        if let Some(test_dev) = &subconfig.test_dev {
+            options.push(set_value_str("programs.xfstests.test_dev", &test_dev));
+        };
+
+        if let Some(scratch_dev) = &subconfig.scratch_dev {
+            options.push(set_value_str("programs.xfstests.scratch_dev", &scratch_dev));
         };
 
         if let Some(hooks) = &subconfig.hooks {
@@ -257,7 +274,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                     "git@github.com:torvalds/linux.git"
                 };
                 let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
-                kernel_options.push(set_value("version", &format!("\"{}\"", version)));
+                kernel_options.push(set_value_str("version", version));
                 kernel_options.push(set_value(
                     "modDirVersion",
                     &version_to_modversion(&version)?,

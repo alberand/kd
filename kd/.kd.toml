@@ -1,0 +1,15 @@
+name = "xfsprogs-testing"
+
+[kernel.config]
+CONFIG_XFS_FS = "yes"
+CONFIG_XFS_QUOTA = "yes"
+CONFIG_XFS_RT = "yes"
+CONFIG_XFS_ONLINE_SCRUB = "yes"
+CONFIG_XFS_ONLINE_REPAIR = "yes"
+
+[xfstests]
+args = "-s xfs_4k -g auto"
+
+[xfsprogs]
+repo = "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
+rev = "v6.14.0"

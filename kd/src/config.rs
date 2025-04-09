@@ -24,7 +24,7 @@ fn default_xfstests() -> Option<String> {
     Some("git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git".to_string())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct XfstestsConfig {
     #[serde(default = "default_xfstests")]
     pub repo: Option<String>,
