@@ -34,6 +34,17 @@ in {
       type = types.attrs;
       default = {};
     };
+
+    # TODO this has to be config level options
+    iso = mkOption {
+      type = types.bool;
+      default = false;
+    };
+
+    debug = mkOption {
+      type = types.bool;
+      default = false;
+    };
   };
 
   config = let
@@ -44,7 +55,7 @@ in {
       buildKernel {
         inherit (cfg) version modDirVersion src;
         kconfig = buildKernelConfig {
-          inherit (cfg) src version kconfig;
+          inherit (cfg) src version kconfig iso debug;
         };
       }
     );

@@ -46,6 +46,7 @@
             pkgs,
             ...
           }: {
+            kernel.iso = pkgs.lib.mkForce true;
             # Don't shutdown system as libvirtd will remove the VM
             programs.xfstests.autoshutdown = false;
 
@@ -302,6 +303,7 @@
 
     kconfig-iso = buildKernelConfig {
       inherit src version;
+      kconfig = kkconfig;
       iso = true;
     };
 
