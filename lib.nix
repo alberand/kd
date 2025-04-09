@@ -50,10 +50,6 @@
             # Don't shutdown system as libvirtd will remove the VM
             programs.xfstests.autoshutdown = false;
 
-            # Enable network
-            networking.networkmanager.enable = true;
-            networking.useDHCP = pkgs.lib.mkForce true;
-
             programs.xfstests = {
               enable = true;
               test-dev = pkgs.lib.mkDefault "/dev/sda";

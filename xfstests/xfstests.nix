@@ -71,7 +71,6 @@ with lib; let
                     attr
                     bc
                     e2fsprogs
-                    fio
                     gawk
                     keyutils
                     libcap
