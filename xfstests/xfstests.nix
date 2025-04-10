@@ -7,7 +7,7 @@
 with lib; let
   cfg = config.programs.xfstests;
   xfstests-overlay-remote = final: prev: rec {
-    xfstests-configs = import ./configs.nix { inherit pkgs; };
+    xfstests-configs = import ./configs.nix {inherit pkgs;};
 
     xfstests-hooks = pkgs.stdenv.mkDerivation {
       name = "xfstests-hooks";
@@ -22,7 +22,9 @@ with lib; let
         runHook postInstall
       '';
     };
-    github-upload = pkgs.writeShellScriptBin "github-upload" ../github-upload.sh;
+    github-upload =
+      pkgs.writeShellScriptBin "github-upload" (builtins.readFile
+        ./github-upload.sh);
     xfstests = pkgs.symlinkJoin {
       name = "xfstests";
       paths =
@@ -187,13 +189,6 @@ in {
       };
     };
 
-    uploader = mkOption {
-      description = "Enable results uploader (the repository must be provided)";
-      default = false;
-      example = true;
-      type = types.bool;
-    };
-
     repository = mkOption {
       description = "GitHub repository to upload results to";
       default = "";
@@ -216,6 +211,10 @@ in {
   };
 
   config = mkIf cfg.enable {
+    warnings = (
+      lib.optionals (cfg.upload-results && (cfg.repository == ""))
+      "To upload results set programs.xfstests.repository"
+    );
     nixpkgs.overlays = [
       xfstests-overlay-remote
     ];
@@ -387,12 +386,12 @@ in {
             "${pkgs.xfstests}/bin/xfstests-check -d $arguments"
 
         ''
-        + optionalString cfg.upload-results ''
+        + (optionalString (cfg.upload-results) ''
           ${pkgs.github-upload}/bin/github-upload \
             ${cfg.repository} \
             ${config.networking.hostName} \
             /root/results
-        '';
+        '');
     };
   };
 }
