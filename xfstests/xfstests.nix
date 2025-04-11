@@ -46,7 +46,7 @@ with lib; let
               ];
             nativeBuildInputs =
               prev.nativeBuildInputs
-              ++ [pkgs.pkg-config]
+              ++ [pkgs.pkg-config pkgs.gdbm]
               ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
             wrapperScript = with pkgs;
@@ -84,7 +84,11 @@ with lib; let
                     util-linux
                     which
                     xfsprogs
-                    gdbm
+                    duperemove
+                    acct
+                    xfsdump
+                    indent
+                    man
                   ]}:$PATH
                   exec ./check "$@"
                 '');
@@ -129,6 +133,16 @@ in {
       description = "Path to disk used as SCRATCH_DEV";
       default = "";
       example = "/dev/sdb";
+      type = types.str;
+    };
+
+    extraEnv = mkOption {
+      description = "Extra environment for xfstests";
+      default = "";
+      example = ''
+        export LOGWRITES_DEV=/dev/sdc
+        export SCRATCH_LOGDEV=/dev/sdd
+      '';
       type = types.str;
     };
 
@@ -216,6 +230,7 @@ in {
       lib.optionals (cfg.upload-results && (cfg.repository == ""))
       "To upload results set programs.xfstests.repository"
     );
+
     nixpkgs.overlays = [
       xfstests-overlay-remote
     ];
@@ -234,6 +249,11 @@ in {
 
     users = {
       users = {
+        daemon = {
+          isNormalUser = true;
+          description = "Test user";
+        };
+
         fsgqa = {
           isNormalUser = true;
           description = "Test user";
@@ -248,7 +268,7 @@ in {
           group = "fsgqa2";
         };
 
-        fsgqa-123456 = {
+        "123456-fsgqa" = {
           isNormalUser = true;
           description = "Test user";
           uid = 2002;
@@ -383,6 +403,7 @@ in {
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
           export PATH="${cfg.sharedir}/bin:$PATH"
+          ${cfg.extraEnv}
           ${pkgs.bash}/bin/bash -lc \
             "${pkgs.xfstests}/bin/xfstests-check -d $arguments"
 
