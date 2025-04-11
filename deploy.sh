@@ -15,6 +15,9 @@ PREFIX="aalbersh"
 SYSURI="qemu+ssh://$TEST_HOST/system"
 NODE="$PREFIX-$2"
 
+echo "Removing /tmp/$NODE.iso from $TEST_HOST"
+ssh $TEST_HOST "sudo rm /tmp/$NODE.iso"
+
 echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE.iso'"
 rsync -avz -P \
        $TEST_ISO \
