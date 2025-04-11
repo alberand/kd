@@ -216,11 +216,11 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
         };
 
         if let Some(test_dev) = &subconfig.test_dev {
-            options.push(set_value_str("programs.xfstests.test_dev", &test_dev));
+            options.push(set_value_str("programs.xfstests.test-dev", &test_dev));
         };
 
         if let Some(scratch_dev) = &subconfig.scratch_dev {
-            options.push(set_value_str("programs.xfstests.scratch_dev", &scratch_dev));
+            options.push(set_value_str("programs.xfstests.scratch-dev", &scratch_dev));
         };
 
         if let Some(hooks) = &subconfig.hooks {
