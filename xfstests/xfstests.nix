@@ -84,6 +84,7 @@ with lib; let
                     util-linux
                     which
                     xfsprogs
+                    gdbm
                   ]}:$PATH
                   exec ./check "$@"
                 '');

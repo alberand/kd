@@ -205,6 +205,7 @@
             gawk
             libuuid
             libxfs
+            gdbm
           ];
 
         buildInputs = with pkgs; [
