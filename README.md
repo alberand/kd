@@ -59,14 +59,33 @@ script = "./test.sh"
 ## Testing xfsprogs package
 
 ```toml
-[kernel]
-repository = "git@github.com:torvalds/linux.git"
-rev = "v6.14"
+name = "xfsprogs-testing"
+
+[kernel.config]
+CONFIG_XFS_FS = "yes"
+CONFIG_XFS_QUOTA = "yes"
+CONFIG_XFS_RT = "yes"
+CONFIG_XFS_ONLINE_SCRUB = "yes"
+CONFIG_XFS_ONLINE_REPAIR = "yes"
+CONFIG_XFS_POSIX_ACL = "yes"
+
+CONFIG_DM_FLAKEY = "yes"
+CONFIG_DM_SNAPSHOT = "yes"
+CONFIG_DM_DELAY = "yes"
+CONFIG_DM_THIN_PROVISIONING = "yes"
+CONFIG_SCSI_DEBUG = "yes"
+CONFIG_USER_NS = "yes"
+CONFIG_DAX = "yes"
+CONFIG_IO_URING = "yes"
 
 [xfstests]
-args = "-s xfs_4k -g auto"
+args = "-r -s xfs_4k -g all -x deprecated,dangerous_fuzzers,broken,recoveryloop"
+test_dev = "/dev/vdb"
+scratch_dev = "/dev/vdc"
 
 [xfsprogs]
-repository = "git@github.com:alberand/xfsprogs.git"
-rev = "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
+repo = "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
+rev = "v6.14.0"
 ```
+
+
