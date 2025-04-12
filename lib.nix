@@ -19,6 +19,7 @@
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
         ({...}: uconfig)
         ({...}: {
+          programs.xfsprogs.enable = true;
           programs.dummy = {
             enable = true;
           };
@@ -47,6 +48,8 @@
             ...
           }: {
             kernel.iso = pkgs.lib.mkForce true;
+
+            programs.xfsprogs.enable = true;
             # Don't shutdown system as libvirtd will remove the VM
             programs.xfstests.autoshutdown = false;
 
