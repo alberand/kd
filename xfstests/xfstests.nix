@@ -46,7 +46,7 @@ with lib; let
               ];
             nativeBuildInputs =
               prev.nativeBuildInputs
-              ++ [pkgs.pkg-config pkgs.gdbm]
+              ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
               ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
             wrapperScript = with pkgs;
@@ -89,6 +89,9 @@ with lib; let
                     xfsdump
                     indent
                     man
+                    fio
+                    dbench
+                    thin-provisioning-tools
                   ]}:$PATH
                   exec ./check "$@"
                 '');
@@ -272,7 +275,14 @@ in {
           isNormalUser = true;
           description = "Test user";
           uid = 2002;
-          group = "fsgqa-123456";
+          group = "123456-fsgqa";
+        };
+
+        bin = {
+          isNormalUser = true;
+          description = "Test user";
+          uid = 2003;
+          group = "bin";
         };
       };
 
@@ -287,9 +297,18 @@ in {
           members = ["fsgqa2"];
         };
 
-        fsgqa-123456 = {
+        "123456-fsgqa" = {
           gid = 2002;
-          members = ["fsgqa-123456"];
+          members = ["123456-fsgqa"];
+        };
+
+        bin = {
+          gid = 2003;
+          members = ["bin"];
+        };
+
+        sys = {
+          gid = 2004;
         };
       };
     };
