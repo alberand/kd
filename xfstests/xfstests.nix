@@ -416,8 +416,8 @@ in {
           if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
             ${pkgs.util-linux}/bin/umount $scratch_dev
           fi
-          ${cfg.mkfs_cmd} $mkfs_opts -L test $test_dev
-          ${cfg.mkfs_cmd} $mkfs_opts -L scratch $scratch_dev
+          ${cfg.mkfs_cmd} -f $mkfs_opts -L test $test_dev
+          ${cfg.mkfs_cmd} -f $mkfs_opts -L scratch $scratch_dev
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
