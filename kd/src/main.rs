@@ -417,9 +417,12 @@ fn main() {
         }
         Some(Commands::Update) => {
             let path = PathBuf::from(path).join(".kd").join(&config.name);
+            let package = format!("path:{}", path.to_str().expect("cannot convert path to string"));
             Command::new("nix")
                 .arg("flake")
                 .arg("update")
+                .arg("--flake")
+                .arg(&package)
                 .current_dir(&path)
                 .spawn()
                 .expect("Failed to spawn 'nix flake update'")
