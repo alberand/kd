@@ -5,6 +5,8 @@ use std::fmt;
 pub enum KdErrorKind {
     FlakeInitError,
     BadKernelVersion,
+    NurlFailed,
+    AlejandraFailed,
 }
 
 impl fmt::Display for KdErrorKind {
@@ -12,6 +14,8 @@ impl fmt::Display for KdErrorKind {
         match *self {
             KdErrorKind::FlakeInitError => write!(f, "can not create flake"),
             KdErrorKind::BadKernelVersion => write!(f, "expecting kernel version in v6.13 format"),
+            KdErrorKind::NurlFailed => write!(f, "nurl failed to fetch these repo/rev"),
+            KdErrorKind::AlejandraFailed => write!(f, "alejandra failed to format nix code"),
         }
     }
 }
@@ -21,6 +25,8 @@ impl Error for KdErrorKind {
         match *self {
             KdErrorKind::FlakeInitError => None,
             KdErrorKind::BadKernelVersion => None,
+            KdErrorKind::NurlFailed => None,
+            KdErrorKind::AlejandraFailed => None,
         }
     }
 }

@@ -71,22 +71,24 @@ enum Commands {
     Update,
 }
 
-fn nurl(repo: &str, rev: &str) -> Result<String, std::string::FromUtf8Error> {
+fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
     let output = Command::new("nurl")
         .arg(repo)
         .arg(rev)
         .output()
-        .expect("Failed to execute command");
+        .map_err(|_| KdError::new(KdErrorKind::NurlFailed, "Failed to execute command".to_string()))
+        .unwrap();
 
     if !output.status.success() {
         // TODO need to throw and error
-        println!("failed: {:?}", String::from_utf8(output.stderr));
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+        return Err(KdError::new(KdErrorKind::NurlFailed, "command failed".to_string()))
     }
 
-    String::from_utf8(output.stdout)
+    String::from_utf8(output.stdout).map_err(|_| KdError::new(KdErrorKind::NurlFailed, "Failed to parse Nurl output".to_string()))
 }
 
-fn format_nix(code: String) -> Result<String, std::string::FromUtf8Error> {
+fn format_nix(code: String) -> Result<String, KdError> {
     // Actually run the command
     let output = Command::new("alejandra")
         .stdin({
@@ -102,14 +104,16 @@ fn format_nix(code: String) -> Result<String, std::string::FromUtf8Error> {
             Stdio::from(reader)
         })
         .output()
-        .expect("Failed to execute command");
+        .map_err(|_| KdError::new(KdErrorKind::AlejandraFailed, "Failed to execute command".to_string()))
+        .unwrap();
 
     if !output.status.success() {
         // TODO need to throw and error
-        println!("failed: {:?}", String::from_utf8(output.stderr));
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+        return Err(KdError::new(KdErrorKind::AlejandraFailed, "command failed".to_string()))
     }
 
-    String::from_utf8(output.stdout)
+    String::from_utf8(output.stdout).map_err(|_| KdError::new(KdErrorKind::AlejandraFailed, "Failed to parse Alejandra output".to_string()))
 }
 
 fn all_good() -> bool {
@@ -209,7 +213,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                 &config::XfstestsConfig::default().repo.unwrap()
             };
 
-            let src = nurl(&repo, &rev).expect("Failed to parse xfstests source repo");
+            let src = nurl(&repo, &rev).unwrap();
             options.push(set_value("programs.xfstests.src", &src));
         };
 
