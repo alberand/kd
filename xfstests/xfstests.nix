@@ -184,16 +184,16 @@ in {
       type = types.nullOr types.path;
     };
 
-    mkfs-cmd = mkOption {
+    mkfs_cmd = mkOption {
       description = "mkfs command to recreate the disks before tests";
       default = "${pkgs.xfsprogs}/bin/mkfs.xfs";
       example = "${pkgs.xfsprogs}/bin/mkfs.xfs";
       type = types.str;
     };
 
-    mkfs-opt = mkOption {
-      description = "Options for mkfs-cmd";
-      default = "-f";
+    mkfs_opts = mkOption {
+      description = "Options for mkfs_cmd";
+      default = "";
       example = "-f";
       type = types.str;
     };
@@ -393,7 +393,7 @@ in {
           if [ "$(get_config 'xfstests.mkfs_opts')" != "" ]; then
             mkfs_opts="$(get_config 'xfstests.mkfs_opts')"
           else
-            mkfs_opts="${cfg.mkfs-opt}"
+            mkfs_opts="${cfg.mkfs_opts}"
           fi;
 
           test_dev=""
@@ -416,8 +416,8 @@ in {
           if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
             ${pkgs.util-linux}/bin/umount $scratch_dev
           fi
-          ${cfg.mkfs-cmd} $mkfs_opts -L test $test_dev
-          ${cfg.mkfs-cmd} $mkfs_opts -L scratch $scratch_dev
+          ${cfg.mkfs_cmd} $mkfs_opts -L test $test_dev
+          ${cfg.mkfs_cmd} $mkfs_opts -L scratch $scratch_dev
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"

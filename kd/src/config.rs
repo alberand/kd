@@ -32,6 +32,7 @@ pub struct XfstestsConfig {
     pub args: Option<String>,
     pub test_dev: Option<String>,
     pub scratch_dev: Option<String>,
+    pub mkfs_opts: Option<String>,
     pub hooks: Option<String>,
 }
 

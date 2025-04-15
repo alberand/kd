@@ -223,6 +223,10 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             options.push(set_value_str("programs.xfstests.scratch-dev", &scratch_dev));
         };
 
+        if let Some(mkfs_opts) = &subconfig.mkfs_opts {
+            options.push(set_value_str("programs.xfstests.mkfs_opts", &mkfs_opts));
+        };
+
         if let Some(hooks) = &subconfig.hooks {
             let path = PathBuf::from(hooks);
             if !path.exists() {
