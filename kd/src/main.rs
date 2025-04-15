@@ -227,6 +227,10 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             options.push(set_value_str("programs.xfstests.mkfs_opts", &mkfs_opts));
         };
 
+        if let Some(extra_env) = &subconfig.extra_env {
+            options.push(set_value_str("programs.xfstests.extraEnv", &extra_env));
+        };
+
         if let Some(hooks) = &subconfig.hooks {
             let path = PathBuf::from(hooks);
             if !path.exists() {
