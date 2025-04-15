@@ -33,8 +33,10 @@ virt-install --connect $SYSURI \
 	--osinfo "nixos-unstable" \
 	--memory=8000 \
 	--vcpu 4 \
-	--disk size=10,target.bus=sata \
-	--disk size=10,target.bus=sata \
+	--disk size=12,target.bus=sata \
+	--disk size=12,target.bus=sata \
+	--disk size=2,target.bus=sata \
+	--disk size=2,target.bus=sata \
 	--network network=default \
 	--cdrom "/tmp/$NODE.iso" \
 	--serial pty \
