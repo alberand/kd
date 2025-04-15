@@ -29,23 +29,20 @@ with lib; let
       name = "xfstests";
       paths =
         [
-          (prev.xfstests.overrideAttrs (prev: {
-            src =
-              if (cfg.src != null)
-              then cfg.src
-              else prev.src;
+          (prev.xfstests.overrideAttrs (old: {
+            inherit (cfg) src;
             version = "git";
             patchPhase =
               builtins.readFile ./patchPhase.sh
-              + prev.patchPhase;
+              + old.patchPhase;
             patches =
-              (prev.patches or [])
+              (old.patches or [])
               ++ [
                 ./0001-common-link-.out-file-to-the-output-directory.patch
                 ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
               ];
             nativeBuildInputs =
-              prev.nativeBuildInputs
+              old.nativeBuildInputs
               ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
               ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
