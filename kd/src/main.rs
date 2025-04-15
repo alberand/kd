@@ -149,13 +149,13 @@ fn init(name: &str) -> Result<(), KdError> {
         return Err(KdError::new(KdErrorKind::FlakeInitError, error.to_string()));
     }
     // TODO handle
-    let _ = std::env::set_current_dir(&path);
     println!("Creating new environment '{}'", name);
     let output = Command::new("nix")
         .arg("flake")
         .arg("init")
         .arg("--template")
         .arg("github:alberand/kd#x86_64-linux.default")
+        .current_dir(&path)
         .output()
         .expect("Failed to execute command");
     if !output.status.success() {
@@ -417,10 +417,10 @@ fn main() {
         }
         Some(Commands::Update) => {
             let path = PathBuf::from(path).join(".kd").join(&config.name);
-            let _ = std::env::set_current_dir(&path);
             Command::new("nix")
                 .arg("flake")
                 .arg("update")
+                .current_dir(&path)
                 .spawn()
                 .expect("Failed to spawn 'nix flake update'")
                 .wait()
