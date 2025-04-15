@@ -34,8 +34,6 @@
           inherit nixpkgs;
           name = "demo";
           root = builtins.toString ./.;
-        }
-        // pkgs.lib.optionalAttrs (builtins.pathExists ./uconfig.nix) {
           uconfig = (import ./uconfig.nix) {inherit pkgs;};
         };
     in {
