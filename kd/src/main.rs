@@ -67,6 +67,8 @@ enum Commands {
     },
 
     Run,
+
+    Update,
 }
 
 fn nurl(repo: &str, rev: &str) -> Result<String, std::string::FromUtf8Error> {
@@ -394,7 +396,6 @@ fn main() {
                 .expect("'nix build' wasn't running");
         }
         Some(Commands::Run) => {
-            println!("Run command");
             let env_path = PathBuf::from(path).join(".kd").join(&config.name);
             let package = format!(
                 "path:{}#vm",
@@ -409,6 +410,17 @@ fn main() {
                 .expect("Failed to spawn 'nix run'")
                 .wait()
                 .expect("'nix run' wasn't running");
+        }
+        Some(Commands::Update) => {
+            let path = PathBuf::from(path).join(".kd").join(&config.name);
+            let _ = std::env::set_current_dir(&path);
+            Command::new("nix")
+                .arg("flake")
+                .arg("update")
+                .spawn()
+                .expect("Failed to spawn 'nix flake update'")
+                .wait()
+                .expect("'nix flake update' wasn't running");
         }
         None => {}
     }
