@@ -18,7 +18,7 @@
         ./vm.nix
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
         ({...}: uconfig)
-        ({...}: {
+        ({config, ...}: {
           programs.xfsprogs.enable = true;
           programs.dummy = {
             enable = true;
@@ -27,6 +27,9 @@
             enable = true;
             test-dev = pkgs.lib.mkDefault "/dev/vdb";
             scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
+            kernelHeaders = buildKernelHeaders {
+              inherit (config.kernel) src version;
+            };
           };
         })
       ];
