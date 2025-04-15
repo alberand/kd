@@ -48,8 +48,6 @@
     PRINTK_TIME = no;
     # Write printk to VGA/serial port
     EARLY_PRINTK = yes;
-    EARLY_PRINTK_DBGP = yes;
-    EARLY_PRINTK_USB_XDBC = yes;
 
     # Support elf and #! scripts
     BINFMT_ELF = yes;
@@ -140,6 +138,7 @@
     SERIO_I8042 = yes;
     MD = yes;
     BLK_DEV_DM = yes;
+
     # Enable kernel tracers
     FTRACE = yes;
     # Creates /proc/pid/stack which shows current stack for each process
