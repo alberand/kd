@@ -340,7 +340,7 @@
             inherit src version modDirVersion;
             kconfig = kkconfig;
           };
-          vm.disks = [11000 11000 2000 2000];
+          vm.disks = [12000 12000 2000 2000];
         }
         // uconfig;
     };
