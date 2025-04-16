@@ -7,11 +7,10 @@
   src,
   kconfig,
   version,
-  modDirVersion,
 }:
 (pkgs.linuxManualConfig
   {
-    inherit src version modDirVersion lib;
+    inherit src version  lib;
     configfile = kconfig;
     allowImportFromDerivation = true;
     # We always want to use ccacheStdenv. By if we do stdenv = ccacheStdenv it

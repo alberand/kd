@@ -174,27 +174,6 @@ fn init(name: &str) -> Result<(), KdError> {
     Ok(())
 }
 
-fn version_to_modversion(version: &str) -> Result<String, KdError> {
-    if !version.starts_with("v") {
-        return Err(KdError::new(
-            KdErrorKind::BadKernelVersion,
-            "doesn't start with 'v'".to_string(),
-        ));
-    }
-
-    if let Some(version) = version.strip_prefix("v") {
-        if version.chars().take_while(|ch| *ch == '.').count() == 2 {
-            return Ok(version.to_string());
-        }
-        return Ok(format!("\"{version}.0\""));
-    }
-
-    Err(KdError::new(
-        KdErrorKind::BadKernelVersion,
-        "no version after 'v'".to_string(),
-    ))
-}
-
 /// TODO all this parsing should be just done nrix
 fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let mut tera = Tera::default();
@@ -289,10 +268,6 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                 };
                 let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
                 kernel_options.push(set_value_str("version", version));
-                kernel_options.push(set_value(
-                    "modDirVersion",
-                    &version_to_modversion(&version)?,
-                ));
                 kernel_options.push(set_value("src", &src));
             } else {
                 println!("If rev is set version need to be set to the latest kernel release");

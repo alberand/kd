@@ -15,11 +15,6 @@ in {
       default = "v6.14";
     };
 
-    modDirVersion = mkOption {
-      type = types.str;
-      default = "6.14.0";
-    };
-
     src = mkOption {
       type = types.nullOr types.package;
       default = pkgs.fetchFromGitHub {
@@ -53,7 +48,7 @@ in {
   in {
     boot.kernelPackages = pkgs.linuxPackagesFor (
       buildKernel {
-        inherit (cfg) version modDirVersion src;
+        inherit (cfg) version src;
         kconfig = buildKernelConfig {
           inherit (cfg) src version kconfig iso debug;
         };

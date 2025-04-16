@@ -3,6 +3,7 @@
   nixos-generators,
   nixpkgs,
 }: rec {
+
   mkVM = {uconfig}:
     nixos-generators.nixosGenerate {
       inherit pkgs;
@@ -286,10 +287,6 @@
       if useConfig && builtins.hasAttr "version" uconfig.kernel
       then uconfig.kernel.version
       else sources.options.kernel.version.default;
-    modDirVersion =
-      if useConfig && builtins.hasAttr "modDirVersion" uconfig.kernel
-      then uconfig.kernel.modDirVersion
-      else sources.options.kernel.modDirVersion.default;
     src =
       if useConfig && builtins.hasAttr "src" uconfig.kernel
       then uconfig.kernel.src
@@ -315,7 +312,7 @@
     };
 
     kernel = buildKernel {
-      inherit src kconfig version modDirVersion;
+      inherit src kconfig version;
     };
 
     iso = mkIso {
@@ -323,7 +320,7 @@
         {
           networking.hostName = "${name}";
           kernel = {
-            inherit src version modDirVersion;
+            inherit src version;
             kconfig = kconfig-iso.structuredConfig;
           };
 
@@ -340,7 +337,7 @@
         {
           networking.hostName = "${name}";
           kernel = {
-            inherit src version modDirVersion;
+            inherit src version;
             kconfig = kkconfig;
           };
           vm.disks = [12000 12000 2000 2000];
