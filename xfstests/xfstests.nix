@@ -30,6 +30,7 @@ with lib; let
       paths =
         [
           (prev.xfstests.overrideAttrs (old: {
+            stdenv = prev.ccacheStdenv;
             inherit (cfg) src;
             version = "git";
             patchPhase =

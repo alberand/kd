@@ -11,6 +11,7 @@ with lib; let
     src ? null,
   }: final: prev: {
     xfsprogs = prev.xfsprogs.overrideAttrs (old: {
+      stdenv = prev.ccacheStdenv;
       inherit version;
       src =
         if cfg.src != null
