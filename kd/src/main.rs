@@ -69,6 +69,11 @@ enum Commands {
     Run,
 
     Update,
+
+    Config {
+        #[arg(short, long, help = "Output filename")]
+        output: Option<String>,
+    },
 }
 
 fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
@@ -403,6 +408,22 @@ fn main() {
                 .expect("Failed to spawn 'nix flake update'")
                 .wait()
                 .expect("'nix flake update' wasn't running");
+        }
+        Some(Commands::Config { output }) => {
+            let path = PathBuf::from(path).join(".kd").join(&config.name);
+            let package = format!("path:{}#kconfig", path.to_str().expect("cannot convert path to string"));
+            Command::new("nix")
+                .arg("build")
+                .arg(&package)
+                .current_dir(&path)
+                .spawn()
+                .expect("Failed to spawn 'nix build .#kconfig'")
+                .wait()
+                .expect("'nix build .#kconfig' wasn't running");
+            if let Some(output) = output {
+                let source = std::env::current_dir().unwrap().join("result");
+                std::fs::copy(source, output).unwrap();
+            }
         }
         None => {}
     }
