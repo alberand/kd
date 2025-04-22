@@ -35,6 +35,7 @@
           name = "demo";
           root = builtins.toString ./.;
           uconfig = (import ./uconfig.nix) {inherit pkgs;};
+          stdenv = pkgs.clangStdenv;
         };
     in {
       packages = {
