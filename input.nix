@@ -12,7 +12,7 @@ in {
   options.kernel = {
     version = mkOption {
       type = types.str;
-      default = "v6.14";
+      default = "6.14";
     };
 
     src = mkOption {
