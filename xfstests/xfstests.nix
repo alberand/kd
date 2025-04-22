@@ -89,6 +89,7 @@ with lib; let
                     fio
                     dbench
                     thin-provisioning-tools
+                    file
                   ]}:$PATH
                   exec ./check "$@"
                 '');
