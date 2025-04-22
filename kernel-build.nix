@@ -36,7 +36,7 @@
     export CCACHE_MAXSIZE=5G
     export CCACHE_DIR=/var/cache/ccache/
     export CCACHE_SLOPPINESS=random_seed
-    export CCACHE_UMASK=666
+    export CCACHE_UMASK=007
     export KBUILD_BUILD_TIMESTAMP=""
   '';
 })
