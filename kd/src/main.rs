@@ -218,7 +218,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
         };
 
         if let Some(extra_env) = &subconfig.extra_env {
-            options.push(set_value_str("programs.xfstests.extraEnv", &extra_env));
+            options.push(set_value_str("programs.xfstests.extraEnv", &format!("\"\"{}\"\"", &extra_env)));
         };
 
         if let Some(hooks) = &subconfig.hooks {
