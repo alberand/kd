@@ -2,7 +2,7 @@
 
 Development environment for Linux kernel.
 
-In development, everything changing :)
+In development, everything changing :) That's my setup for linux kernel work.
 
 NixOS/Nix and direnv is necessary.
 
@@ -10,14 +10,18 @@ NixOS/Nix and direnv is necessary.
 
 Activate environment in the kernel directory:
 
-    $ echo "use flake github:alberand/kd" > .envrc
-    $ direnv allow
+    $ echo "use flake github:alberand/kd" > .envrc && direnv allow
     ... will take a long time
 
-The following commands are available:
+Now create environment with your feature name:
 
     # Init env
     $ kd init kfeature
+
+Now you can do following:
+
+    # Generate minimal kernel config for QEMU
+    $ kd config
 
     # Build VM or ISO
     $ kd build [vm|iso]
@@ -25,13 +29,13 @@ The following commands are available:
     # Run VM
     $ kd run
 
-The `build` command will create a Nix Flake in `./.kd/kfeature`. Edit this flake
-as you wish.
+Edit your `.kd.toml` config to adjust environment to your needs.
+
+If you know Nix you can edit VM configuration direction in
+`.kd/kfeature/uconfig.nix`. **Note** that `kd build` command overwrites
+`uconfig.nix`!
 
 The `run` command runs flake in the `./.kd/kfeature`.
-
-The `.kd.toml` config in the working directory (the one with .envrc) can be used
-to modify VM configuration without diving into Nix language.
 
 # Config Examples
 
@@ -87,5 +91,3 @@ scratch_dev = "/dev/vdc"
 repo = "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
 rev = "v6.14.0"
 ```
-
-
