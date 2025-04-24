@@ -53,7 +53,7 @@ impl fmt::Display for Target {
 enum Commands {
     /// Initialize development environment
     Init {
-        #[arg(required = true, help = "Environment name")]
+        #[arg(required = true, default_value = "default", help = "Environment name")]
         name: String,
     },
 
@@ -356,7 +356,7 @@ fn main() {
         }
         Some(Commands::Build { target }) => {
             if config.name == "" {
-                println!("Please, run 'kd init' first. Can not find .kd.toml");
+                println!("Not in the 'kd' environment, run 'kd init' first. Can not find .kd.toml");
                 std::process::exit(1);
             }
 
