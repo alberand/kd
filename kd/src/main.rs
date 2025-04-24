@@ -53,7 +53,7 @@ impl fmt::Display for Target {
 enum Commands {
     /// Initialize development environment
     Init {
-        #[arg(required = true, default_value = "default", help = "Environment name")]
+        #[arg(default_value = "default", help = "Environment name")]
         name: String,
     },
 
