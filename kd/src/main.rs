@@ -330,6 +330,20 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     Ok(())
 }
 
+fn is_in_env() -> bool {
+    let path = std::env::current_dir();
+    let config_path = match path {
+        Ok(path) => path.join(".kd.toml"),
+        Err(..) => return false,
+    };
+
+    if !config_path.exists() {
+        return false;
+    }
+
+    true
+}
+
 fn main() {
     // TODO check if 'nix' exists
     let cli = Cli::parse();
@@ -356,7 +370,7 @@ fn main() {
             init(name.as_str()).expect("Failed to initialize environment");
         }
         Some(Commands::Build { target }) => {
-            if config.name == "" {
+            if !is_in_env() {
                 println!("Not in the 'kd' environment, run 'kd init' first. Can not find .kd.toml");
                 std::process::exit(1);
             }
@@ -381,6 +395,11 @@ fn main() {
                 .expect("'nix build' wasn't running");
         }
         Some(Commands::Run) => {
+            if !is_in_env() {
+                println!("Not in the 'kd' environment, run 'kd init' first. Can not find .kd.toml");
+                std::process::exit(1);
+            }
+
             let env_path = PathBuf::from(path).join(".kd").join(&config.name);
             let package = format!(
                 "path:{}#vm",
@@ -397,6 +416,11 @@ fn main() {
                 .expect("'nix run' wasn't running");
         }
         Some(Commands::Update) => {
+            if !is_in_env() {
+                println!("Not in the 'kd' environment, run 'kd init' first. Can not find .kd.toml");
+                std::process::exit(1);
+            }
+
             let path = PathBuf::from(path).join(".kd").join(&config.name);
             let package = format!("path:{}", path.to_str().expect("cannot convert path to string"));
             Command::new("nix")
@@ -411,6 +435,11 @@ fn main() {
                 .expect("'nix flake update' wasn't running");
         }
         Some(Commands::Config { output }) => {
+            if !is_in_env() {
+                println!("Not in the 'kd' environment, run 'kd init' first. Can not find .kd.toml");
+                std::process::exit(1);
+            }
+
             let path = PathBuf::from(path).join(".kd").join(&config.name);
             let package = format!("path:{}#kconfig", path.to_str().expect("cannot convert path to string"));
             Command::new("nix")
