@@ -3,7 +3,6 @@
   nixos-generators,
   nixpkgs,
 }: rec {
-
   mkVM = {uconfig}:
     nixos-generators.nixosGenerate {
       inherit pkgs;
@@ -47,10 +46,7 @@
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
-          ({
-            pkgs,
-            ...
-          }: {
+          ({pkgs, ...}: {
             kernel.iso = pkgs.lib.mkForce true;
 
             programs.xfsprogs.enable = true;
@@ -257,6 +253,59 @@
           echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
         '';
       };
+    };
+
+  mkXfsprogsShell = {}:
+    pkgs.mkShell {
+      nativeBuildInputs = with pkgs; [
+        udev
+        flex
+        bison
+        perl
+        gnumake
+        pkg-config
+        clang
+        clang-tools
+        lld
+        file
+        gettext
+        libtool
+        automake
+        autoconf
+        attr
+        acl
+        # xfsprogs
+        icu
+        libuuid # codegen tool uses libuuid
+        liburcu # required by crc32selftest
+        readline
+        inih
+        man
+      ];
+
+      KBUILD_BUILD_TIMESTAMP = "";
+      SOURCE_DATE_EPOCH = 0;
+      CCACHE_DIR = "/var/cache/ccache/";
+      CCACHE_SLOPPINESS = "random_seed";
+      CCACHE_UMASK = 777;
+
+      shellHook = ''
+        export LLVM=1
+        export MAKEFLAGS="-j$(nproc)"
+        if type -p ccache; then
+          export CC="ccache clang"
+          export HOSTCC="ccache clang"
+        fi
+
+        export AWK=$(type -P awk)
+        export ECHO=$(type -P echo)
+        export LIBTOOL=$(type -P libtool)
+        export MAKE=$(type -P make)
+        export SED=$(type -P sed)
+        export SORT=$(type -P sort)
+
+        echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
+      '';
     };
 
   buildKernelHeaders = pkgs.makeLinuxHeaders;

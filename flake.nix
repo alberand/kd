@@ -50,7 +50,10 @@
     in {
       inherit lib;
 
-      devShells.default = default.shell;
+      devShells = {
+        default = default.shell;
+        xfsprogs = lib.mkXfsprogsShell {};
+      };
 
       packages = {
         inherit (default) kconfig kconfig-iso headers kernel iso vm;
