@@ -206,6 +206,7 @@
             liburcu # required by crc32selftest
             readline
             inih
+            man
           ]
           ++ [
             # xfstests
