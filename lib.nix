@@ -19,7 +19,12 @@
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
         ({...}: uconfig)
         ({config, ...}: {
-          programs.xfsprogs.enable = true;
+          programs.xfsprogs = {
+            enable = true;
+            kernelHeaders = buildKernelHeaders {
+              inherit (config.kernel) src version;
+            };
+          };
           programs.dummy = {
             enable = true;
           };
