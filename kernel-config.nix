@@ -204,6 +204,8 @@
     HID_LENOVO = yes;
     HID_APPLE = yes;
     HID_ROCCAT = yes;
+    LEDS_CLASS = yes;
+    LEDS_CLASS_MULTICOLOR = yes;
     HID_LOGITECH_HIDPP = yes;
     HID_LOGITECH_DJ = yes;
     HID_MICROSOFT = yes;
