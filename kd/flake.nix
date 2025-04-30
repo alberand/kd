@@ -26,6 +26,8 @@
             buildInputs = [
               cargo
               rustc
+              pkg-config
+              openssl
             ];
           };
       }

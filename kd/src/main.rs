@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use tera::{Context, Tera};
+use git2::Repository;
 
 mod utils;
 use utils::{KdError, KdErrorKind};
@@ -134,6 +135,22 @@ fn all_good() -> bool {
     true
 }
 
+fn get_latest_tag() -> Result<(), git2::Error> {
+    let repo = Repository::open(".")?;
+    println!();
+    // Only v6.* for now
+    for name in repo.tag_names(Some("v6.*"))?.iter() {
+        let name = name.unwrap();
+        let obj = repo.revparse_single(name)?;
+
+        if let Some(tag) = obj.as_tag() {
+            println!("{:<16}", tag.name().unwrap());
+        }
+    }
+
+    Ok(())
+}
+
 fn init(name: &str) -> Result<(), KdError> {
     // TODO this need to be checked in all good
     let workdir = std::env::current_dir().expect("Can not detect current working directory");
@@ -163,6 +180,8 @@ fn init(name: &str) -> Result<(), KdError> {
     target.push(".kd.toml");
     let mut writer = std::fs::File::create(target).expect("Failed to create .kd.toml config");
     writeln!(writer, "name = \"{}\"", name).expect("Failed to write env name to .kd.toml");
+
+    // let _ = get_latest_tag();
     println!("Update your .kd.toml configuration");
 
     Ok(())
