@@ -95,83 +95,26 @@
       shell = pkgs.mkShell {
         nativeBuildInputs = with pkgs;
           [
-            ctags
             getopt
             flex
             bison
             perl
-            gnumake
-            bc
-            jq
-            pkg-config
             clang
             clang-tools
+            gnumake
+            bc
+            pkg-config
+            binutils
+            elfutils
+            ncurses
             lld
-            file
             gettext
             libtool
             qemu_full
             qemu-utils
             automake
             autoconf
-            e2fsprogs
-            attr
-            acl
-            libaio
-            keyutils
-            fsverity-utils
-            ima-evm-utils
-            util-linux
-            stress-ng
-            fio
-            linuxquota
-            nvme-cli
-            virt-manager # for deploy
-            xmlstarlet
-            rpm
             pahole
-            sphinx # for btrfs-progs
-            zstd # for btrfs-progs
-            udev # for btrfs-progs
-            lzo # for btrfs-progs
-            liburing # for btrfs-progs
-            guilt
-            nix-prefetch-git
-            tomlq
-
-            # probably better to move it to separate module
-            sqlite
-            openssl
-            libllvm
-            libxml2.dev
-            perl
-            perl538Packages.DBI
-            perl538Packages.DBDSQLite
-            perl538Packages.TryTiny
-
-            # kselftest deps
-            libcap
-            libcap_ng
-            fuse3
-            fuse
-            alsa-lib
-            libmnl
-            numactl
-            (smatch.overrideAttrs (final: prev: {
-              version = "git";
-              src = fetchgit {
-                url = "git://repo.or.cz/smatch.git";
-                rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
-                hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
-              };
-            }))
-
-            python312
-            python312Packages.flake8
-            python312Packages.pylint
-            cargo
-            rustc
-
             (
               let
                 name = "vmtest";
@@ -200,6 +143,64 @@
             (callPackage (import ./kd/derivation.nix) {})
           ]
           ++ packages
+          ++ lib.optional false [
+            file
+            e2fsprogs
+            attr
+            acl
+            libaio
+            keyutils
+            fsverity-utils
+            ima-evm-utils
+            util-linux
+            stress-ng
+            fio
+            linuxquota
+            nvme-cli
+            virt-manager # for deploy
+            xmlstarlet
+            rpm
+            sphinx # for btrfs-progs
+            zstd # for btrfs-progs
+            udev # for btrfs-progs
+            lzo # for btrfs-progs
+            ctags
+            jq
+            liburing # for btrfs-progs
+            python312
+            python312Packages.flake8
+            python312Packages.pylint
+            cargo
+            rustc
+            # kselftest deps
+            libcap
+            libcap_ng
+            fuse3
+            fuse
+            alsa-lib
+            libmnl
+            numactl
+            guilt
+            nix-prefetch-git
+            tomlq
+            # probably better to move it to separate module
+            sqlite
+            openssl
+            libllvm
+            libxml2.dev
+            perl
+            perl538Packages.DBI
+            perl538Packages.DBDSQLite
+            perl538Packages.TryTiny
+            (smatch.overrideAttrs (final: prev: {
+              version = "git";
+              src = fetchgit {
+                url = "git://repo.or.cz/smatch.git";
+                rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
+                hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
+              };
+            }))
+          ]
           ++ [
             # xfsprogs
             icu
