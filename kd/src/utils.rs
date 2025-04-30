@@ -5,7 +5,7 @@ use std::fmt;
 pub enum KdErrorKind {
     FlakeInitError,
     NurlFailed,
-    AlejandraFailed,
+    FormattingFailed,
 }
 
 impl fmt::Display for KdErrorKind {
@@ -13,7 +13,7 @@ impl fmt::Display for KdErrorKind {
         match *self {
             KdErrorKind::FlakeInitError => write!(f, "can not create flake"),
             KdErrorKind::NurlFailed => write!(f, "nurl failed to fetch these repo/rev"),
-            KdErrorKind::AlejandraFailed => write!(f, "alejandra failed to format nix code"),
+            KdErrorKind::FormattingFailed => write!(f, "'nix fmt' failed to format nix code"),
         }
     }
 }
@@ -23,7 +23,7 @@ impl Error for KdErrorKind {
         match *self {
             KdErrorKind::FlakeInitError => None,
             KdErrorKind::NurlFailed => None,
-            KdErrorKind::AlejandraFailed => None,
+            KdErrorKind::FormattingFailed => None,
         }
     }
 }

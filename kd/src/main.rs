@@ -94,36 +94,24 @@ fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
     String::from_utf8(output.stdout).map_err(|_| KdError::new(KdErrorKind::NurlFailed, "Failed to parse Nurl output".to_string()))
 }
 
-fn format_nix(code: String) -> Result<String, KdError> {
+fn format_nix(path: &PathBuf) -> Result<(), KdError> {
     // Actually run the command
-    let output = Command::new("alejandra")
-        .stdin({
-            // Unfortunately, it's not possible to provide a direct string as an input to a command
-            // We actually need to provide an actual file descriptor (as is a usual stdin "pipe")
-            // So we create a new pair of pipes here...
-            let (reader, mut writer) = std::io::pipe().unwrap();
-
-            // ...write the string to one end...
-            writer.write_all(code.as_bytes()).unwrap();
-
-            // ...and then transform the other to pipe it into the command as soon as it spawns!
-            Stdio::from(reader)
-        })
-        .output()
-        .map_err(|_| KdError::new(KdErrorKind::AlejandraFailed, "Failed to execute command".to_string()))
+    let status = Command::new("nix")
+        .arg("fmt")
+        .arg(path)
+        .status()
+        .map_err(|_| KdError::new(KdErrorKind::FormattingFailed, "Failed to execute command".to_string()))
         .unwrap();
 
-    if !output.status.success() {
-        // TODO need to throw and error
-        println!("{}", String::from_utf8_lossy(&output.stderr));
-        return Err(KdError::new(KdErrorKind::AlejandraFailed, "command failed".to_string()))
+    if !status.success() {
+        return Err(KdError::new(KdErrorKind::FormattingFailed, "command failed".to_string()))
     }
 
-    String::from_utf8(output.stdout).map_err(|_| KdError::new(KdErrorKind::AlejandraFailed, "Failed to parse Alejandra output".to_string()))
+    Ok(())
 }
 
 fn all_good() -> bool {
-    let commands = vec!["nix", "nurl", "alejandra"];
+    let commands = vec!["nix", "nurl"];
 
     for command in commands {
         let status = Command::new(command)
@@ -318,14 +306,11 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     context.insert("kernel_options", &kernel_options);
     context.insert("kernel_config_options", &kernel_config_options);
 
-    let formatted = format_nix(tera.render("top", &context).unwrap()).unwrap();
-
-    println!("{}", formatted);
-
-    println!("user config {:?}", &path);
+    let uconfig = tera.render("top", &context).unwrap();
     let mut file = std::fs::File::create(path).expect("Failed to create user config uconfig.nix");
-    file.write_all(formatted.as_bytes())
+    file.write_all(uconfig.as_bytes())
         .expect("Failed to write out uconfig.nix data");
+    format_nix(&path).unwrap();
 
     Ok(())
 }
