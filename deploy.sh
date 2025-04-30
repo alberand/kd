@@ -15,13 +15,13 @@ PREFIX="aalbersh"
 SYSURI="qemu+ssh://$TEST_HOST/system"
 NODE="$PREFIX-$2"
 
-echo "Removing /tmp/$NODE.iso from $TEST_HOST"
-ssh $TEST_HOST "sudo rm /tmp/$NODE.iso"
+echo "Removing /tmp/$NODE from $TEST_HOST"
+ssh $TEST_HOST "sudo rm /tmp/$NODE"
 
-echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE.iso'"
+echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE'"
 rsync -avz -P \
        $TEST_ISO \
-       $TEST_HOST:/tmp/$NODE.iso
+       $TEST_HOST:/tmp/$NODE
 if [ $? -ne 0 ]; then
 	exit 1;
 fi;
@@ -33,12 +33,13 @@ virt-install --connect $SYSURI \
 	--osinfo "nixos-unstable" \
 	--memory=8000 \
 	--vcpu 4 \
+	--disk path="/tmp/$NODE",format=qcow2 \
 	--disk size=12,target.bus=sata,format=raw \
 	--disk size=12,target.bus=sata,format=raw \
 	--disk size=2,target.bus=sata,format=raw \
 	--disk size=2,target.bus=sata,format=raw \
 	--network network=default \
-	--cdrom "/tmp/$NODE.iso" \
+	--import \
 	--serial pty \
 	--graphics none \
 	--noautoconsole \
