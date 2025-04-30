@@ -69,6 +69,34 @@
       };
     };
 
+  mkQcow = {uconfig}:
+    builtins.getAttr "qcow" {
+      qcow = nixos-generators.nixosGenerate {
+        system = "x86_64-linux";
+        modules = [
+          ./xfstests/xfstests.nix
+          ./xfsprogs.nix
+          ./system.nix
+          (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+          ({...}: uconfig)
+          ({pkgs, ...}: {
+            kernel.iso = pkgs.lib.mkForce true;
+
+            programs.xfsprogs.enable = true;
+            # Don't shutdown system as libvirtd will remove the VM
+            programs.xfstests.autoshutdown = false;
+
+            programs.xfstests = {
+              enable = true;
+              test-dev = pkgs.lib.mkDefault "/dev/sda";
+              scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
+            };
+          })
+        ];
+        format = "qcow";
+      };
+    };
+
   mkVmTest = {uconfig}:
     builtins.getAttr "vmtest" rec {
       nixos = mkVM {
@@ -388,6 +416,22 @@
             arguments = "-R xunit -s xfs_4k generic/110";
             upload-results = true;
           };
+        }
+        // uconfig;
+    };
+
+    qcow = mkQcow {
+      uconfig =
+        {
+          networking.hostName = "${name}";
+          programs.xfstests = {
+            arguments = "-R xunit -s xfs_4k generic/110";
+          };
+          boot.initrd.kernelModules = pkgs.lib.mkForce [
+            "virtio_balloon"
+            "virtio_console"
+            "virtio_rng"
+          ];
         }
         // uconfig;
     };

@@ -39,6 +39,7 @@ struct Cli {
 enum Target {
     Vm,
     Iso,
+    Qcow
 }
 
 impl fmt::Display for Target {
@@ -46,6 +47,7 @@ impl fmt::Display for Target {
         match *self {
             Target::Vm => write!(f, "vm"),
             Target::Iso => write!(f, "iso"),
+            Target::Qcow => write!(f, "qcow"),
         }
     }
 }
