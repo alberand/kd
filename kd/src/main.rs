@@ -71,7 +71,7 @@ enum Commands {
     Update,
 
     Config {
-        #[arg(short, long, help = "Output filename")]
+        #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
     },
 }
@@ -436,7 +436,14 @@ fn main() {
                 .wait()
                 .expect("'nix build .#kconfig' wasn't running");
             if let Some(output) = output {
-                let source = std::env::current_dir().unwrap().join("result");
+                let source = PathBuf::from(".config");
+                if source.exists() {
+                    let mut backup = source.clone();
+                    backup.set_extension(".bup");
+                    std::fs::copy(&source, backup).unwrap();
+                }
+                std::fs::copy(source, output).unwrap();
+                let source = path.join("result");
                 std::fs::copy(source, output).unwrap();
             }
         }
