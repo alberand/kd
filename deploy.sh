@@ -26,6 +26,7 @@ if [ $? -ne 0 ]; then
 	exit 1;
 fi;
 
+ssh $TEST_HOST "sudo chmod u+w /tmp/$NODE"
 echo "Bringing up the node"
 virt-install --connect $SYSURI \
 	--name "$NODE" \
@@ -38,7 +39,7 @@ virt-install --connect $SYSURI \
 	--disk size=12,target.bus=sata,format=raw \
 	--disk size=2,target.bus=sata,format=raw \
 	--disk size=2,target.bus=sata,format=raw \
-	--network network=default \
+	--network network=anet \
 	--import \
 	--serial pty \
 	--graphics none \
