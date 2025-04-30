@@ -329,7 +329,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let mut file = std::fs::File::create(path).expect("Failed to create user config uconfig.nix");
     file.write_all(uconfig.as_bytes())
         .expect("Failed to write out uconfig.nix data");
-    format_nix(&path).unwrap();
+    // format_nix(&path).unwrap();
 
     Ok(())
 }
