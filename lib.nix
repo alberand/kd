@@ -99,8 +99,6 @@
             flex
             bison
             perl
-            clang
-            clang-tools
             gnumake
             bc
             pkg-config
@@ -141,6 +139,12 @@
             nixfmt-classic
 
             (callPackage (import ./kd/derivation.nix) {})
+          ]
+          ++ [
+            # LLVM
+            clang
+            clang-tools
+            libllvm
           ]
           ++ packages
           ++ lib.optional false [
