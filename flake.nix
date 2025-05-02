@@ -1,17 +1,17 @@
 {
   description = "kd - Linux Kernel development toolset";
 
-  nixConfig = {
-    # override the default substituters
-    # TODO this need to be replaced with public bucket or something
-    extra-substituters = [
-      "http://192.168.0.100"
-    ];
+  # nixConfig = {
+  # override the default substituters
+  # TODO this need to be replaced with public bucket or something
+  # extra-substituters = [
+  # "http://192.168.0.100"
+  # ];
 
-    extra-trusted-public-keys = [
-      "192.168.0.100:T4If+3X03bZC62Jh+Uzuz+ElERtgQFlbarUQE1PzC94="
-    ];
-  };
+  # extra-trusted-public-keys = [
+  # "192.168.0.100:T4If+3X03bZC62Jh+Uzuz+ElERtgQFlbarUQE1PzC94="
+  # ];
+  # };
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
