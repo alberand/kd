@@ -423,7 +423,7 @@ in {
           export PATH="${cfg.sharedir}/bin:$PATH"
           ${cfg.extraEnv}
           ${pkgs.bash}/bin/bash -lc \
-            "${pkgs.xfstests}/bin/xfstests-check -d $arguments"
+            "${pkgs.xfstests}/bin/xfstests-check $arguments"
 
         ''
         + (optionalString (cfg.upload-results) ''
