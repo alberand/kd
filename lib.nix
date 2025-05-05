@@ -19,6 +19,13 @@
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
         ({...}: uconfig)
         ({config, ...}: {
+          #assertions = [
+          #  {
+          #    assertion = config.kernel.prebuild != null;
+          #    message = "kernel.prebuild should be set to path with built kernel";
+          #  }
+          #];
+
           programs.xfsprogs = {
             enable = true;
             kernelHeaders = buildKernelHeaders {
@@ -167,6 +174,7 @@
             nixfmt-classic
 
             (callPackage (import ./kd/derivation.nix) {})
+            (pkgs.writeShellScriptBin "vmtest-dirty-kernel" ./build.sh)
           ]
           ++ [
             # LLVM
@@ -445,6 +453,24 @@
             kconfig = kkconfig;
           };
           vm.disks = [12000 12000 2000 2000];
+        }
+        // uconfig;
+    };
+
+    prebuild = mkVmTest {
+      uconfig =
+        {
+          # Same as in .vm
+          networking.hostName = "${name}";
+          kernel = {
+            inherit src version;
+            kconfig = kkconfig;
+          };
+          vm.disks = [12000 12000 2000 2000];
+
+          # As our dummy derivation doesn't provide any .config we need to tell
+          # NixOS not to check for any required configurations
+          system.requiredKernelConfig = pkgs.lib.mkForce [];
         }
         // uconfig;
     };

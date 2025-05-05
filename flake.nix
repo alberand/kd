@@ -56,7 +56,17 @@
       };
 
       packages = {
-        inherit (default) kconfig kconfig-iso headers kernel iso vm qcow;
+        inherit
+          (default)
+          kconfig
+          kconfig-iso
+          headers
+          kernel
+          iso
+          vm
+          qcow
+          prebuild
+          ;
       };
 
       templates.default = {
