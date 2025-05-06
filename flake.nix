@@ -53,6 +53,7 @@
       devShells = {
         default = default.shell;
         xfsprogs = lib.mkXfsprogsShell {};
+        xfstests = lib.mkXfstestsShell {};
       };
 
       packages = {

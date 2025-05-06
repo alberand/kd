@@ -148,30 +148,7 @@
             automake
             autoconf
             pahole
-            (
-              let
-                name = "vmtest";
-                vmtest = (pkgs.writeScriptBin name (builtins.readFile ./vmtest.sh)).overrideAttrs (old: {
-                  buildCommand = ''
-                    ${old.buildCommand}
-                    patchShebangs $out
-                    substituteInPlace $out/bin/${name} \
-                      --subst-var-by root ${root}
-                  '';
-                });
-              in
-                pkgs.symlinkJoin {
-                  name = name;
-                  paths = [vmtest];
-                  buildInputs = [pkgs.makeWrapper];
-                  postBuild = "wrapProgram $out/bin/${name} --prefix PATH : $out/bin";
-                }
-            )
             (vmtest-deploy {})
-
-            # vmtest deps
-            nurl
-            nixfmt-classic
 
             (callPackage (import ./kd/derivation.nix) {})
             (pkgs.writeShellScriptBin "vmtest-dirty-kernel" ./build.sh)
@@ -240,22 +217,6 @@
                 hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
               };
             }))
-          ]
-          ++ [
-            # xfsprogs
-            icu
-            libuuid # codegen tool uses libuuid
-            liburcu # required by crc32selftest
-            readline
-            inih
-            man
-          ]
-          ++ [
-            # xfstests
-            gawk
-            libuuid
-            libxfs
-            gdbm
           ];
 
         buildInputs = with pkgs; [
@@ -304,6 +265,56 @@
   mkXfsprogsShell = {}:
     pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
+        acl
+        attr
+        automake
+        autoconf
+        bc
+        dbench
+        dump
+        e2fsprogs
+        fio
+        gawk
+        indent
+        libtool
+        file
+        gnumake
+        pkg-config
+        libuuid
+        gawk
+        libuuid
+        libxfs
+        gdbm
+      ];
+
+      KBUILD_BUILD_TIMESTAMP = "";
+      SOURCE_DATE_EPOCH = 0;
+      CCACHE_DIR = "/var/cache/ccache/";
+      CCACHE_SLOPPINESS = "random_seed";
+      CCACHE_UMASK = 777;
+
+      shellHook = ''
+        export LLVM=1
+        export MAKEFLAGS="-j$(nproc)"
+        if type -p ccache; then
+          export CC="ccache clang"
+          export HOSTCC="ccache clang"
+        fi
+
+        export AWK=$(type -P awk)
+        export ECHO=$(type -P echo)
+        export LIBTOOL=$(type -P libtool)
+        export MAKE=$(type -P make)
+        export SED=$(type -P sed)
+        export SORT=$(type -P sort)
+
+        echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
+      '';
+    };
+
+  mkXfstestsShell = {}:
+    pkgs.mkShell {
+      nativeBuildInputs = with pkgs; [
         udev
         flex
         bison
@@ -320,13 +331,15 @@
         autoconf
         attr
         acl
-        # xfsprogs
+        libxfs
+        libaio
         icu
-        libuuid # codegen tool uses libuuid
-        liburcu # required by crc32selftest
+        libuuid
+        liburcu
+        liburing
         readline
-        inih
-        man
+        gnutar
+        gzip
       ];
 
       KBUILD_BUILD_TIMESTAMP = "";
