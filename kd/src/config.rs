@@ -13,7 +13,7 @@ pub struct KernelConfigOption {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct KernelConfig {
-    pub image: Option<String>,
+    pub prebuild: Option<bool>,
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,

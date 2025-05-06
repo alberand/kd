@@ -5,18 +5,14 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use tera::{Context, Tera};
-use git2::Repository;
 
 mod utils;
 use utils::{KdError, KdErrorKind};
 mod config;
 use config::{Config, KernelConfigOption};
 
-// kd config CONFIG_XFS_FS=y
-// kd build [vm|iso]
-// kd run
-// kd deploy [path]
-//
+// Agh, so ugly
+// TODO fix nrix to parse nix from rust
 
 #[derive(Parser)]
 #[command(version)]
@@ -137,22 +133,6 @@ fn all_good() -> bool {
     true
 }
 
-fn get_latest_tag() -> Result<(), git2::Error> {
-    let repo = Repository::open(".")?;
-    println!();
-    // Only v6.* for now
-    for name in repo.tag_names(Some("v6.*"))?.iter() {
-        let name = name.unwrap();
-        let obj = repo.revparse_single(name)?;
-
-        if let Some(tag) = obj.as_tag() {
-            println!("{:<16}", tag.name().unwrap());
-        }
-    }
-
-    Ok(())
-}
-
 fn init(name: &str) -> Result<(), KdError> {
     // TODO this need to be checked in all good
     let workdir = std::env::current_dir().expect("Can not detect current working directory");
@@ -183,7 +163,6 @@ fn init(name: &str) -> Result<(), KdError> {
     let mut writer = std::fs::File::create(target).expect("Failed to create .kd.toml config");
     writeln!(writer, "name = \"{}\"", name).expect("Failed to write env name to .kd.toml");
 
-    // let _ = get_latest_tag();
     println!("Update your .kd.toml configuration");
 
     Ok(())
@@ -253,13 +232,9 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     };
 
     if let Some(subconfig) = &config.kernel {
-        if subconfig.image.is_some()
-            && (subconfig.version.is_some()
-                || subconfig.rev.is_some()
-                || subconfig.repo.is_some()
-                || subconfig.config.is_some())
-        {
-            println!("None of the options in [kernel] would take effect if 'image' is set");
+        if let Some(_) = &subconfig.prebuild {
+            let path = std::env::current_dir().expect("Don't have access to current working dir").join(".kd/build");
+            options.push(set_value("kernel.prebuild", path.to_str().unwrap()));
         }
 
         if subconfig.repo.is_some() && subconfig.rev.is_none() && subconfig.version.is_none() {
@@ -272,9 +247,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             std::process::exit(1);
         }
 
-        if let Some(_) = &subconfig.image {
-            // pass
-        } else if let Some(rev) = &subconfig.rev {
+        if let Some(rev) = &subconfig.rev {
             if let Some(version) = &subconfig.version {
                 let repo = if let Some(repo) = &subconfig.repo {
                     repo
@@ -381,9 +354,38 @@ fn main() {
                 std::process::exit(1);
             }
 
-            let env_path = PathBuf::from(path).join(".kd").join(&config.name);
+            let mut extra_args: Vec<String> = vec![];
+            let env_path = PathBuf::from(path.clone()).join(".kd").join(&config.name);
             let uconfig_path = PathBuf::from(env_path.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &config).expect("Failed to generate user environment");
+
+            let mut target = target.to_string();
+            if let Some(subconfig) = config.kernel {
+                if let Some(prebuild) = &subconfig.prebuild {
+                    if *prebuild {
+                        extra_args.push("--impure".to_string());
+                        target = "prebuild".to_string();
+
+                        let build_path = PathBuf::from(path.clone()).join(".kd").join("build");
+                        let kernel_path = PathBuf::from(path.clone()).join("arch/x86_64/boot/bzImage");
+
+
+                        std::fs::create_dir_all(build_path.clone()).unwrap();
+                        Command::new("make")
+                            .env("INSTALL_MOD_PATH", build_path.clone())
+                            .arg("-C")
+                            .arg(path)
+                            .arg("modules_install")
+                            .spawn()
+                            .expect("Failed to spawn 'nix build'")
+                            .wait()
+                            .expect("'nix build' wasn't running");
+
+                        println!("kernel: {} target: {}", kernel_path.to_str().unwrap(), build_path.join("bzImage").to_str().unwrap());
+                        std::fs::copy(kernel_path, build_path.join("bzImage")).unwrap();
+                    }
+                }
+            }
 
             let package = format!(
                 "path:{}#{}",
@@ -394,6 +396,7 @@ fn main() {
             );
             Command::new("nix")
                 .arg("build")
+                .args(extra_args)
                 .arg(&package)
                 .spawn()
                 .expect("Failed to spawn 'nix build'")
@@ -406,15 +409,28 @@ fn main() {
                 std::process::exit(1);
             }
 
+            let mut extra_args: Vec<String> = vec![];
+            let mut target = "vm".to_string();
+            if let Some(subconfig) = config.kernel {
+                if let Some(prebuild) = &subconfig.prebuild {
+                    if *prebuild {
+                        extra_args.push("--impure".to_string());
+                        target = "prebuild".to_string();
+                    }
+                }
+            }
+
             let env_path = PathBuf::from(path).join(".kd").join(&config.name);
             let package = format!(
-                "path:{}#vm",
+                "path:{}#{}",
                 env_path
                     .to_str()
-                    .expect("Can not convert env path to string")
+                    .expect("Can not convert env path to string"),
+                target
             );
             Command::new("nix")
                 .arg("run")
+                .args(extra_args)
                 .arg(&package)
                 .spawn()
                 .expect("Failed to spawn 'nix run'")
