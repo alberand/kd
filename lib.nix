@@ -290,6 +290,12 @@ in rec {
           libuuid
           libxfs
           gdbm
+          icu
+          libuuid # codegen tool uses libuuid
+          liburcu # required by crc32selftest
+          readline
+          inih
+          man
         ]
         ++ llvm;
 
