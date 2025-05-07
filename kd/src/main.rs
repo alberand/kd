@@ -369,7 +369,7 @@ fn main() {
                         let build_path = PathBuf::from(path.clone()).join(".kd").join("build");
                         let kernel_path = PathBuf::from(path.clone()).join("arch/x86_64/boot/bzImage");
 
-
+                        std::fs::remove_dir_all(build_path.clone()).unwrap();
                         std::fs::create_dir_all(build_path.clone()).unwrap();
                         Command::new("make")
                             .env("INSTALL_MOD_PATH", build_path.clone())
