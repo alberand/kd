@@ -324,14 +324,14 @@ in {
         "/mnt/test" = {
           device = cfg.test-dev;
           fsType = "xfs";
-          autoFormat = true;
+          options = ["nofail"];
         };
       }
       // lib.mkIf (cfg.scratch-dev != "") {
         "/mnt/scratch" = {
           device = cfg.scratch-dev;
           fsType = "xfs";
-          autoFormat = true;
+          options = ["nofail"];
         };
       };
 
