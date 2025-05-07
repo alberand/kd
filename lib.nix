@@ -2,7 +2,16 @@
   pkgs,
   nixos-generators,
   nixpkgs,
-}: rec {
+}: let
+  llvm = with pkgs; [
+    clang
+    clang-tools
+    libllvm
+  ];
+  gcc = with pkgs; [
+    gcc
+  ];
+in rec {
   mkVM = {uconfig}:
     nixos-generators.nixosGenerate {
       inherit pkgs;
@@ -153,12 +162,7 @@
             (callPackage (import ./kd/derivation.nix) {})
             (pkgs.writeShellScriptBin "vmtest-dirty-kernel" ./build.sh)
           ]
-          ++ [
-            # LLVM
-            clang
-            clang-tools
-            libllvm
-          ]
+          ++ llvm
           ++ packages
           ++ lib.optional false [
             file
@@ -264,28 +268,30 @@
 
   mkXfsprogsShell = {}:
     pkgs.mkShell {
-      nativeBuildInputs = with pkgs; [
-        acl
-        attr
-        automake
-        autoconf
-        bc
-        dbench
-        dump
-        e2fsprogs
-        fio
-        gawk
-        indent
-        libtool
-        file
-        gnumake
-        pkg-config
-        libuuid
-        gawk
-        libuuid
-        libxfs
-        gdbm
-      ];
+      nativeBuildInputs = with pkgs;
+        [
+          acl
+          attr
+          automake
+          autoconf
+          bc
+          dbench
+          dump
+          e2fsprogs
+          fio
+          gawk
+          indent
+          libtool
+          file
+          gnumake
+          pkg-config
+          libuuid
+          gawk
+          libuuid
+          libxfs
+          gdbm
+        ]
+        ++ llvm;
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
@@ -314,33 +320,33 @@
 
   mkXfstestsShell = {}:
     pkgs.mkShell {
-      nativeBuildInputs = with pkgs; [
-        udev
-        flex
-        bison
-        perl
-        gnumake
-        pkg-config
-        clang
-        clang-tools
-        lld
-        file
-        gettext
-        libtool
-        automake
-        autoconf
-        attr
-        acl
-        libxfs
-        libaio
-        icu
-        libuuid
-        liburcu
-        liburing
-        readline
-        gnutar
-        gzip
-      ];
+      nativeBuildInputs = with pkgs;
+        [
+          udev
+          flex
+          bison
+          perl
+          gnumake
+          pkg-config
+          lld
+          file
+          gettext
+          libtool
+          automake
+          autoconf
+          attr
+          acl
+          libxfs
+          libaio
+          icu
+          libuuid
+          liburcu
+          liburing
+          readline
+          gnutar
+          gzip
+        ]
+        ++ llvm;
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
