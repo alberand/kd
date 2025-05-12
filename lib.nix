@@ -296,6 +296,7 @@ in rec {
           readline
           inih
           man
+          gettext
         ]
         ++ llvm;
 
