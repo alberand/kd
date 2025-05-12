@@ -41,6 +41,10 @@ fn default_xfsprogs() -> Option<String> {
     Some("git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git".to_string())
 }
 
+fn default_name() -> String {
+    "default".to_string()
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct XfsprogsConfig {
     #[serde(default = "default_xfsprogs")]
@@ -55,6 +59,7 @@ pub struct DummyConfig {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
+    #[serde(default = "default_name")]
     pub name: String,
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
@@ -63,13 +68,10 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load(path: Option<PathBuf>) -> Result<Self, Error> {
-        let path = path.unwrap();
-
+    pub fn load(path: PathBuf) -> Result<Self, Error> {
         if !path.exists() {
             return Err(Error::new(ErrorKind::NotFound, "config file not found"));
         }
-        println!("Loading config: {}", path.display());
 
         let data = fs::read_to_string(path).expect("Unable to read file");
         let config: Config = toml::from_str(&data).unwrap();
