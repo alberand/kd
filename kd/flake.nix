@@ -28,6 +28,8 @@
               rustc
               pkg-config
               openssl
+              rust-analyzer
+              rustfmt
             ];
           };
       }
