@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use tera::{Context, Tera};
+use std::os::unix::fs::PermissionsExt;
 
 mod utils;
 use utils::{KdError, KdErrorKind};
@@ -482,6 +483,7 @@ fn main() {
                 std::fs::copy(source, output).unwrap();
                 let source = path.join("result");
                 std::fs::copy(source, output).unwrap();
+                std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644));
             }
         }
         None => {}
