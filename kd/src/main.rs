@@ -463,7 +463,10 @@ fn main() {
                 std::process::exit(1);
             }
 
-            let path = PathBuf::from(path).join(".kd").join(&config.name);
+            let env_path = PathBuf::from(path.clone()).join(".kd").join(&config.name);
+            let uconfig_path = PathBuf::from(env_path.clone()).join("uconfig.nix");
+            generate_uconfig(&uconfig_path, &config).expect("Failed to generate user environment");
+
             let package = format!("path:{}#kconfig", path.to_str().expect("cannot convert path to string"));
             Command::new("nix")
                 .arg("build")
