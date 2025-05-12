@@ -476,18 +476,23 @@ fn main() {
                 .expect("Failed to spawn 'nix build .#kconfig'")
                 .wait()
                 .expect("'nix build .#kconfig' wasn't running");
-            if let Some(output) = output {
-                let source = PathBuf::from(".config");
-                if source.exists() {
-                    let mut backup = source.clone();
-                    backup.set_extension(".bup");
-                    std::fs::copy(&source, backup).unwrap();
-                }
-                std::fs::copy(source, output).unwrap();
-                let source = path.join("result");
-                std::fs::copy(source, output).unwrap();
-                std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644));
+
+            let curdir = std::env::current_dir().expect("Can not detect current working directory");
+            let output = if let Some(output) = output {
+                PathBuf::from(output)
+            } else {
+                curdir.clone().join(".config")
+            };
+
+            if output.exists() {
+                let mut backup = output.clone();
+                backup.set_extension("bup");
+                std::fs::copy(&output, backup).unwrap();
             }
+
+            let source = curdir.clone().join(".kd").join(&config.name).join("result");
+            std::fs::copy(source, &output).unwrap();
+            std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
         }
         None => {}
     }
