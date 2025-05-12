@@ -54,6 +54,17 @@
         default = default.shell;
         xfsprogs = lib.mkXfsprogsShell {};
         xfstests = lib.mkXfstestsShell {};
+        kd-dev = with pkgs;
+          mkShell {
+            buildInputs = [
+              cargo
+              rustc
+              pkg-config
+              openssl
+              rust-analyzer
+              rustfmt
+            ];
+          };
       };
 
       packages = {
