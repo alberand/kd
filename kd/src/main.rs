@@ -176,6 +176,8 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
     let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
+    options.push(set_value_str("name", &config.name));
+
     if let Some(subconfig) = &config.xfstests {
         if let Some(rev) = &subconfig.rev {
             let repo = if let Some(repo) = &subconfig.repo {

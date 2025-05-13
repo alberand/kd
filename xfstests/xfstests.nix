@@ -51,7 +51,6 @@ with lib; let
               writeScript "xfstests-check" (''
                   #!${pkgs.runtimeShell}
                   set -e
-                  export RESULT_BASE="$(pwd)/results"
 
                   dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
                   trap "rm -rf $dir" EXIT
@@ -114,13 +113,6 @@ in {
       # Has to be empty by default to not run anything in VM
       default = "";
       example = "-g auto";
-      type = types.str;
-    };
-
-    sharedir = mkOption {
-      description = "path to the share directory inside VM";
-      default = "/root/vmtest";
-      example = "/root/vmtest";
       type = types.str;
     };
 
@@ -368,16 +360,16 @@ in {
           ${cfg.pre-test-hook}
 
           function get_config {
-            ${pkgs.tomlq}/bin/tq --file ${cfg.sharedir}/kd.toml $@
+            ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@
           }
 
-          if [ ! -f "${cfg.sharedir}/kd.toml" ] && [ "${cfg.arguments}" == "" ]; then
-            echo "${cfg.sharedir}/kd.toml: file doesn't exist"
+          if [ ! -f "/root/share/kd.toml" ] && [ "${cfg.arguments}" == "" ]; then
+            echo "/root/share/kd.toml: file doesn't exist"
             exit 0
           fi
 
           if [ "$(get_config 'xfstests.args')" == "" ] && [ "${cfg.arguments}" == "" ]; then
-            echo "No tests to run according to ${cfg.sharedir}/kd.toml"
+            echo "No tests to run according to /root/share/kd.toml"
             exit 0
           fi
 
@@ -420,7 +412,6 @@ in {
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
-          export PATH="${cfg.sharedir}/bin:$PATH"
           ${cfg.extraEnv}
           ${pkgs.bash}/bin/bash -lc \
             "${pkgs.xfstests}/bin/xfstests-check $arguments"

@@ -21,13 +21,6 @@ in {
       type = types.str;
     };
 
-    sharedir = mkOption {
-      description = "path to the share directory inside VM";
-      default = "/root/vmtest";
-      example = "/root/vmtest";
-      type = types.str;
-    };
-
     autoshutdown = mkOption {
       description = "autoshutdown machine after test is complete";
       default = false;
@@ -71,10 +64,10 @@ in {
         '';
       script = ''
         function get_config {
-          ${pkgs.tomlq}/bin/tq --file ${cfg.sharedir}/kd.toml $@
+          ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@
         }
 
-        if [ ! -f "${cfg.sharedir}/kd.toml" ]; then
+        if [ ! -f "/root/share/kd.toml" ]; then
           exit 0
         fi
 
@@ -82,9 +75,9 @@ in {
           exit 0
         fi
 
-        echo "Running test ${cfg.sharedir}/dummy.sh"
-        chmod u+x ${cfg.sharedir}/dummy.sh
-        ${pkgs.bash}/bin/bash -l -c 'exec ${cfg.sharedir}/dummy.sh ${cfg.arguments}'
+        echo "Running test /root/share/dummy.sh"
+        chmod u+x /root/share/dummy.sh
+        ${pkgs.bash}/bin/bash -l -c 'exec /root/share/dummy.sh ${cfg.arguments}'
         exit $?
       '';
     };

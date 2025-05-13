@@ -113,26 +113,63 @@ in rec {
       };
     };
 
-  mkVmTest = {uconfig}:
-    builtins.getAttr "vmtest" rec {
+  mkVmTest = {
+    name,
+    root,
+    uconfig,
+  }:
+    builtins.getAttr "runner" rec {
+      inherit name root;
       nixos = mkVM {
         inherit uconfig;
       };
 
-      vmtest =
-        pkgs.writeScriptBin "kd-run-vm"
-        ((builtins.readFile ./run.sh)
-          + ''
-            ${nixos}/bin/run-$NODE_NAME-vm 2>&1 | tee -a $LOG_FILE
-            echo "View results at $SHARE_DIR/results"
-            echo "Log is in $LOG_FILE"
-          '');
+      runner =
+        pkgs.writeScriptBin "runner"
+        ''
+          ROOTDIR="$(git rev-parse --show-toplevel)"
+          ENVNAME="${name}"
+          ENVDIR="$ROOTDIR/.kd/$ENVNAME"
+          LOCAL_CONFIG="$ROOTDIR/.kd.toml"
+          RUNDIR="$ENVDIR/share"
+          LOG_FILE="$RUNDIR/execution_$(date +"%Y-%m-%d_%H-%M").log"
+
+          function eecho() {
+            echo "$1" | tee -a $LOG_FILE
+          }
+
+          rm -rf "$RUNDIR/results"
+          rm -rf "$RUNDIR/dummy.sh"
+          mkdir -p $RUNDIR
+          mkdir -p $RUNDIR/results
+
+          cp "$LOCAL_CONFIG" "$RUNDIR/kd.toml"
+
+          if ! tq --file $LOCAL_CONFIG . > /dev/null; then
+            echo "Invalid $LOCAL_CONFIG"
+            exit 1
+          fi
+
+          if tq --file $LOCAL_CONFIG 'dummy' > /dev/null; then
+            export SIMPLE_TEST="$(tq --file $LOCAL_CONFIG 'dummy')"
+          fi
+
+          if [[ -f "$SIMPLE_TEST" ]]; then
+            eecho "$SIMPLE_TEST will be used as simple test"
+            cp "$SIMPLE_TEST" "$RUNDIR/dummy.sh"
+          fi
+
+          export NIX_DISK_IMAGE="$ENVDIR/image.qcow2"
+          # After this line nix will insert more bash code. Don't exit
+          ${nixos}/bin/run-${name}-vm 2>&1 | tee -a $LOG_FILE
+          echo "View results at $RUNDIR/results"
+          echo "Log is in $LOG_FILE"
+        '';
     };
 
   mkLinuxShell = {
     root,
     name,
-    sharedir ? "/tmp/vmtest",
     packages ? [],
   }:
     builtins.getAttr "shell" {
@@ -160,7 +197,6 @@ in rec {
             (vmtest-deploy {})
 
             (callPackage (import ./kd/derivation.nix) {})
-            (pkgs.writeShellScriptBin "vmtest-dirty-kernel" ./build.sh)
           ]
           ++ llvm
           ++ packages
@@ -230,13 +266,13 @@ in rec {
           zlib
         ];
 
-        SHARE_DIR = "${sharedir}";
         NODE_NAME = "${name}";
         KBUILD_BUILD_TIMESTAMP = "";
         SOURCE_DATE_EPOCH = 0;
         CCACHE_DIR = "/var/cache/ccache/";
         CCACHE_SLOPPINESS = "random_seed";
         CCACHE_UMASK = 777;
+        ROOTDIR = "$(git rev-parse --show-toplevel)";
 
         NIX_HARDENING_ENABLE = "";
 
@@ -471,6 +507,7 @@ in rec {
     };
 
     vm = mkVmTest {
+      inherit name root;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -478,12 +515,14 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
+          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
           vm.disks = [12000 12000 2000 2000];
         }
         // uconfig;
     };
 
     prebuild = mkVmTest {
+      inherit name root;
       uconfig =
         {
           # Same as in .vm
@@ -492,6 +531,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
+          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
           vm.disks = [12000 12000 2000 2000];
 
           # As our dummy derivation doesn't provide any .config we need to tell

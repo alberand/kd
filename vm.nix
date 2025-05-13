@@ -40,7 +40,7 @@ in {
     virtualisation = {
       diskSize = 20000; # MB
       # Store the image in sharedir instead of pwd
-      diskImage = "${cfg.sharedir}/test-node.qcow2";
+      diskImage = "${cfg.sharedir}/image.qcow2";
       memorySize = 4096; # MB
       cores = 4;
       writableStoreUseTmpfs = false;
@@ -62,13 +62,9 @@ in {
       };
 
       sharedDirectories = {
-        results = {
-          source = "${cfg.sharedir}/results";
-          target = "/root/results";
-        };
-        vmtest = {
+        share = {
           source = "${cfg.sharedir}";
-          target = "/root/vmtest";
+          target = "/root/share";
         };
       };
     };

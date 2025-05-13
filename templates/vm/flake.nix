@@ -29,17 +29,19 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-      vm =
+      vm = let
+        uset = (import ./uconfig.nix);
+      in
         kd.lib.${system}.mkEnv {
           inherit nixpkgs;
-          name = "demo";
+          inherit (uset) name;
           root = builtins.toString ./.;
-          uconfig = (import ./uconfig.nix) {inherit pkgs;};
           stdenv = pkgs.clangStdenv;
+          uconfig = uset.uconfig {inherit pkgs;};
         };
     in {
       packages = {
-        inherit (vm) kconfig kconfig-iso headers kernel iso vm;
+        inherit (vm) kconfig kconfig-iso headers kernel iso vm qcow prebuild;
       };
       devShells = {
         default = vm.shell;
