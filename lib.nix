@@ -125,7 +125,7 @@ in rec {
       };
 
       runner =
-        pkgs.writeScriptBin "runner"
+        pkgs.writeShellScriptBin "runner"
         ''
           ROOTDIR="$(git rev-parse --show-toplevel)"
           ENVNAME="${name}"
