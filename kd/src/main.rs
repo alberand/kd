@@ -396,6 +396,24 @@ fn main() {
                             .expect("Failed to spawn 'nix build'")
                             .wait()
                             .expect("'nix build' wasn't running");
+                        Command::new("make")
+                            .env("INSTALL_PATH", build_path.clone())
+                            .arg("-C")
+                            .arg(&state.curdir)
+                            .arg("install")
+                            .spawn()
+                            .expect("Failed to spawn 'nix build'")
+                            .wait()
+                            .expect("'nix build' wasn't running");
+                        Command::new("make")
+                            .env("KBUILD_OUTPUT", build_path.clone())
+                            .arg("-C")
+                            .arg(&state.curdir)
+                            .arg("headers_install")
+                            .spawn()
+                            .expect("Failed to spawn 'nix build'")
+                            .wait()
+                            .expect("'nix build' wasn't running");
 
                         std::fs::copy(kernel_path, build_path.join("bzImage")).unwrap();
                     }
