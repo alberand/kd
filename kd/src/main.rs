@@ -176,8 +176,6 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
     let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
-    options.push(set_value_str("name", &config.name));
-
     if let Some(subconfig) = &config.xfstests {
         if let Some(rev) = &subconfig.rev {
             let repo = if let Some(repo) = &subconfig.repo {
@@ -282,7 +280,9 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     };
 
     let source = r#"
-        {pkgs}: with pkgs; {
+    {
+        name = "{{ name }}";
+        uconfig = {pkgs}: with pkgs; {
             {% for option in options %}
                 {{ option }}
             {% endfor%}
@@ -300,10 +300,12 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
               {% endfor%}
             };
             {% endif %}
-        }
+        };
+    }
     "#;
     tera.add_raw_template("top", source).unwrap();
 
+    context.insert("name", &config.name);
     context.insert("options", &options);
     context.insert("kernel_options", &kernel_options);
     context.insert("kernel_config_options", &kernel_config_options);
