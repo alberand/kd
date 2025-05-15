@@ -151,12 +151,12 @@ in rec {
           fi
 
           if tq --file $LOCAL_CONFIG 'dummy' > /dev/null; then
-            export SIMPLE_TEST="$(tq --file $LOCAL_CONFIG 'dummy')"
+            export DUMMY_TEST="$(tq --file $LOCAL_CONFIG 'dummy.script')"
           fi
 
-          if [[ -f "$SIMPLE_TEST" ]]; then
-            eecho "$SIMPLE_TEST will be used as simple test"
-            cp "$SIMPLE_TEST" "$RUNDIR/dummy.sh"
+          if [[ -f "$DUMMY_TEST" ]]; then
+            eecho "$DUMMY_TEST will be used as simple test"
+            cp "$DUMMY_TEST" "$RUNDIR/dummy.sh"
           fi
 
           export NIX_DISK_IMAGE="$ENVDIR/image.qcow2"
