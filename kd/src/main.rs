@@ -389,6 +389,7 @@ fn main() {
                         std::fs::create_dir_all(build_path.clone()).unwrap();
                         Command::new("make")
                             .env("INSTALL_MOD_PATH", build_path.clone())
+                            .stdout(Stdio::null())
                             .arg("-C")
                             .arg(&state.curdir)
                             .arg("modules_install")
@@ -398,18 +399,10 @@ fn main() {
                             .expect("'nix build' wasn't running");
                         Command::new("make")
                             .env("INSTALL_PATH", build_path.clone())
+                            .stdout(Stdio::null())
                             .arg("-C")
                             .arg(&state.curdir)
                             .arg("install")
-                            .spawn()
-                            .expect("Failed to spawn 'nix build'")
-                            .wait()
-                            .expect("'nix build' wasn't running");
-                        Command::new("make")
-                            .env("KBUILD_OUTPUT", build_path.clone())
-                            .arg("-C")
-                            .arg(&state.curdir)
-                            .arg("headers_install")
                             .spawn()
                             .expect("Failed to spawn 'nix build'")
                             .wait()
