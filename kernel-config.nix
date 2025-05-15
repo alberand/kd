@@ -83,8 +83,6 @@
     SOFTLOCKUP_DETECTOR = yes;
     HARDLOCKUP_DETECTOR = yes;
     DETECT_HUNG_TASK = yes;
-    DEFAULT_HUNG_TASK_TIMEOUT = 120;
-    DETECT_HUNG_TASK_BLOCKER = yes;
     WQ_WATCHDOG = yes;
 
     # Can kernel load modules?
