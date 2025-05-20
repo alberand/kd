@@ -67,19 +67,7 @@
           };
       };
 
-      packages = {
-        inherit
-          (default)
-          kconfig
-          kconfig-iso
-          headers
-          kernel
-          iso
-          vm
-          qcow
-          prebuild
-          ;
-      };
+      packages = default;
 
       templates.default = {
         path = ./templates/vm;
