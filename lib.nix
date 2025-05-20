@@ -541,6 +541,223 @@ in rec {
         // uconfig;
     };
 
+    initrd = let
+      dummy-system = let
+        nixosGenerate = {
+          pkgs ? null,
+          lib ? nixpkgs.lib,
+          nixosSystem ? nixpkgs.lib.nixosSystem,
+          format,
+          system ? null,
+          specialArgs ? {},
+          modules ? [],
+          customFormats ? {},
+        }: let
+          extraFormats =
+            lib.mapAttrs' (
+              name: value:
+                lib.nameValuePair
+                name
+                {
+                  imports = [
+                    value
+                    (nixos-generators + /format-module.nix)
+                  ];
+                }
+            )
+            customFormats;
+          formatModule = builtins.getAttr format (nixos-generators.nixosModules // extraFormats);
+          image = nixosSystem {
+            inherit pkgs specialArgs;
+            system =
+              if system != null
+              then system
+              else pkgs.system;
+            lib =
+              if lib != null
+              then lib
+              else pkgs.lib;
+            modules =
+              [
+                formatModule
+              ]
+              ++ modules;
+          };
+        in
+          image;
+      in
+        nixosGenerate {
+          inherit pkgs;
+          system = "x86_64-linux";
+          specialArgs = {
+            diskSize = "20000";
+          };
+          modules = [
+            ./xfstests/xfstests.nix
+            ./xfsprogs.nix
+            ./dummy.nix
+            ./system.nix
+            ./vm.nix
+            (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+            ({...}: uconfig)
+          ];
+          format = "vm";
+        };
+      modulesClosure = pkgs.makeModulesClosure {
+        rootModules = dummy-system.config.boot.initrd.availableKernelModules ++ dummy-system.config.boot.initrd.kernelModules;
+        kernel = dummy-system.config.system.modulesTree;
+        firmware = dummy-system.config.hardware.firmware;
+        allowMissing = false;
+      };
+      hd = "vda"; # either "sda" or "vda"
+
+      initrdUtils =
+        pkgs.runCommand "initrd-utils"
+        {
+          nativeBuildInputs = [pkgs.buildPackages.nukeReferences];
+          allowedReferences = [
+            "out"
+            modulesClosure
+          ]; # prevent accidents like glibc being included in the initrd
+        }
+        ''
+          mkdir -p $out/bin
+          mkdir -p $out/lib
+
+          # Copy what we need from Glibc.
+          cp -p \
+            ${pkgs.stdenv.cc.libc}/lib/ld-*.so.? \
+            ${pkgs.stdenv.cc.libc}/lib/libc.so.* \
+            ${pkgs.stdenv.cc.libc}/lib/libm.so.* \
+            ${pkgs.stdenv.cc.libc}/lib/libresolv.so.* \
+            ${pkgs.stdenv.cc.libc}/lib/libpthread.so.* \
+            ${pkgs.zstd.out}/lib/libzstd.so.* \
+            ${pkgs.xz.out}/lib/liblzma.so.* \
+            $out/lib
+
+          # Copy BusyBox.
+          cp -pd ${pkgs.busybox}/bin/* $out/bin
+          cp -pd ${pkgs.kmod}/bin/* $out/bin
+
+          # Run patchelf to make the programs refer to the copied libraries.
+          for i in $out/bin/* $out/lib/*; do if ! test -L $i; then nuke-refs $i; fi; done
+
+          for i in $out/bin/*; do
+              if [ -f "$i" -a ! -L "$i" ]; then
+                  echo "patching $i..."
+                  patchelf --set-interpreter $out/lib/ld-*.so.? --set-rpath $out/lib $i || true
+              fi
+          done
+
+          find $out/lib -type f \! -name 'ld*.so.?' | while read i; do
+            echo "patching $i..."
+            patchelf --set-rpath $out/lib $i
+          done
+        ''; # */
+
+      storeDir = builtins.storeDir;
+
+      stage1Init = pkgs.writeScript "vm-run-stage1" ''
+        #! ${initrdUtils}/bin/ash -e
+
+        export PATH=${initrdUtils}/bin
+
+        mkdir /etc
+        echo -n > /etc/fstab
+
+        mount -t proc none /proc
+        mount -t sysfs none /sys
+
+        echo 2 > /proc/sys/vm/panic_on_oom
+
+        for o in $(cat /proc/cmdline); do
+          case $o in
+            mountDisk=*)
+              mountDisk=''${mountDisk#mountDisk=}
+              ;;
+            command=*)
+              set -- $(IFS==; echo $o)
+              command=$2
+              ;;
+          esac
+        done
+
+        echo "loading kernel modules..."
+        for i in $(cat ${modulesClosure}/insmod-list); do
+          insmod $i || echo "warning: unable to load $i"
+        done
+
+        mount -t devtmpfs devtmpfs /dev
+        ln -s /proc/self/fd /dev/fd
+        ln -s /proc/self/fd/0 /dev/stdin
+        ln -s /proc/self/fd/1 /dev/stdout
+        ln -s /proc/self/fd/2 /dev/stderr
+
+        ifconfig lo up
+
+        mkdir /fs
+
+        if test -z "$mountDisk"; then
+          mount -t tmpfs none /fs
+        elif [[ -e "$mountDisk" ]]; then
+          mount "$mountDisk" /fs
+        else
+          mount /dev/${hd} /fs
+        fi
+
+        mkdir -p /fs/dev
+        mount -o bind /dev /fs/dev
+
+        mkdir -p /fs/dev/shm /fs/dev/pts
+        mount -t tmpfs -o "mode=1777" none /fs/dev/shm
+        mount -t devpts none /fs/dev/pts
+
+        echo "mounting Nix store..."
+        mkdir -p /fs${storeDir}
+        mount -t virtiofs store /fs${storeDir}
+
+        mkdir -p /fs/tmp /fs/run /fs/var
+        mount -t tmpfs -o "mode=1777" none /fs/tmp
+        mount -t tmpfs -o "mode=755" none /fs/run
+        ln -sfn /run /fs/var/run
+
+        echo "mounting host's temporary directory..."
+        mkdir -p /fs/tmp/xchg
+        mount -t virtiofs xchg /fs/tmp/xchg
+
+        mkdir -p /fs/proc
+        mount -t proc none /fs/proc
+
+        mkdir -p /fs/sys
+        mount -t sysfs none /fs/sys
+
+        mkdir -p /fs/etc
+        ln -sf /proc/mounts /fs/etc/mtab
+        echo "127.0.0.1 localhost" > /fs/etc/hosts
+        # Ensures tools requiring /etc/passwd will work (e.g. nix)
+        if [ ! -e /fs/etc/passwd ]; then
+          echo "root:x:0:0:System administrator:/root:/bin/sh" > /fs/etc/passwd
+        fi
+
+        echo "starting stage 2 ($command)"
+        exec switch_root /fs $command
+      '';
+    in
+      pkgs.callPackage (import (nixpkgs + /pkgs/build-support/kernel/make-initrd.nix)) {
+        name = "initrd-kd";
+
+        contents = [
+          {
+            object = stage1Init;
+            symlink = "/init";
+          }
+          {
+            object = "${modulesClosure}/lib";
+            symlink = "/lib";
+          }
+        ];
+      };
+
     shell = mkLinuxShell {
       inherit root name;
     };
