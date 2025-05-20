@@ -90,6 +90,7 @@ with lib; let
                     dbench
                     thin-provisioning-tools
                     file
+                    openssl
                   ]}:$PATH
                   exec ./check "$@"
                 '');
