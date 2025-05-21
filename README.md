@@ -23,8 +23,8 @@ Now you can do following:
     # Generate minimal kernel config for QEMU
     $ kd config
 
-    # Build VM or ISO
-    $ kd build [vm|iso]
+    # Build QCOW2 or ISO
+    $ kd build [qcow|iso]
 
     # Run VM
     $ kd run
@@ -43,7 +43,8 @@ The `run` command runs flake in the `./.kd/kfeature`.
 
 ```toml
 [kernel]
-kernel = "arch/x86_64/boot/bzImage"
+# Use already build kernel from the current directory
+prebuild = true
 
 [xfstests]
 repository = "git@github.com:alberand/xfstests.git"

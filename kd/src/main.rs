@@ -34,7 +34,6 @@ struct Cli {
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
 enum Target {
-    Vm,
     Iso,
     Qcow,
 }
@@ -42,7 +41,6 @@ enum Target {
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Target::Vm => write!(f, "vm"),
             Target::Iso => write!(f, "iso"),
             Target::Qcow => write!(f, "qcow"),
         }
@@ -60,7 +58,7 @@ enum Commands {
     Build {
         /// lists test values
         #[arg(
-            default_value_t = Target::Vm,
+            default_value_t = Target::Qcow,
             value_enum
         )]
         target: Target,
@@ -324,6 +322,27 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     Ok(())
 }
 
+fn prebuild_kernel(envdir: &PathBuf, curdir: &PathBuf) {
+    let build_path = envdir.join("build");
+    let kernel_path = curdir.join("arch/x86_64/boot/bzImage");
+
+    if build_path.exists() {
+        std::fs::remove_dir_all(build_path.clone()).unwrap();
+    }
+    std::fs::create_dir_all(build_path.clone()).unwrap();
+    Command::new("make")
+        .env("INSTALL_MOD_PATH", build_path.clone())
+        .stdout(Stdio::null())
+        .arg("-C")
+        .arg(curdir)
+        .arg("modules_install")
+        .spawn()
+        .expect("Failed to spawn 'nix build'")
+        .wait()
+        .expect("'nix build' wasn't running");
+    std::fs::copy(kernel_path, build_path.join("bzImage")).unwrap();
+}
+
 struct State {
     curdir: PathBuf,
     envdir: PathBuf,
@@ -373,51 +392,11 @@ fn main() {
         Some(Commands::Build { target }) => {
             let state = State::new();
 
-            let mut extra_args: Vec<String> = vec![];
             let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &state.config)
                 .expect("Failed to generate user environment");
 
-            let mut target = target.to_string();
-            if let Some(subconfig) = state.config.kernel {
-                if let Some(prebuild) = &subconfig.prebuild {
-                    if *prebuild {
-                        extra_args.push("--impure".to_string());
-                        target = "prebuild".to_string();
-
-                        let build_path = state.envdir.join("build");
-                        let kernel_path = state.curdir.join("arch/x86_64/boot/bzImage");
-
-                        if build_path.exists() {
-                            std::fs::remove_dir_all(build_path.clone()).unwrap();
-                        }
-                        std::fs::create_dir_all(build_path.clone()).unwrap();
-                        Command::new("make")
-                            .env("INSTALL_MOD_PATH", build_path.clone())
-                            .stdout(Stdio::null())
-                            .arg("-C")
-                            .arg(&state.curdir)
-                            .arg("modules_install")
-                            .spawn()
-                            .expect("Failed to spawn 'nix build'")
-                            .wait()
-                            .expect("'nix build' wasn't running");
-                        Command::new("make")
-                            .env("INSTALL_PATH", build_path.clone())
-                            .stdout(Stdio::null())
-                            .arg("-C")
-                            .arg(&state.curdir)
-                            .arg("install")
-                            .spawn()
-                            .expect("Failed to spawn 'nix build'")
-                            .wait()
-                            .expect("'nix build' wasn't running");
-
-                        std::fs::copy(kernel_path, build_path.join("bzImage")).unwrap();
-                    }
-                }
-            }
-
+            let target = target.to_string();
             let package = format!(
                 "path:{}#{}",
                 state
@@ -428,7 +407,6 @@ fn main() {
             );
             Command::new("nix")
                 .arg("build")
-                .args(extra_args)
                 .arg(&package)
                 .spawn()
                 .expect("Failed to spawn 'nix build'")
@@ -445,6 +423,7 @@ fn main() {
                     if *prebuild {
                         extra_args.push("--impure".to_string());
                         target = "prebuild".to_string();
+                        prebuild_kernel(&state.envdir, &state.curdir);
                     }
                 }
             }
