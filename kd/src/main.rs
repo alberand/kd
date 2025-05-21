@@ -79,6 +79,8 @@ enum Commands {
 fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
     println!("Fetching source for {} at {}", repo, rev);
     let output = Command::new("nurl")
+        .arg("--fetcher")
+        .arg("builtins.fetchGit")
         .arg(repo)
         .arg(rev)
         .output()
