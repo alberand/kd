@@ -311,7 +311,6 @@ in rec {
           automake
           autoconf
           bc
-          dbench
           dump
           e2fsprogs
           fio
