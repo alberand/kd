@@ -333,6 +333,7 @@ in rec {
           inih
           man
           gettext
+          patchutils_0_4_2
         ]
         ++ llvm;
 
