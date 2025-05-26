@@ -47,6 +47,8 @@ with lib; let
               ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
               ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
+            dontStrip = config.dev.dontStrip;
+
             wrapperScript = with pkgs;
               writeScript "xfstests-check" (''
                   #!${pkgs.runtimeShell}

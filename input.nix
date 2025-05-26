@@ -9,40 +9,49 @@
 with pkgs.lib; let
   cfg = config.kernel;
 in {
-  options.kernel = {
-    version = mkOption {
-      type = types.str;
-      default = "6.14.5";
-    };
-
-    src = mkOption {
-      type = types.nullOr types.package;
-      default = pkgs.fetchgit {
-        url = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git";
-        rev = "v6.14.5";
-        hash = "sha256-9FVjWxVurrsPqT3hSRHnga3T6Aj3MMCqtpC2+rPfm6U=";
+  options = {
+    dev = {
+      dontStrip = mkOption {
+        type = types.bool;
+        default = false;
       };
     };
 
-    kconfig = mkOption {
-      type = types.attrs;
-      default = {};
-    };
+    kernel = {
+      version = mkOption {
+        type = types.str;
+        default = "6.14.5";
+      };
 
-    # TODO this has to be config level options
-    iso = mkOption {
-      type = types.bool;
-      default = false;
-    };
+      src = mkOption {
+        type = types.nullOr types.package;
+        default = pkgs.fetchgit {
+          url = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git";
+          rev = "v6.14.5";
+          hash = "sha256-9FVjWxVurrsPqT3hSRHnga3T6Aj3MMCqtpC2+rPfm6U=";
+        };
+      };
 
-    debug = mkOption {
-      type = types.bool;
-      default = false;
-    };
+      kconfig = mkOption {
+        type = types.attrs;
+        default = {};
+      };
 
-    prebuild = mkOption {
-      type = types.nullOr types.path;
-      default = null;
+      # TODO this has to be config level options
+      iso = mkOption {
+        type = types.bool;
+        default = false;
+      };
+
+      debug = mkOption {
+        type = types.bool;
+        default = false;
+      };
+
+      prebuild = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+      };
     };
   };
 

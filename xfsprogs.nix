@@ -38,6 +38,8 @@ with lib; let
         cp include/install-sh install-sh
         patchShebangs ./install-sh
       '';
+
+      dontStrip = config.dev.dontStrip;
     });
   };
 in {
