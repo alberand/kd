@@ -416,6 +416,10 @@ fn main() {
         Some(Commands::Run) => {
             let state = State::new();
 
+            let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
+            generate_uconfig(&uconfig_path, &state.config)
+                .expect("Failed to generate user environment");
+
             let mut extra_args: Vec<String> = vec![];
             let mut target = "vm".to_string();
             if let Some(subconfig) = state.config.kernel {
