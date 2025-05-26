@@ -194,6 +194,7 @@ in rec {
             automake
             autoconf
             pahole
+            trace-cmd
             (vmtest-deploy {})
 
             (callPackage (import ./kd/derivation.nix) {})
