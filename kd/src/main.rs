@@ -179,6 +179,17 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
     let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
+    if let Some(packages) = &config.packages {
+        let mut list = String::from("with pkgs; [");
+        for package in packages {
+            list.push_str(package);
+            list.push_str("\n");
+        }
+        list.push_str("]");
+
+        options.push(set_value("environment.systemPackages", &list));
+    }
+
     if let Some(subconfig) = &config.xfstests {
         if let Some(rev) = &subconfig.rev {
             let repo = if let Some(repo) = &subconfig.repo {

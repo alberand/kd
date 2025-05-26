@@ -61,6 +61,7 @@ pub struct DummyConfig {
 pub struct Config {
     #[serde(default = "default_name")]
     pub name: String,
+    pub packages: Option<Vec<String>>,
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
     pub xfsprogs: Option<XfsprogsConfig>,
