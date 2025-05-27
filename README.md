@@ -136,3 +136,13 @@ scratch_dev = "/dev/vdc"
 repo = "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
 rev = "v6.14.0"
 ```
+
+# TODO
+- [ ] Do I really need to use TOML instead of just plain Nix? devenv does it but
+      Nix isn't that nice for configuration
+- [ ] Convert `nurl` to front-end + lib to call use the lib directly
+- [ ] After decision on TOML necessity, convert `kd` from string manipulation to
+      parsing Nix code with rnix-parse
+- [ ] Add Initrd generator without kernel/modules
+- [ ] Make `kd run` without Nix evaluation, it can put all the things in right
+      places and execute a script with qemu
