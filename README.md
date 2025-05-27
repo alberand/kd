@@ -18,16 +18,19 @@ Now create environment with your feature name:
     # Init env
     $ kd init kfeature
 
-Now you can do following:
+Run VM:
+
+    # Run VM
+    $ kd run
+
+You can also generate minimal config or build a deployable image for longer test
+runs:
 
     # Generate minimal kernel config for QEMU
     $ kd config
 
     # Build QCOW2 or ISO
     $ kd build [qcow|iso]
-
-    # Run VM
-    $ kd run
 
 Edit your `.kd.toml` config to adjust environment to your needs.
 
@@ -40,6 +43,10 @@ The `run` command runs flake in the `./.kd/kfeature`.
 # Config Examples
 
 ## Developing new feature with userspace commands and new tests
+
+The `prebuild = true` is quite important. Instead of using Nix to build your
+kernel in reproducible way, the `kd` will just take your compiled kernel from
+the current directory.
 
 ```toml
 [kernel]
@@ -61,7 +68,44 @@ rev = "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
 script = "./test.sh"
 ```
 
+## Developing kernel, xfsprogs and xfstests at the same time
+
+This config has a `gdb` package included into VM. The xfstests and xfsprogs
+packages are pointing to local repositories for quicker iterations.
+
+```toml
+name = "default"
+packages = [ "gdb" ]
+
+[kernel]
+prebuild = true
+
+[kernel.config]
+CONFIG_XFS_FS = "yes"
+CONFIG_XFS_QUOTA = "yes"
+CONFIG_XFS_RT = "yes"
+CONFIG_XFS_ONLINE_SCRUB = "yes"
+CONFIG_XFS_ONLINE_REPAIR = "yes"
+CONFIG_XFS_POSIX_ACL = "yes"
+CONFIG_XFS_DEBUG = "yes"
+
+CONFIG_FS_VERITY = "yes"
+CONFIG_FS_VERITY_BUILTIN_SIGNATURES = "yes"
+
+[xfstests]
+repo = "file:///home/aalbersh/Projects/xfstests-dev"
+rev = "b602eccc851aae190e5a4319171481bc4c90888b"
+args = "-d -s xfs_1k_quota generic/572 generic/574"
+hooks = "/home/aalbersh/Projects/kernel/fsverity/tmp/hooks"
+
+[xfsprogs]
+repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
+rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
+```
+
 ## Testing xfsprogs package
+
+This is config used for xfsprogs package testing with latest kernel.
 
 ```toml
 name = "xfsprogs-testing"
