@@ -270,9 +270,10 @@ in rec {
         NODE_NAME = "${name}";
         KBUILD_BUILD_TIMESTAMP = "";
         SOURCE_DATE_EPOCH = 0;
-        CCACHE_DIR = "/var/cache/ccache/";
+        CCACHE_MAXSIZE = "5G";
+        CCACHE_DIR = "$HOME/.cache/ccache/";
         CCACHE_SLOPPINESS = "random_seed";
-        CCACHE_UMASK = 777;
+        CCACHE_UMASK = 007;
         ROOTDIR = "$(git rev-parse --show-toplevel)";
 
         NIX_HARDENING_ENABLE = "";
