@@ -20,15 +20,15 @@ in {
     kernel = {
       version = mkOption {
         type = types.str;
-        default = "6.14.5";
+        default = "6.15";
       };
 
       src = mkOption {
         type = types.nullOr types.package;
         default = pkgs.fetchgit {
-          url = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git";
-          rev = "v6.14.5";
-          hash = "sha256-9FVjWxVurrsPqT3hSRHnga3T6Aj3MMCqtpC2+rPfm6U=";
+          url = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git";
+          rev = "v6.15";
+          hash = "sha256-PQjXBWJV+i2O0Xxbg76HqbHyzu7C0RWkvHJ8UywJSCw=";
         };
       };
 
