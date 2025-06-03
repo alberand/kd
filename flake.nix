@@ -52,8 +52,18 @@
 
       devShells = {
         default = default.shell;
+        clang = default.shell;
+        clang20 = default.shell-clang20;
+        clang18 = default.shell-clang18;
+        clang17 = default.shell-clang17;
+        gcc = default.shell-gcc;
+        gcc15 = default.shell-gcc15;
+        gcc14 = default.shell-gcc14;
+        gcc13 = default.shell-gcc13;
+
         xfsprogs = lib.mkXfsprogsShell {};
         xfstests = lib.mkXfstestsShell {};
+
         kd-dev = with pkgs;
           mkShell {
             buildInputs = [

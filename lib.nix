@@ -3,13 +3,23 @@
   nixos-generators,
   nixpkgs,
 }: let
-  llvm = with pkgs; [
-    clang
-    clang-tools
-    libllvm
-  ];
-  gcc = with pkgs; [
-    gcc
+  mkLlvmPkgs = {clangVersion}: let
+    llvmPackages =
+      if clangVersion != ""
+      then pkgs."llvmPackages_${clangVersion}"
+      else pkgs."llvmPackages_latest";
+  in
+    with llvmPackages; [
+      clang
+      clang-tools
+      libllvm
+    ];
+  mkGccPkgs = {gccVersion ? ""}: [
+    (
+      if gccVersion != ""
+      then pkgs."gcc${gccVersion}"
+      else pkgs."gcc"
+    )
   ];
 in rec {
   mkVM = {uconfig}:
@@ -170,138 +180,138 @@ in rec {
   mkLinuxShell = {
     root,
     name,
+    clangVersion ? "",
+    gcc ? false,
+    gccVersion ? "",
     packages ? [],
   }:
     builtins.getAttr "shell" {
-      shell = pkgs.mkShell {
-        nativeBuildInputs = with pkgs;
-          [
-            getopt
-            flex
-            bison
-            perl
-            gnumake
-            bc
-            pkg-config
-            binutils
+      shell = pkgs.mkShell ({
+          nativeBuildInputs = with pkgs;
+            [
+              getopt
+              flex
+              bison
+              perl
+              gnumake
+              bc
+              pkg-config
+              binutils
+              elfutils
+              ncurses
+              lld
+              gettext
+              libtool
+              qemu_full
+              qemu-utils
+              automake
+              autoconf
+              pahole
+              trace-cmd
+              (vmtest-deploy {})
+
+              (callPackage (import ./kd/derivation.nix) {})
+            ]
+            ++ (
+              if gcc
+              then (mkGccPkgs {inherit gccVersion;})
+              else (mkLlvmPkgs {inherit clangVersion;})
+            )
+            ++ packages
+            ++ lib.optional false [
+              file
+              e2fsprogs
+              attr
+              acl
+              libaio
+              keyutils
+              fsverity-utils
+              ima-evm-utils
+              util-linux
+              stress-ng
+              fio
+              linuxquota
+              nvme-cli
+              virt-manager # for deploy
+              xmlstarlet
+              rpm
+              sphinx # for btrfs-progs
+              zstd # for btrfs-progs
+              udev # for btrfs-progs
+              lzo # for btrfs-progs
+              ctags
+              jq
+              liburing # for btrfs-progs
+              python312
+              python312Packages.flake8
+              python312Packages.pylint
+              cargo
+              rustc
+              # kselftest deps
+              libcap
+              libcap_ng
+              fuse3
+              fuse
+              alsa-lib
+              libmnl
+              numactl
+              guilt
+              nix-prefetch-git
+              tomlq
+              # probably better to move it to separate module
+              sqlite
+              openssl
+              libllvm
+              libxml2.dev
+              perl
+              perl538Packages.DBI
+              perl538Packages.DBDSQLite
+              perl538Packages.TryTiny
+              (smatch.overrideAttrs (final: prev: {
+                version = "git";
+                src = fetchgit {
+                  url = "git://repo.or.cz/smatch.git";
+                  rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
+                  hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
+                };
+              }))
+            ];
+
+          buildInputs = with pkgs; [
             elfutils
             ncurses
-            lld
-            gettext
-            libtool
-            qemu_full
-            qemu-utils
-            automake
-            autoconf
-            pahole
-            trace-cmd
-            (vmtest-deploy {})
-
-            (callPackage (import ./kd/derivation.nix) {})
-          ]
-          ++ llvm
-          ++ packages
-          ++ lib.optional false [
-            file
-            e2fsprogs
-            attr
-            acl
-            libaio
-            keyutils
-            fsverity-utils
-            ima-evm-utils
-            util-linux
-            stress-ng
-            fio
-            linuxquota
-            nvme-cli
-            virt-manager # for deploy
-            xmlstarlet
-            rpm
-            sphinx # for btrfs-progs
-            zstd # for btrfs-progs
-            udev # for btrfs-progs
-            lzo # for btrfs-progs
-            ctags
-            jq
-            liburing # for btrfs-progs
-            python312
-            python312Packages.flake8
-            python312Packages.pylint
-            cargo
-            rustc
-            # kselftest deps
-            libcap
-            libcap_ng
-            fuse3
-            fuse
-            alsa-lib
-            libmnl
-            numactl
-            guilt
-            nix-prefetch-git
-            tomlq
-            # probably better to move it to separate module
-            sqlite
             openssl
-            libllvm
-            libxml2.dev
-            perl
-            perl538Packages.DBI
-            perl538Packages.DBDSQLite
-            perl538Packages.TryTiny
-            (smatch.overrideAttrs (final: prev: {
-              version = "git";
-              src = fetchgit {
-                url = "git://repo.or.cz/smatch.git";
-                rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
-                hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
-              };
-            }))
+            zlib
           ];
 
-        buildInputs = with pkgs; [
-          elfutils
-          ncurses
-          openssl
-          zlib
-        ];
+          NODE_NAME = "${name}";
+          KBUILD_BUILD_TIMESTAMP = "";
+          # Disable all automatically applied hardening. The Linux
+          # kernel will take care of itself.
+          NIX_HARDENING_ENABLE = "";
+          SOURCE_DATE_EPOCH = 0;
+          CCACHE_MAXSIZE = "5G";
+          CCACHE_DIR = "$HOME/.cache/ccache/";
+          CCACHE_SLOPPINESS = "random_seed";
+          CCACHE_UMASK = 007;
+          ROOTDIR = "$(git rev-parse --show-toplevel)";
 
-        NODE_NAME = "${name}";
-        KBUILD_BUILD_TIMESTAMP = "";
-        SOURCE_DATE_EPOCH = 0;
-        CCACHE_MAXSIZE = "5G";
-        CCACHE_DIR = "$HOME/.cache/ccache/";
-        CCACHE_SLOPPINESS = "random_seed";
-        CCACHE_UMASK = 007;
-        ROOTDIR = "$(git rev-parse --show-toplevel)";
+          shellHook = ''
+            export MAKEFLAGS="-j$(nproc)"
 
-        NIX_HARDENING_ENABLE = "";
+            export AWK=$(type -P awk)
+            export ECHO=$(type -P echo)
+            export LIBTOOL=$(type -P libtool)
+            export MAKE=$(type -P make)
+            export SED=$(type -P sed)
+            export SORT=$(type -P sort)
 
-        shellHook = ''
-          curdir="$(pwd)"
-          if [ ! -f "$curdir/compile_commands.json" ] &&
-              [ -f "$curdir/scripts/clang-tools/gen_compile_commands.py" ]; then
-            "$curdir/scripts/clang-tools/gen_compile_commands.py"
-          fi
-
-          export LLVM=1
-          export MAKEFLAGS="-j$(nproc)"
-          if type -p ccache; then
-            export CC="ccache clang"
-            export HOSTCC="ccache clang"
-          fi
-
-          export AWK=$(type -P awk)
-          export ECHO=$(type -P echo)
-          export LIBTOOL=$(type -P libtool)
-          export MAKE=$(type -P make)
-          export SED=$(type -P sed)
-          export SORT=$(type -P sort)
-
-          echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
-        '';
-      };
+            echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
+          '';
+        }
+        // (pkgs.lib.optionalAttrs (!gcc) {
+          LLVM = 1;
+        }));
     };
 
   mkXfsprogsShell = {}:
@@ -934,6 +944,44 @@ in rec {
 
     shell = mkLinuxShell {
       inherit root name;
+    };
+
+    shell-clang20 = mkLinuxShell {
+      inherit root name;
+      clangVersion = "20";
+    };
+
+    shell-clang18 = mkLinuxShell {
+      inherit root name;
+      clangVersion = "18";
+    };
+
+    shell-clang17 = mkLinuxShell {
+      inherit root name;
+      clangVersion = "17";
+    };
+
+    shell-gcc = mkLinuxShell {
+      inherit root name;
+      gcc = true;
+    };
+
+    shell-gcc15 = mkLinuxShell {
+      inherit root name;
+      gcc = true;
+      gccVersion = "15";
+    };
+
+    shell-gcc14 = mkLinuxShell {
+      inherit root name;
+      gcc = true;
+      gccVersion = "14";
+    };
+
+    shell-gcc13 = mkLinuxShell {
+      inherit root name;
+      gcc = true;
+      gccVersion = "13";
     };
   };
 }
