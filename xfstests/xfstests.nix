@@ -196,8 +196,8 @@ in {
       type = types.nullOr types.package;
       default = pkgs.fetchgit {
         url = "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git";
-        rev = "v2024.12.22";
-        sha256 = "sha256-xZkCZVvlcnqsUnGGxSFqOHoC73M9ijM5sQnnRqamOk8=";
+        rev = "v2025.05.25";
+        sha256 = "sha256-jE/c2F+6Sxj1ucBGMgCfyopmjOQwvrKJW3FRQPDEz0U=";
       };
     };
 
