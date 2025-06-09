@@ -1,4 +1,4 @@
-{
+{enableCcache ? false}: {
   lib,
   pkgs,
   config,
@@ -29,74 +29,77 @@ with lib; let
       name = "xfstests";
       paths =
         [
-          (prev.xfstests.overrideAttrs (old: {
-            stdenv = prev.ccacheStdenv;
-            inherit (cfg) src;
-            version = "git";
-            patchPhase =
-              builtins.readFile ./patchPhase.sh
-              + old.patchPhase;
-            patches =
-              (old.patches or [])
-              ++ [
-                ./0001-common-link-.out-file-to-the-output-directory.patch
-                ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-              ];
-            nativeBuildInputs =
-              old.nativeBuildInputs
-              ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
-              ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+          (prev.xfstests.overrideAttrs (old:
+            {
+              inherit (cfg) src;
+              version = "git";
+              patchPhase =
+                builtins.readFile ./patchPhase.sh
+                + old.patchPhase;
+              patches =
+                (old.patches or [])
+                ++ [
+                  ./0001-common-link-.out-file-to-the-output-directory.patch
+                  ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
+                ];
+              nativeBuildInputs =
+                old.nativeBuildInputs
+                ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
+                ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
-            dontStrip = config.dev.dontStrip;
+              dontStrip = config.dev.dontStrip;
 
-            wrapperScript = with pkgs;
-              writeScript "xfstests-check" (''
-                  #!${pkgs.runtimeShell}
-                  set -e
+              wrapperScript = with pkgs;
+                writeScript "xfstests-check" (''
+                    #!${pkgs.runtimeShell}
+                    set -e
 
-                  dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-                  trap "rm -rf $dir" EXIT
+                    dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
+                    trap "rm -rf $dir" EXIT
 
-                  chmod a+rx "$dir"
-                  cd "$dir"
-                  for f in $(cd @out@/lib/xfstests; echo *); do
-                    ln -s @out@/lib/xfstests/$f $f
-                  done
-                ''
-                + (optionalString (cfg.hooks != null) ''
-                  ln -s ${pkgs.xfstests-hooks}/lib/xfstests/hooks hooks
-                '')
-                + ''
-                  export PATH=${lib.makeBinPath [
-                    acl
-                    attr
-                    bc
-                    e2fsprogs
-                    gawk
-                    keyutils
-                    libcap
-                    lvm2
-                    perl
-                    procps
-                    killall
-                    quota
-                    util-linux
-                    which
-                    xfsprogs
-                    duperemove
-                    acct
-                    xfsdump
-                    indent
-                    man
-                    fio
-                    dbench
-                    thin-provisioning-tools
-                    file
-                    openssl
-                  ]}:$PATH
-                  exec ./check "$@"
-                '');
-          }))
+                    chmod a+rx "$dir"
+                    cd "$dir"
+                    for f in $(cd @out@/lib/xfstests; echo *); do
+                      ln -s @out@/lib/xfstests/$f $f
+                    done
+                  ''
+                  + (optionalString (cfg.hooks != null) ''
+                    ln -s ${pkgs.xfstests-hooks}/lib/xfstests/hooks hooks
+                  '')
+                  + ''
+                    export PATH=${lib.makeBinPath [
+                      acl
+                      attr
+                      bc
+                      e2fsprogs
+                      gawk
+                      keyutils
+                      libcap
+                      lvm2
+                      perl
+                      procps
+                      killall
+                      quota
+                      util-linux
+                      which
+                      xfsprogs
+                      duperemove
+                      acct
+                      xfsdump
+                      indent
+                      man
+                      fio
+                      dbench
+                      thin-provisioning-tools
+                      file
+                      openssl
+                    ]}:$PATH
+                    exec ./check "$@"
+                  '');
+            }
+            // lib.optionalAttrs enableCcache {
+              stdenv = prev.ccacheStdenv;
+            }))
         ]
         ++ optionals (cfg.hooks != null) [
           xfstests-hooks

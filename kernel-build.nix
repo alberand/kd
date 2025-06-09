@@ -3,6 +3,7 @@
   stdenv,
   ccacheStdenv,
   lib,
+  enableCcache ? false,
 }: {
   src,
   kconfig,
@@ -10,9 +11,11 @@
 }:
 (pkgs.linuxManualConfig
   {
-    inherit src version  lib;
+    inherit src version lib;
     configfile = kconfig;
     allowImportFromDerivation = true;
+  }
+  // lib.optionalAttrs enableCcache {
     # We always want to use ccacheStdenv. By if we do stdenv = ccacheStdenv it
     # will always use gcc. So, if stdenv is llvm fix ccacheStdenv.
     stdenv =
@@ -23,20 +26,23 @@
         }
       else ccacheStdenv;
   })
-.overrideAttrs (old: {
-  nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.cpio];
-  dontStrip = true;
-  patches = [
-    ./randstruct-provide-seed.patch
-  ];
-  # Temporary fix for the following
-  # clang: error: argument unused during compilation: '-fno-strict-overflow' [-Werror,-Wunused-command-line-argument]
-  hardeningDisable = lib.optional stdenv.cc.isClang "strictoverflow";
-  preConfigure = ''
-    export CCACHE_MAXSIZE=5G
-    export CCACHE_DIR=/var/cache/ccache/
-    export CCACHE_SLOPPINESS=random_seed
-    export CCACHE_UMASK=007
-    export KBUILD_BUILD_TIMESTAMP=""
-  '';
-})
+.overrideAttrs (old:
+    {
+      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.cpio];
+      dontStrip = true;
+      patches = [
+        ./randstruct-provide-seed.patch
+      ];
+      # Temporary fix for the following
+      # clang: error: argument unused during compilation: '-fno-strict-overflow' [-Werror,-Wunused-command-line-argument]
+      hardeningDisable = lib.optional stdenv.cc.isClang "strictoverflow";
+    }
+    // lib.optionalAttrs enableCcache {
+      preConfigure = ''
+        export CCACHE_MAXSIZE=5G
+        export CCACHE_DIR=/var/cache/ccache/
+        export CCACHE_SLOPPINESS=random_seed
+        export CCACHE_UMASK=007
+        export KBUILD_BUILD_TIMESTAMP=""
+      '';
+    })
