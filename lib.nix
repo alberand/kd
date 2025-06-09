@@ -352,7 +352,7 @@ in rec {
       SOURCE_DATE_EPOCH = 0;
       CCACHE_DIR = "/var/cache/ccache/";
       CCACHE_SLOPPINESS = "random_seed";
-      CCACHE_UMASK = 777;
+      CCACHE_UMASK = 007;
 
       shellHook = ''
         export LLVM=1
@@ -407,7 +407,7 @@ in rec {
       SOURCE_DATE_EPOCH = 0;
       CCACHE_DIR = "/var/cache/ccache/";
       CCACHE_SLOPPINESS = "random_seed";
-      CCACHE_UMASK = 777;
+      CCACHE_UMASK = 007;
 
       shellHook = ''
         export LLVM=1
