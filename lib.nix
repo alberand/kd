@@ -571,7 +571,7 @@ in rec {
     };
 
     prebuild = mkVmTest {
-      inherit name root;
+      inherit name root enableCcache;
       uconfig =
         {
           # Same as in .vm
