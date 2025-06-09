@@ -54,8 +54,8 @@ in {
       type = types.nullOr types.package;
       default = pkgs.fetchgit {
         url = "git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git";
-        rev = "v6.13.0";
-        sha256 = "sha256-R9Njh1fl0TDiomjbMd/gQyv+KwVF0tbU6rruwfwjSy4=";
+        rev = "v6.14.0";
+        sha256 = "sha256-jngn0xvTyWtDsKZWTMerw4sqsval0KcmTnkfkXuoGbM=";
       };
     };
 
