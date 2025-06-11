@@ -205,7 +205,8 @@ in rec {
 
           export NIX_DISK_IMAGE="$ENVDIR/image.qcow2"
           # After this line nix will insert more bash code. Don't exit
-          ${nixos}/bin/run-${name}-vm 2>&1 | tee -a $LOG_FILE
+          # TODO this has to be proper name
+          ${nixos}/bin/run-*-vm 2>&1 | tee -a $LOG_FILE
           echo "View results at $RUNDIR/results"
           echo "Log is in $LOG_FILE"
         '';
