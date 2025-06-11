@@ -575,13 +575,43 @@ in rec {
       uconfig =
         {
           # Same as in .vm
-          networking.hostName = "${name}";
+          networking.hostName = "${name}-prebuild";
           kernel = {
             inherit src version;
             kconfig = kkconfig;
           };
           vm.sharedir = "$ROOTDIR/.kd/${name}/share";
           vm.disks = [12000 12000 2000 2000];
+
+          # As our dummy derivation doesn't provide any .config we need to tell
+          # NixOS not to check for any required configurations
+          system.requiredKernelConfig = pkgs.lib.mkForce [];
+        }
+        // uconfig;
+    };
+
+    kgdbvm = mkVmTest {
+      inherit name root enableCcache;
+      uconfig =
+        {
+          # Same as in .vm
+          networking.hostName = "${name}-kgdb";
+          kernel = {
+            inherit src version;
+            kconfig = kkconfig;
+          };
+          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
+          vm.disks = [12000 12000 2000 2000];
+
+          boot.kernelParams = pkgs.lib.mkForce [
+            # consistent eth* naming
+            "net.ifnames=0"
+            "biosdevnames=0"
+            "console=tty0"
+            "kgdboc=ttyS0,115200"
+            "nokaslr"
+            "kgdbwait"
+          ];
 
           # As our dummy derivation doesn't provide any .config we need to tell
           # NixOS not to check for any required configurations
