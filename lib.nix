@@ -384,25 +384,12 @@ in rec {
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
-      CCACHE_DIR = "/var/cache/ccache/";
+      CCACHE_DIR = "$HOME/.cache/ccache/";
       CCACHE_SLOPPINESS = "random_seed";
       CCACHE_UMASK = 007;
 
       shellHook = ''
-        export LLVM=1
         export MAKEFLAGS="-j$(nproc)"
-        if type -p ccache; then
-          export CC="ccache clang"
-          export HOSTCC="ccache clang"
-        fi
-
-        export AWK=$(type -P awk)
-        export ECHO=$(type -P echo)
-        export LIBTOOL=$(type -P libtool)
-        export MAKE=$(type -P make)
-        export SED=$(type -P sed)
-        export SORT=$(type -P sort)
-
         echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
       '';
     };
@@ -438,25 +425,12 @@ in rec {
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
-      CCACHE_DIR = "/var/cache/ccache/";
+      CCACHE_DIR = "$HOME/.cache/ccache/";
       CCACHE_SLOPPINESS = "random_seed";
       CCACHE_UMASK = 007;
 
       shellHook = ''
-        export LLVM=1
         export MAKEFLAGS="-j$(nproc)"
-        if type -p ccache; then
-          export CC="ccache clang"
-          export HOSTCC="ccache clang"
-        fi
-
-        export AWK=$(type -P awk)
-        export ECHO=$(type -P echo)
-        export LIBTOOL=$(type -P libtool)
-        export MAKE=$(type -P make)
-        export SED=$(type -P sed)
-        export SORT=$(type -P sort)
-
         echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
       '';
     };
