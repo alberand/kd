@@ -351,37 +351,36 @@ in rec {
 
   mkXfsprogsShell = {}:
     pkgs.mkShell {
-      nativeBuildInputs = with pkgs;
-        [
-          acl
-          attr
-          automake
-          autoconf
-          bc
-          dump
-          e2fsprogs
-          fio
-          gawk
-          indent
-          libtool
-          file
-          gnumake
-          pkg-config
-          libuuid
-          gawk
-          libuuid
-          libxfs
-          gdbm
-          icu
-          libuuid # codegen tool uses libuuid
-          liburcu # required by crc32selftest
-          readline
-          inih
-          man
-          gettext
-          patchutils_0_4_2
-        ]
-        ++ llvm;
+      nativeBuildInputs = with pkgs; [
+        acl
+        attr
+        automake
+        autoconf
+        bc
+        dump
+        e2fsprogs
+        fio
+        gawk
+        indent
+        libtool
+        file
+        gnumake
+        pkg-config
+        libuuid
+        gawk
+        libuuid
+        libxfs
+        gdbm
+        icu
+        libuuid # codegen tool uses libuuid
+        liburcu # required by crc32selftest
+        readline
+        inih
+        man
+        gettext
+        patchutils_0_4_2
+        (mkLlvmPkgs {clangVersion = "19";})
+      ];
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
@@ -410,33 +409,32 @@ in rec {
 
   mkXfstestsShell = {}:
     pkgs.mkShell {
-      nativeBuildInputs = with pkgs;
-        [
-          udev
-          flex
-          bison
-          perl
-          gnumake
-          pkg-config
-          lld
-          file
-          gettext
-          libtool
-          automake
-          autoconf
-          attr
-          acl
-          libxfs
-          libaio
-          icu
-          libuuid
-          liburcu
-          liburing
-          readline
-          gnutar
-          gzip
-        ]
-        ++ llvm;
+      nativeBuildInputs = with pkgs; [
+        udev
+        flex
+        bison
+        perl
+        gnumake
+        pkg-config
+        lld
+        file
+        gettext
+        libtool
+        automake
+        autoconf
+        attr
+        acl
+        libxfs
+        libaio
+        icu
+        libuuid
+        liburcu
+        liburing
+        readline
+        gnutar
+        gzip
+        (mkLlvmPkgs {clangVersion = "19";})
+      ];
 
       KBUILD_BUILD_TIMESTAMP = "";
       SOURCE_DATE_EPOCH = 0;
