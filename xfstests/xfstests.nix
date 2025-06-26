@@ -181,6 +181,13 @@ in {
       type = types.nullOr types.path;
     };
 
+    filesystem = mkOption {
+      description = "Filesystem to format disks to before xfstests";
+      default = "xfs";
+      example = "ext4";
+      type = types.str;
+    };
+
     src = mkOption {
       type = types.nullOr types.package;
       default = pkgs.fetchgit {
@@ -347,10 +354,7 @@ in {
           # Auto poweroff
           ${pkgs.systemd}/bin/systemctl poweroff;
         '';
-        script = let
-          mkfs = "${xfsprogs}/bin/mkfs.xfs";
-        in
-        ''
+        script = ''
           ${cfg.pre-test-hook}
 
           function get_config {
@@ -388,17 +392,20 @@ in {
             scratch_dev="${cfg.scratch-dev}"
           fi;
 
-          if ${pkgs.util-linux}/bin/mountpoint /mnt/test; then
-            ${pkgs.util-linux}/bin/umount $test_dev
-          fi
-          if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
-            ${pkgs.util-linux}/bin/umount $scratch_dev
-          fi
-
           # Prepare disks
           mkfs_initial=$(mktemp)
-          ${mkfs} -f -L test $test_dev 2>&1 > $mkfs_initial
-          ${mkfs} -f -L scratch $scratch_dev 2>&1 > $mkfs_initial
+          ${pkgs.util-linux}/bin/umount $test_dev 2>&1 > $mkfs_initial
+          ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 > $mkfs_initial
+
+          ${pkgs.util-linux}/bin/mkfs \
+            -f ${cfg.filesystem} \
+            -L test $test_dev \
+            2>&1 > $mkfs_initial
+          ${pkgs.util-linux}/bin/mkfs \
+            -t ${cfg.filesystem} \
+            -f \
+            -L scratch $scratch_dev \
+            2>&1 > $mkfs_initial
           echo "Initial mkfs output for test/scratch can be found at $mkfs_initial"
 
           export TEST_DEV="$test_dev"
