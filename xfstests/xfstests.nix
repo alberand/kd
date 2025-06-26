@@ -181,20 +181,6 @@ in {
       type = types.nullOr types.path;
     };
 
-    mkfs_cmd = mkOption {
-      description = "mkfs command to recreate the disks before tests";
-      default = "${pkgs.xfsprogs}/bin/mkfs.xfs";
-      example = "${pkgs.xfsprogs}/bin/mkfs.xfs";
-      type = types.str;
-    };
-
-    mkfs_opts = mkOption {
-      description = "Options for mkfs_cmd";
-      default = "";
-      example = "-f";
-      type = types.str;
-    };
-
     src = mkOption {
       type = types.nullOr types.package;
       default = pkgs.fetchgit {
@@ -361,7 +347,9 @@ in {
           # Auto poweroff
           ${pkgs.systemd}/bin/systemctl poweroff;
         '';
-      script =
+        script = let
+          mkfs = "${xfsprogs}/bin/mkfs.xfs";
+        in
         ''
           ${cfg.pre-test-hook}
 
@@ -386,13 +374,6 @@ in {
             arguments="${cfg.arguments}"
           fi;
 
-          mkfs_opts=""
-          if [ "$(get_config 'xfstests.mkfs_opts')" != "" ]; then
-            mkfs_opts="$(get_config 'xfstests.mkfs_opts')"
-          else
-            mkfs_opts="${cfg.mkfs_opts}"
-          fi;
-
           test_dev=""
           if [ "$(get_config 'xfstests.test_dev')" != "" ]; then
             test_dev="$(get_config 'xfstests.test_dev')"
@@ -413,8 +394,12 @@ in {
           if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
             ${pkgs.util-linux}/bin/umount $scratch_dev
           fi
-          ${cfg.mkfs_cmd} -f $mkfs_opts -L test $test_dev
-          ${cfg.mkfs_cmd} -f $mkfs_opts -L scratch $scratch_dev
+
+          # Prepare disks
+          mkfs_initial=$(mktemp)
+          ${mkfs} -f -L test $test_dev 2>&1 > $mkfs_initial
+          ${mkfs} -f -L scratch $scratch_dev 2>&1 > $mkfs_initial
+          echo "Initial mkfs output for test/scratch can be found at $mkfs_initial"
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
