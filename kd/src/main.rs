@@ -214,6 +214,10 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             options.push(set_value_str("programs.xfstests.scratch-dev", &scratch_dev));
         };
 
+        if let Some(filesystem) = &subconfig.filesystem {
+            options.push(set_value_str("programs.xfstests.filesystem", &filesystem));
+        };
+
         if let Some(extra_env) = &subconfig.extra_env {
             options.push(set_value_str(
                 "programs.xfstests.extraEnv",
