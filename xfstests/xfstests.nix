@@ -341,6 +341,10 @@ in {
         Group = "root";
         WorkingDirectory = "/root";
       };
+      path = [
+        pkgs.xfsprogs
+        pkgs.e2fsprogs
+      ];
       after = ["network.target" "network-online.target" "local-fs.target"];
       wants = ["network.target" "network-online.target" "local-fs.target"];
       wantedBy = ["multi-user.target"];
