@@ -330,8 +330,8 @@ in {
       enable = true;
       serviceConfig = {
         Type = "oneshot";
-        StandardOutput = "tty";
-        StandardError = "tty";
+        StandardOutput = "journal+console";
+        StandardError = "journal+console";
         # argh... Nix ignore SIGPIPE somewhere and it causes all child processes
         # to ignore SIGPIPE. Don't remove it or otherwise many tests will fail
         # due too Broken pipe. Test with yes | head should not return Brokne
