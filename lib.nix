@@ -243,6 +243,8 @@ in rec {
               autoconf
               pahole
               trace-cmd
+              python312Packages.ply # b4 prep --check and ./script/checkpatch
+              python312Packages.gitpython # b4 prep --check and ./script/checkpatch
               (vmtest-deploy {})
 
               (callPackage (import ./kd/derivation.nix) {})
