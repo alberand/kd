@@ -358,7 +358,13 @@ in {
           # Auto poweroff
           ${pkgs.systemd}/bin/systemctl poweroff;
         '';
-        script = ''
+      script = let
+        mkfs-options = getAttr "${cfg.filesystem}" {
+          xfs = "-f";
+          ext4 = "-F";
+        };
+      in
+        ''
           ${cfg.pre-test-hook}
 
           function get_config {
@@ -406,12 +412,13 @@ in {
           fi
 
           ${pkgs.util-linux}/bin/mkfs \
-            -f ${cfg.filesystem} \
+            -t ${cfg.filesystem} \
+            ${mkfs-options} \
             -L test $test_dev \
             2>&1 > $mkfs_initial
           ${pkgs.util-linux}/bin/mkfs \
             -t ${cfg.filesystem} \
-            -f \
+            ${mkfs-options} \
             -L scratch $scratch_dev \
             2>&1 > $mkfs_initial
           echo "Initial mkfs output for test/scratch can be found at $mkfs_initial"
