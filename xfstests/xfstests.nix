@@ -394,8 +394,12 @@ in {
 
           # Prepare disks
           mkfs_initial=$(mktemp)
-          ${pkgs.util-linux}/bin/umount $test_dev 2>&1 > $mkfs_initial
-          ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 > $mkfs_initial
+          if ${pkgs.util-linux}/bin/mountpoint /mnt/test; then
+            ${pkgs.util-linux}/bin/umount $test_dev 2>&1 > $mkfs_initial
+          fi
+          if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
+            ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 > $mkfs_initial
+          fi
 
           ${pkgs.util-linux}/bin/mkfs \
             -f ${cfg.filesystem} \
