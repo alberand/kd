@@ -36,13 +36,14 @@
             xfstests-configs = (import ./xfstests/configs.nix) {pkgs = prev;};
           })
           (import rust-overlay)
+          (import ./xfsprogs/overlay.nix {})
         ];
       };
       lib = import ./lib.nix {
         inherit pkgs nixos-generators nixpkgs;
       };
       default = lib.mkEnv {
-        inherit nixpkgs;
+        inherit nixpkgs pkgs;
         name = "demo";
         root = builtins.toString ./.;
         stdenv = pkgs.clangStdenv;

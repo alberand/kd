@@ -38,11 +38,7 @@ in rec {
             enableCcache
             ;
         })
-        (pkgs.callPackage (import ./xfsprogs.nix) {
-          inherit
-            enableCcache
-            ;
-        })
+        (import ./xfsprogs/module.nix {inherit enableCcache;})
         ./dummy.nix
         ./system.nix
         ./vm.nix
@@ -91,11 +87,7 @@ in rec {
               enableCcache
               ;
           })
-          (pkgs.callPackage (import ./xfsprogs.nix) {
-            inherit
-              enableCcache
-              ;
-          })
+          (import ./xfsprogs/module.nix {inherit enableCcache;})
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
@@ -130,11 +122,7 @@ in rec {
               enableCcache
               ;
           })
-          (pkgs.callPackage (import ./xfsprogs.nix) {
-            inherit
-              enableCcache
-              ;
-          })
+          (import ./xfsprogs/module.nix {inherit enableCcache;})
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
@@ -448,6 +436,7 @@ in rec {
     name,
     root,
     nixpkgs,
+    pkgs,
     stdenv ? pkgs.stdenv,
     uconfig ? {},
     enableCcache ? false,
@@ -476,6 +465,8 @@ in rec {
       then uconfig.kernel.kconfig
       else sources.options.kernel.kconfig.default;
   in rec {
+    inherit (pkgs) xfsprogs;
+
     kconfig = buildKernelConfig {
       inherit src version;
       kconfig = kkconfig;
@@ -648,7 +639,7 @@ in rec {
           };
           modules = [
             ./xfstests/xfstests.nix
-            ./xfsprogs.nix
+            ./xfsprogs/module.nix
             ./dummy.nix
             ./system.nix
             ./vm.nix
