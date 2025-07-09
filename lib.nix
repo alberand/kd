@@ -435,6 +435,7 @@ in rec {
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv enableCcache;
     };
+    kconfigs = (import ./kconfigs/default.nix) {inherit (pkgs) lib;};
     sources = (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;}) {
       inherit pkgs;
       config = {};
@@ -455,16 +456,19 @@ in rec {
   in rec {
     inherit (pkgs) xfsprogs xfstests;
 
+    kconfigBuild = {config}:
+      buildKernelConfig {
+        inherit src version;
+        kconfig = kkconfig // kconfigs."${config}";
+      };
+
     kconfig = buildKernelConfig {
       inherit src version;
       kconfig = kkconfig;
     };
 
-    kconfig-iso = buildKernelConfig {
-      inherit src version;
-      kconfig = kkconfig;
-      iso = true;
-    };
+    kconfig-debug = kconfigBuild {config = "debug";};
+    kconfig-iso = kconfigBuild {config = "iso";};
 
     headers = buildKernelHeaders {
       inherit src version;

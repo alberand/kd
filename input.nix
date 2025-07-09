@@ -57,11 +57,16 @@ in {
   config = let
     buildKernel = pkgs.callPackage ./kernel-build.nix {};
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {inherit nixpkgs;};
+    configs = pkgs.callPackage ./kconfigs/default.nix {};
     kernelPackages = pkgs.linuxPackagesFor (
       buildKernel {
         inherit (cfg) version src;
         kconfig = buildKernelConfig {
-          inherit (cfg) src version kconfig iso debug;
+          inherit (cfg) src version;
+          kconfig =
+            kconfig
+            // (lib.optionalAttrs debug configs.debug)
+            // (lib.optionalAttrs iso configs.iso);
         };
       }
     );

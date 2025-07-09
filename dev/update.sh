@@ -45,3 +45,12 @@ for file in $OUTPUT/*.json; do
 	jq .args $file > $temp
 	cp $temp $file
 done;
+
+nix build .#kconfig
+cp result ./kconfigs/config-vm-$VERSION_KERNEL
+
+nix build .#kconfig-debug
+cp result ./kconfigs/config-debug-$VERSION_KERNEL
+
+nix build .#kconfig-iso
+cp result ./kconfigs/config-iso-$VERSION_KERNEL
