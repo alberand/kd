@@ -63,10 +63,10 @@ in {
 
     src = mkOption {
       type = types.nullOr types.package;
-      default = pkgs.fetchgit {
+      default = fetchgit {
         url = "git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git";
-        rev = "v6.14.0";
-        sha256 = "sha256-jngn0xvTyWtDsKZWTMerw4sqsval0KcmTnkfkXuoGbM=";
+        rev = "v6.15.0";
+        hash = "sha256-NbD0WUFZo75vacJi6hcpO6kMwMHoTKiW2nB0oUZumpc=";
       };
     };
 

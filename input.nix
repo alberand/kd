@@ -9,7 +9,7 @@
 with pkgs.lib; let
   cfg = config.kernel;
 in {
-  options = {
+  options = with pkgs; {
     dev = {
       dontStrip = mkOption {
         type = types.bool;
@@ -25,10 +25,10 @@ in {
 
       src = mkOption {
         type = types.nullOr types.package;
-        default = pkgs.fetchgit {
+        default = fetchgit {
           url = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git";
-          rev = "v6.15";
-          hash = "sha256-PQjXBWJV+i2O0Xxbg76HqbHyzu7C0RWkvHJ8UywJSCw=";
+          rev = "v6.16-rc5";
+          hash = "sha256-3k7L4kZEZBGCVhbjy47Z7iZIjEDnZOqy74y2WjOiNHI=";
         };
       };
 

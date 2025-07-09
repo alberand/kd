@@ -107,7 +107,7 @@ with lib; let
     };
   };
 in {
-  options.programs.xfstests = {
+  options.programs.xfstests = with pkgs; {
     enable = mkEnableOption {
       name = "xfstests";
       default = true;
@@ -190,10 +190,10 @@ in {
 
     src = mkOption {
       type = types.nullOr types.package;
-      default = pkgs.fetchgit {
+      default = fetchgit {
         url = "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git";
-        rev = "v2025.05.25";
-        sha256 = "sha256-jE/c2F+6Sxj1ucBGMgCfyopmjOQwvrKJW3FRQPDEz0U=";
+        rev = "v2025.06.22";
+        hash = "sha256-y/PSHxjGSTPzJN0vLEzkhm794KvoUbvMyMLHlhClpJo=";
       };
     };
 
