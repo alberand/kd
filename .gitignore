@@ -6,3 +6,5 @@ modules
 .vmtest.toml
 .vmtest
 kd/target
+.kd
+.kd.toml
