@@ -63,11 +63,7 @@ in {
 
     src = mkOption {
       type = types.nullOr types.package;
-      default = fetchgit {
-        url = "git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git";
-        rev = "v6.15.0";
-        hash = "sha256-NbD0WUFZo75vacJi6hcpO6kMwMHoTKiW2nB0oUZumpc=";
-      };
+      default = pkgs.fetchgit (pkgs.lib.importJSON ./sources/xfsprogs.json);
     };
 
     kernelHeaders = mkOption {

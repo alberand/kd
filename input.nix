@@ -9,7 +9,9 @@
 with pkgs.lib; let
   cfg = config.kernel;
 in {
-  options = with pkgs; {
+  options = let
+    src = pkgs.lib.importJSON ./sources/kernel.json;
+  in {
     dev = {
       dontStrip = mkOption {
         type = types.bool;
@@ -20,16 +22,13 @@ in {
     kernel = {
       version = mkOption {
         type = types.str;
-        default = "6.15";
+        default = src.rev;
       };
 
       src = mkOption {
         type = types.nullOr types.package;
-        default = fetchgit {
-          url = "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git";
-          rev = "v6.16-rc5";
-          hash = "sha256-3k7L4kZEZBGCVhbjy47Z7iZIjEDnZOqy74y2WjOiNHI=";
-        };
+
+        default = pkgs.fetchgit src;
       };
 
       kconfig = mkOption {
