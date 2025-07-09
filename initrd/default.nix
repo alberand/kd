@@ -56,7 +56,7 @@
         diskSize = "20000";
       };
       modules = [
-        ./xfstests/xfstests.nix
+        ./xfstests/module.nix
         ./xfsprogs/module.nix
         ./dummy.nix
         ./system.nix

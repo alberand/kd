@@ -453,14 +453,13 @@ in rec {
       if useConfig && builtins.hasAttr "kconfig" uconfig.kernel
       then uconfig.kernel.kconfig
       else sources.options.kernel.kconfig.default;
-  in rec {
-    inherit (pkgs) xfsprogs xfstests;
-
     kconfigBuild = {config}:
       buildKernelConfig {
         inherit src version;
         kconfig = kkconfig // kconfigs."${config}";
       };
+  in rec {
+    inherit (pkgs) xfsprogs xfstests;
 
     kconfig = buildKernelConfig {
       inherit src version;
@@ -522,7 +521,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
+          vm.workdir = "${root}/.kd/${name}";
           vm.disks = [12000 12000 2000 2000];
         }
         // uconfig;
@@ -538,7 +537,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
+          vm.workdir = "${root}/.kd/${name}";
           vm.disks = [12000 12000 2000 2000];
 
           # As our dummy derivation doesn't provide any .config we need to tell
@@ -558,7 +557,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.sharedir = "$ROOTDIR/.kd/${name}/share";
+          vm.workdir = "${root}/.kd/${name}";
           vm.disks = [12000 12000 2000 2000];
 
           boot.kernelParams = pkgs.lib.mkForce [
@@ -578,7 +577,9 @@ in rec {
         // uconfig;
     };
 
-    initrd = pkgs.callPackage (import ./initrd/default.nix) {};
+    initrd = pkgs.callPackage (import ./initrd/default.nix) {
+      inherit nixpkgs uconfig;
+    };
 
     shell = mkLinuxShell {
       inherit root name;

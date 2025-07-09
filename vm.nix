@@ -6,10 +6,10 @@
   cfg = config.vm;
 in {
   options.vm = {
-    sharedir = lib.mkOption {
-      description = "path to the share directory inside VM";
-      default = "/tmp/vmtest";
-      example = "/tmp/vmtest";
+    workdir = lib.mkOption {
+      description = "Work dir for creating disk image and share mount";
+      example = "/tmp/kd";
+      default = ".kd/default";
       type = lib.types.str;
     };
 
@@ -40,7 +40,7 @@ in {
     virtualisation = {
       diskSize = 20000; # MB
       # Store the image in sharedir instead of pwd
-      diskImage = "${cfg.sharedir}/image.qcow2";
+      diskImage = "${cfg.workdir}/${config.system.name}.qcow2";
       memorySize = 4096; # MB
       cores = 4;
       writableStoreUseTmpfs = false;
@@ -63,7 +63,7 @@ in {
 
       sharedDirectories = {
         share = {
-          source = "${cfg.sharedir}";
+          source = "${cfg.workdir}/share";
           target = "/root/share";
         };
       };

@@ -64,9 +64,9 @@ in {
         kconfig = buildKernelConfig {
           inherit (cfg) src version;
           kconfig =
-            kconfig
-            // (lib.optionalAttrs debug configs.debug)
-            // (lib.optionalAttrs iso configs.iso);
+            cfg.kconfig
+            // (pkgs.lib.optionalAttrs cfg.debug configs.debug)
+            // (pkgs.lib.optionalAttrs cfg.iso configs.iso);
         };
       }
     );
