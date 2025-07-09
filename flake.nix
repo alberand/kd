@@ -32,11 +32,9 @@
       pkgs = import nixpkgs {
         inherit system;
         overlays = [
-          (_final: prev: {
-            xfstests-configs = (import ./xfstests/configs.nix) {pkgs = prev;};
-          })
           (import rust-overlay)
           (import ./xfsprogs/overlay.nix {})
+          (import ./xfstests/overlay.nix {})
         ];
       };
       lib = import ./lib.nix {

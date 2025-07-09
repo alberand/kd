@@ -6,106 +6,6 @@
 }:
 with lib; let
   cfg = config.programs.xfstests;
-  xfstests-overlay-remote = final: prev: rec {
-    xfstests-configs = import ./configs.nix {inherit pkgs;};
-
-    xfstests-hooks = pkgs.stdenv.mkDerivation {
-      name = "xfstests-hooks";
-      src = cfg.hooks;
-      phases = ["unpackPhase" "installPhase"];
-      installPhase = ''
-        runHook preInstall
-
-        mkdir -p $out/lib/xfstests/hooks
-        cp --no-preserve=mode -r $src/* $out/lib/xfstests/hooks
-
-        runHook postInstall
-      '';
-    };
-    github-upload =
-      pkgs.writeShellScriptBin "github-upload" (builtins.readFile
-        ./github-upload.sh);
-    xfstests = pkgs.symlinkJoin {
-      name = "xfstests";
-      paths =
-        [
-          (prev.xfstests.overrideAttrs (old:
-            {
-              inherit (cfg) src;
-              version = "git";
-              patchPhase =
-                builtins.readFile ./patchPhase.sh
-                + old.patchPhase;
-              patches =
-                (old.patches or [])
-                ++ [
-                  ./0001-common-link-.out-file-to-the-output-directory.patch
-                  ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-                ];
-              nativeBuildInputs =
-                old.nativeBuildInputs
-                ++ [pkgs.pkg-config pkgs.gdbm pkgs.liburing]
-                ++ lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
-
-              dontStrip = config.dev.dontStrip;
-
-              wrapperScript = with pkgs;
-                writeScript "xfstests-check" (''
-                    #!${pkgs.runtimeShell}
-                    set -e
-
-                    dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-                    trap "rm -rf $dir" EXIT
-
-                    chmod a+rx "$dir"
-                    cd "$dir"
-                    for f in $(cd @out@/lib/xfstests; echo *); do
-                      ln -s @out@/lib/xfstests/$f $f
-                    done
-                  ''
-                  + (optionalString (cfg.hooks != null) ''
-                    ln -s ${pkgs.xfstests-hooks}/lib/xfstests/hooks hooks
-                  '')
-                  + ''
-                    export PATH=${lib.makeBinPath [
-                      acl
-                      attr
-                      bc
-                      e2fsprogs
-                      gawk
-                      keyutils
-                      libcap
-                      lvm2
-                      perl
-                      procps
-                      killall
-                      quota
-                      util-linux
-                      which
-                      xfsprogs
-                      duperemove
-                      acct
-                      xfsdump
-                      indent
-                      man
-                      fio
-                      dbench
-                      thin-provisioning-tools
-                      file
-                      openssl
-                    ]}:$PATH
-                    exec ./check "$@"
-                  '');
-            }
-            // lib.optionalAttrs enableCcache {
-              stdenv = prev.ccacheStdenv;
-            }))
-        ]
-        ++ optionals (cfg.hooks != null) [
-          xfstests-hooks
-        ];
-    };
-  };
 in {
   options.programs.xfstests = {
     enable = mkEnableOption {
@@ -221,7 +121,22 @@ in {
     );
 
     nixpkgs.overlays = [
-      xfstests-overlay-remote
+      (
+        final: prev:
+          {
+            inherit (cfg) src;
+            version = "git";
+
+            nativeBuildInputs =
+              old.nativeBuildInputs
+              ++ prev.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+
+            dontStrip = config.dev.dontStrip;
+          }
+          // prev.lib.optionalAttrs enableCcache {
+            stdenv = prev.ccacheStdenv;
+          }
+      )
     ];
 
     environment.systemPackages = with pkgs; [
@@ -427,7 +342,7 @@ in {
 
         ''
         + (optionalString (cfg.upload-results) ''
-          ${pkgs.github-upload}/bin/github-upload \
+          ${pkgs.xfstests-upload}/bin/xfstests-upload \
             ${cfg.repository} \
             ${config.networking.hostName} \
             /root/results

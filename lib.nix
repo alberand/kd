@@ -33,11 +33,7 @@ in rec {
         diskSize = "20000";
       };
       modules = [
-        (pkgs.callPackage (import ./xfstests/xfstests.nix) {
-          inherit
-            enableCcache
-            ;
-        })
+        (import ./xfstests/module.nix {inherit enableCcache;})
         (import ./xfsprogs/module.nix {inherit enableCcache;})
         ./dummy.nix
         ./system.nix
@@ -82,11 +78,7 @@ in rec {
       iso = nixos-generators.nixosGenerate {
         system = "x86_64-linux";
         modules = [
-          (pkgs.callPackage (import ./xfstests/xfstests.nix) {
-            inherit
-              enableCcache
-              ;
-          })
+          (import ./xfstests/module.nix {inherit enableCcache;})
           (import ./xfsprogs/module.nix {inherit enableCcache;})
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
@@ -117,11 +109,7 @@ in rec {
       qcow = nixos-generators.nixosGenerate {
         system = "x86_64-linux";
         modules = [
-          (pkgs.callPackage (import ./xfstests/xfstests.nix) {
-            inherit
-              enableCcache
-              ;
-          })
+          (import ./xfstests/module.nix {inherit enableCcache;})
           (import ./xfsprogs/module.nix {inherit enableCcache;})
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
@@ -465,7 +453,7 @@ in rec {
       then uconfig.kernel.kconfig
       else sources.options.kernel.kconfig.default;
   in rec {
-    inherit (pkgs) xfsprogs;
+    inherit (pkgs) xfsprogs xfstests;
 
     kconfig = buildKernelConfig {
       inherit src version;
