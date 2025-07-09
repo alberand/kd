@@ -40,6 +40,14 @@ with lib; let
         '';
 
         dontStrip = config.dev.dontStrip;
+
+        # Let's check for a version
+        nativeInstallCheckInputs = [
+          versionCheckHook
+        ];
+        versionCheckProgram = "${placeholder "out"}/bin/mkfs.xfs";
+        versionCheckProgramArg = "-V";
+        doInstallCheck = true;
       }
       // lib.optionalAttrs enableCcache {
         stdenv = prev.ccacheStdenv;
