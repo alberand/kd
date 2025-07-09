@@ -14,6 +14,20 @@
     inherit src version lib;
     configfile = kconfig;
     allowImportFromDerivation = true;
+    # Standard lib.versions.pad doesn't handle 'v' in front let's define our own
+    # TODO suggest it upstream?
+    modDirVersion = let
+      pad = n: version: let
+        numericVersion =
+          lib.head (lib.splitString "-"
+            version);
+        versionSuffix = lib.removePrefix numericVersion version;
+        prefixlessVersion = lib.removePrefix "v" numericVersion;
+      in
+        lib.concatStringsSep "." (lib.take n (lib.splitVersion prefixlessVersion
+            ++ lib.genList (_: "0") n))
+        + versionSuffix;
+    in (pad 3 version);
   }
   // lib.optionalAttrs enableCcache {
     # We always want to use ccacheStdenv. By if we do stdenv = ccacheStdenv it
