@@ -76,7 +76,11 @@
           };
       };
 
-      packages = default;
+      packages =
+        default
+        // {
+          kd = pkgs.callPackage (import ./kd/derivation.nix) {};
+        };
 
       templates.default = {
         path = ./templates/vm;
