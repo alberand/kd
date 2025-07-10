@@ -108,20 +108,21 @@ in {
 
     nixpkgs.overlays = [
       (
-        final: prev:
-          {
-            inherit (cfg) src;
-            version = "git";
+        final: prev: {
+          xfstests = prev.xfstests.overrideAttrs (old: ({
+              inherit (cfg) src;
+              version = "git";
 
-            nativeBuildInputs =
-              old.nativeBuildInputs
-              ++ prev.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+              nativeBuildInputs =
+                old.nativeBuildInputs
+                ++ prev.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
-            dontStrip = config.dev.dontStrip;
-          }
-          // prev.lib.optionalAttrs enableCcache {
-            stdenv = prev.ccacheStdenv;
-          }
+              dontStrip = config.dev.dontStrip;
+            }
+            // prev.lib.optionalAttrs enableCcache {
+              stdenv = prev.ccacheStdenv;
+            }));
+        }
       )
     ];
 

@@ -32,6 +32,7 @@ in {
         xfsprogs =
           prev.xfsprogs.overrideAttrs {
             inherit (cfg) src;
+            version = "git";
 
             nativeInstallCheckInputs =
               prev.xfsprogs.nativeInstallCheckInputs
