@@ -147,12 +147,14 @@ in rec {
       runner =
         pkgs.writeShellScriptBin "runner"
         ''
-          ROOTDIR="$(git rev-parse --show-toplevel)"
-          ENVNAME="${name}"
-          ENVDIR="$ROOTDIR/.kd/$ENVNAME"
-          LOCAL_CONFIG="$ROOTDIR/.kd.toml"
-          RUNDIR="$ENVDIR/share"
-          LOG_FILE="$RUNDIR/execution_$(date +"%Y-%m-%d_%H-%M").log"
+          # TODO find where .kd is
+          # ROOTDIR="$(git rev-parse --show-toplevel)"
+          export ROOTDIR="$PWD"
+          export ENVNAME="${name}"
+          export ENVDIR="$ROOTDIR/.kd/$ENVNAME"
+          export LOCAL_CONFIG="$ROOTDIR/.kd.toml"
+          export RUNDIR="$ENVDIR/share"
+          export LOG_FILE="$RUNDIR/execution_$(date +"%Y-%m-%d_%H-%M").log"
 
           function eecho() {
             echo "$1" | tee -a $LOG_FILE
@@ -163,20 +165,22 @@ in rec {
           mkdir -p $RUNDIR
           mkdir -p $RUNDIR/results
 
-          cp "$LOCAL_CONFIG" "$RUNDIR/kd.toml"
+          if [ -f "$LOCAL_CONFIG" ]; then
+            cp "$LOCAL_CONFIG" "$RUNDIR/kd.toml"
 
-          if ! tq --file $LOCAL_CONFIG . > /dev/null; then
-            echo "Invalid $LOCAL_CONFIG"
-            exit 1
-          fi
+            if ! tq --file $LOCAL_CONFIG . > /dev/null; then
+              echo "Invalid $LOCAL_CONFIG"
+              exit 1
+            fi
 
-          if tq --file $LOCAL_CONFIG 'dummy' > /dev/null; then
-            export DUMMY_TEST="$(tq --file $LOCAL_CONFIG 'dummy.script')"
-          fi
+            if tq --file $LOCAL_CONFIG 'dummy' > /dev/null; then
+              export DUMMY_TEST="$(tq --file $LOCAL_CONFIG 'dummy.script')"
+            fi
 
-          if [[ -f "$DUMMY_TEST" ]]; then
-            eecho "$DUMMY_TEST will be used as simple test"
-            cp "$DUMMY_TEST" "$RUNDIR/dummy.sh"
+            if [[ -f "$DUMMY_TEST" ]]; then
+              eecho "$DUMMY_TEST will be used as simple test"
+              cp "$DUMMY_TEST" "$RUNDIR/dummy.sh"
+            fi
           fi
 
           export NIX_DISK_IMAGE="$ENVDIR/image.qcow2"
@@ -521,7 +525,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "${root}/.kd/${name}";
+          vm.workdir = "$ENVDIR";
           vm.disks = [12000 12000 2000 2000];
         }
         // uconfig;
@@ -537,7 +541,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "${root}/.kd/${name}";
+          vm.workdir = "$ENVDIR";
           vm.disks = [12000 12000 2000 2000];
 
           # As our dummy derivation doesn't provide any .config we need to tell
@@ -557,7 +561,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "${root}/.kd/${name}";
+          vm.workdir = "$ENVDIR";
           vm.disks = [12000 12000 2000 2000];
 
           boot.kernelParams = pkgs.lib.mkForce [
