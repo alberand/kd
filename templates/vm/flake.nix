@@ -2,7 +2,7 @@
   description = "Linux Kernel development environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     kd.url = "github:alberand/kd";
     kd.inputs.nixpkgs.follows = "nixpkgs";

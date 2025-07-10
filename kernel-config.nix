@@ -8,6 +8,7 @@
   bison,
   flex,
   pahole,
+  buildPackages,
   nixpkgs,
 }: {
   src,
@@ -25,7 +26,7 @@ stdenv.mkDerivation rec {
   kernelConfig = passthru.moduleStructuredConfig.intermediateNixConfig;
   passAsFile = ["kernelConfig"];
 
-  depsBuildBuild = [stdenv.cc];
+  depsBuildBuild = [buildPackages.stdenv.cc];
   nativeBuildInputs = [perl gmp libmpc mpfr bison flex pahole];
 
   makeFlags =
