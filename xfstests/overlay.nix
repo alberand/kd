@@ -97,7 +97,6 @@
           prev.indent
           prev.man
           prev.fio
-          prev.dbench
           prev.thin-provisioning-tools
           prev.file
           prev.openssl
