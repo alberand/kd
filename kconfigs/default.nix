@@ -98,6 +98,7 @@ with lib.kernel; {
 
     # Filesystems
     EXT4_FS = yes;
+    XFS_FS = yes;
     TMPFS = yes;
     OVERLAY_FS = yes;
 
