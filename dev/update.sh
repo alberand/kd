@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 usage() {
 	echo "$(basename "$0") <kernel version> <xfsprogs version> <xfstests version>"
 }
@@ -18,6 +20,7 @@ OUTPUT=./sources
 rm -rf -- $OUTPUT
 mkdir $OUTPUT
 
+echo "💡Fetching new versions and updating hashes"
 nurl \
 	--fetcher fetchgit \
 	--json \
@@ -46,6 +49,7 @@ for file in $OUTPUT/*.json; do
 	cp $temp $file
 done;
 
+echo "💡Updating kernel configs"
 nix build .#kconfig
 cp result ./kconfigs/config-vm-$VERSION_KERNEL
 
@@ -54,3 +58,9 @@ cp result ./kconfigs/config-debug-$VERSION_KERNEL
 
 nix build .#kconfig-iso
 cp result ./kconfigs/config-iso-$VERSION_KERNEL
+
+chmod 666 ./kconfigs/*
+
+echo "💡Updating Flake inputs"
+nix flake update
+nix flake update --flake ./templates/vm
