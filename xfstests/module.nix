@@ -60,20 +60,6 @@ in {
       type = types.bool;
     };
 
-    pre-test-hook = mkOption {
-      description = "bash script run before test execution";
-      default = "";
-      example = "trace-cmd start -e xfs";
-      type = types.str;
-    };
-
-    post-test-hook = mkOption {
-      description = "bash script run after test execution";
-      default = "";
-      example = "trace-cmd stop; trace-cmd show > /root/trace.log";
-      type = types.str;
-    };
-
     hooks = mkOption {
       description = "Path to hooks folder. 20210722064725.3077558-1-david@fromorbit.com";
       default = null;
@@ -261,7 +247,6 @@ in {
       wantedBy = ["multi-user.target"];
       postStop =
         ''
-          ${cfg.post-test-hook}
           # Beep beep... Human... back to work
           echo -ne '\007'
         ''
@@ -276,10 +261,9 @@ in {
         };
       in
         ''
-          ${cfg.pre-test-hook}
-
+          set -x
           function get_config {
-            ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@
+            ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ || true
           }
 
           if [ ! -f "/root/share/kd.toml" ] && [ "${cfg.arguments}" == "" ]; then
@@ -288,50 +272,44 @@ in {
           fi
 
           if [ "$(get_config 'xfstests.args')" == "" ] && [ "${cfg.arguments}" == "" ]; then
-            echo "No tests to run according to /root/share/kd.toml"
+            echo "No tests to run"
             exit 0
           fi
 
-          arguments=""
-          if [ "$(get_config 'xfstests.args')" != "" ]; then
-            arguments="$(get_config 'xfstests.args')"
-          else
+          arguments="$(get_config 'xfstests.args')"
+          if [ "$arguments" == "" ]; then
             arguments="${cfg.arguments}"
           fi;
 
-          test_dev=""
-          if [ "$(get_config 'xfstests.test_dev')" != "" ]; then
-            test_dev="$(get_config 'xfstests.test_dev')"
-          else
+          test_dev="$(get_config 'xfstests.test_dev')"
+          if [ "$test_dev" == "" ]; then
             test_dev="${cfg.test-dev}"
           fi;
 
-          scratch_dev=""
-          if [ "$(get_config 'xfstests.scratch_dev')" != "" ]; then
-            scratch_dev="$(get_config 'xfstests.scratch_dev')"
-          else
+          scratch_dev="$(get_config 'xfstests.scratch_dev')"
+          if [ "$scratch_dev" == "" ]; then
             scratch_dev="${cfg.scratch-dev}"
           fi;
 
           # Prepare disks
           mkfs_initial=$(mktemp)
           if ${pkgs.util-linux}/bin/mountpoint /mnt/test; then
-            ${pkgs.util-linux}/bin/umount $test_dev 2>&1 > $mkfs_initial
+            ${pkgs.util-linux}/bin/umount $test_dev 2>&1 >> $mkfs_initial
           fi
           if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
-            ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 > $mkfs_initial
+            ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 >> $mkfs_initial
           fi
 
           ${pkgs.util-linux}/bin/mkfs \
             -t ${cfg.filesystem} \
             ${mkfs-options} \
             -L test $test_dev \
-            2>&1 > $mkfs_initial
+            2>&1 >> $mkfs_initial
           ${pkgs.util-linux}/bin/mkfs \
             -t ${cfg.filesystem} \
             ${mkfs-options} \
             -L scratch $scratch_dev \
-            2>&1 > $mkfs_initial
+            2>&1 >> $mkfs_initial
           echo "Initial mkfs output for test/scratch can be found at $mkfs_initial"
 
           export TEST_DEV="$test_dev"
