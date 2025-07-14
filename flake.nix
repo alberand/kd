@@ -15,6 +15,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-clang.url = "github:nixos/nixpkgs/6915a163f351c32bd4557518d047725665e83d37";
     flake-utils.url = "github:numtide/flake-utils";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
@@ -24,18 +25,28 @@
   outputs = {
     self,
     nixpkgs,
+    nixpkgs-clang,
     flake-utils,
     nixos-generators,
     rust-overlay,
   }:
     flake-utils.lib.eachSystem ["x86_64-linux"] (system: let
+      pkgs-clang = import nixpkgs-clang {
+        inherit system;
+      };
       pkgs = import nixpkgs {
         inherit system;
         overlays = [
           (import rust-overlay)
           (import ./xfsprogs/overlay.nix {})
           (import ./xfstests/overlay.nix {})
+          (final: prev: {
+            llvmPackages_latest = pkgs-clang.llvmPackages_latest;
+          })
         ];
+      };
+      specialArgs = {
+        inherit pkgs-clang pkgs;
       };
       lib = import ./lib.nix {
         inherit pkgs nixos-generators nixpkgs;

@@ -70,6 +70,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-clang": {
+      "locked": {
+        "lastModified": 1731650604,
+        "narHash": "sha256-GZKb4C4BceEsApitbnFqyeKqjJpVDgSumi4LzVR9Iq4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "6915a163f351c32bd4557518d047725665e83d37",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "6915a163f351c32bd4557518d047725665e83d37",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1744536153,
@@ -91,6 +107,7 @@
         "flake-utils": "flake-utils",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-clang": "nixpkgs-clang",
         "rust-overlay": "rust-overlay"
       }
     },

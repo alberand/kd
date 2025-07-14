@@ -21,6 +21,8 @@ in {
           prev.attr
         ];
 
+      patches = [];
+
       postConfigure = ''
         cp include/install-sh install-sh
         patchShebangs ./install-sh
