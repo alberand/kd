@@ -5,9 +5,9 @@
   ...
 }:
 with lib; let
-  cfg = config.programs.xfstests;
+  cfg = config.services.xfstests;
 in {
-  options.programs.xfstests = {
+  options.services.xfstests = {
     enable = mkEnableOption {
       name = "xfstests";
       default = true;
@@ -103,7 +103,7 @@ in {
   config = mkIf cfg.enable {
     warnings = (
       lib.optionals (cfg.upload-results && (cfg.repository == ""))
-      "To upload results set programs.xfstests.repository"
+      "To upload results set services.xfstests.repository"
     );
 
     nixpkgs.overlays = [

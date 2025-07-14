@@ -109,16 +109,16 @@
                   vm.workdir = "/tmp/kd-test/";
                   vm.disks = [12000 12000 2000 2000];
 
-                  programs.xfsprogs = {
+                  services.xfsprogs = {
                     enable = true;
                     kernelHeaders = buildKernelHeaders {
                       inherit (config.kernel) src version;
                     };
                   };
-                  programs.dummy = {
+                  services.dummy = {
                     enable = true;
                   };
-                  programs.xfstests = {
+                  services.xfstests = {
                     enable = true;
                     test-dev = pkgs.lib.mkDefault "/dev/vdb";
                     scratch-dev = pkgs.lib.mkDefault "/dev/vdc";

@@ -48,16 +48,16 @@ in rec {
           #  }
           #];
 
-          programs.xfsprogs = {
+          services.xfsprogs = {
             enable = true;
             kernelHeaders = buildKernelHeaders {
               inherit (config.kernel) src version;
             };
           };
-          programs.dummy = {
+          services.dummy = {
             enable = true;
           };
-          programs.xfstests = {
+          services.xfstests = {
             enable = true;
             test-dev = pkgs.lib.mkDefault "/dev/vdb";
             scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
@@ -86,11 +86,11 @@ in rec {
           ({pkgs, ...}: {
             kernel.iso = pkgs.lib.mkForce true;
 
-            programs.xfsprogs.enable = true;
+            services.xfsprogs.enable = true;
             # Don't shutdown system as libvirtd will remove the VM
-            programs.xfstests.autoshutdown = false;
+            services.xfstests.autoshutdown = false;
 
-            programs.xfstests = {
+            services.xfstests = {
               enable = true;
               test-dev = pkgs.lib.mkDefault "/dev/sda";
               scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
@@ -117,11 +117,11 @@ in rec {
           ({pkgs, ...}: {
             kernel.iso = pkgs.lib.mkForce true;
 
-            programs.xfsprogs.enable = true;
+            services.xfsprogs.enable = true;
             # Don't shutdown system as libvirtd will remove the VM
-            programs.xfstests.autoshutdown = false;
+            services.xfstests.autoshutdown = false;
 
-            programs.xfstests = {
+            services.xfstests = {
               enable = true;
               test-dev = pkgs.lib.mkDefault "/dev/sda";
               scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
@@ -491,7 +491,7 @@ in rec {
             kconfig = kconfig-iso.structuredConfig;
           };
 
-          programs.xfstests = {
+          services.xfstests = {
             arguments = "-R xunit -s xfs_4k generic/110";
             upload-results = true;
           };
@@ -504,7 +504,7 @@ in rec {
       uconfig =
         {
           networking.hostName = "${name}";
-          programs.xfstests = {
+          services.xfstests = {
             arguments = "-R xunit -s xfs_4k generic/110";
           };
           boot.initrd.kernelModules = pkgs.lib.mkForce [

@@ -199,28 +199,28 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             };
 
             let src = nurl(&repo, &rev).unwrap();
-            options.push(set_value("programs.xfstests.src", &src));
+            options.push(set_value("services.xfstests.src", &src));
         };
 
         if let Some(args) = &subconfig.args {
-            options.push(set_value_str("programs.xfstests.arguments", &args));
+            options.push(set_value_str("services.xfstests.arguments", &args));
         };
 
         if let Some(test_dev) = &subconfig.test_dev {
-            options.push(set_value_str("programs.xfstests.test-dev", &test_dev));
+            options.push(set_value_str("services.xfstests.test-dev", &test_dev));
         };
 
         if let Some(scratch_dev) = &subconfig.scratch_dev {
-            options.push(set_value_str("programs.xfstests.scratch-dev", &scratch_dev));
+            options.push(set_value_str("services.xfstests.scratch-dev", &scratch_dev));
         };
 
         if let Some(filesystem) = &subconfig.filesystem {
-            options.push(set_value_str("programs.xfstests.filesystem", &filesystem));
+            options.push(set_value_str("services.xfstests.filesystem", &filesystem));
         };
 
         if let Some(extra_env) = &subconfig.extra_env {
             options.push(set_value_str(
-                "programs.xfstests.extraEnv",
+                "services.xfstests.extraEnv",
                 &format!("\"\"{}\"\"", &extra_env),
             ));
         };
@@ -233,7 +233,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
                 std::process::exit(1);
             }
             let path = path.to_str().expect("Failed to retrieve hooks path");
-            options.push(set_value("programs.xfstests.hooks", path));
+            options.push(set_value("services.xfstests.hooks", path));
         };
     };
 
@@ -241,7 +241,7 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
         if let Some(rev) = &subconfig.rev {
             if let Some(repo) = &subconfig.repo {
                 let src = nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
-                options.push(set_value("programs.xfsprogs.src", &src));
+                options.push(set_value("services.xfsprogs.src", &src));
             }
         };
     };

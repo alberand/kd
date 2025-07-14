@@ -5,9 +5,9 @@
   ...
 }:
 with lib; let
-  cfg = config.programs.dummy;
+  cfg = config.services.dummy;
 in {
-  options.programs.dummy = {
+  options.services.dummy = {
     enable = mkEnableOption {
       name = "dummy";
       default = true;

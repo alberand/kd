@@ -5,9 +5,9 @@
   ...
 }:
 with lib; let
-  cfg = config.programs.xfsprogs;
+  cfg = config.services.xfsprogs;
 in {
-  options.programs.xfsprogs = {
+  options.services.xfsprogs = {
     enable = mkEnableOption {
       name = "xfsprogs";
       default = true;
