@@ -46,21 +46,66 @@
     {
       src = prev.fetchgit sources;
       version = "git-${sources.rev}";
-      patchPhase = old.patchPhase +
-        builtins.readFile ./patchPhase.sh;
-      patches =
-        (old.patches or [])
-        ++ [
-          ./0001-common-link-.out-file-to-the-output-directory.patch
-          ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-        ];
+      patchPhase = with prev; ''
+        # Apply patches if any
+        local -a patchesArray
+        patchesArray=( ''${patches[@]:-} )
+        for p in "''${patchesArray[@]}"; do
+          echo "applying patch $p"
+          patch -p1 < $p
+        done
+
+        # As install-sh is taken from the /nix/store by libtoolize, it's read-only. The
+        # Makefile can not overwrite it latter. Fix this by telling cp to force
+        # overwrite.
+        substituteInPlace Makefile \
+          --replace "cp include/install-sh ." "cp -f include/install-sh ."
+
+        # Patch the destination directory
+        sed -i include/builddefs.in -e "s|^PKG_LIB_DIR\s*=.*|PKG_LIB_DIR=$out/lib/xfstests|"
+
+        # Don't canonicalize path to mkfs (in util-linux) - otherwise e.g. mkfs.ext4 isn't found
+        sed -i common/config -e 's|^export MKFS_PROG=.*|export MKFS_PROG=mkfs|'
+
+        # Move the Linux-specific test output files to the correct place, or else it will
+        # try to move them at runtime. Also nuke all the irix crap.
+        for f in tests/*/*.out.linux; do
+          mv $f $(echo $f | sed -e 's/\.linux$//')
+        done
+        rm -f tests/*/*.out.irix
+
+        # Fix up lots of impure paths
+        for f in common/* tools/* tests/*/*; do
+          sed -i $f -e 's|/bin/bash|${bash}/bin/bash|'
+          sed -i $f -e 's|/bin/true|${coreutils}/bin/true|'
+          sed -i $f -e 's|/usr/sbin/filefrag|${e2fsprogs}/bin/filefrag|'
+          # `hostname -s` seems problematic on NixOS
+          sed -i $f -e 's|hostname -s|${hostname}/bin/hostname|'
+          # NixOS won't ever have Yellow Pages enabled
+          sed -i $f -e 's|$(_yp_active)|1|'
+        done
+
+        for f in src/*.c src/*.sh; do
+          sed -e 's|/bin/rm|${coreutils}/bin/rm|' -i $f
+          sed -e 's|/usr/bin/time|${time}/bin/time|' -i $f
+        done
+
+        patchShebangs .
+      '';
+      patches = [
+        ./0001-common-link-.out-file-to-the-output-directory.patch
+        ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
+      ];
+
       nativeBuildInputs =
         old.nativeBuildInputs
         ++ [prev.pkg-config prev.gdbm prev.liburing];
 
-      postInstall = old.postInstall + ''
-        ln -s ${xfstests-hooks}/lib/xfstests/hooks $out/lib/xfstests/hooks
-      '';
+      postInstall =
+        old.postInstall
+        + ''
+          ln -s ${xfstests-hooks}/lib/xfstests/hooks $out/lib/xfstests/hooks
+        '';
 
       wrapperScript = prev.writeScript "xfstests-check" ''
         #!${prev.runtimeShell}
