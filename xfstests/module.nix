@@ -111,7 +111,7 @@ in {
         final: prev: {
           xfstests = prev.xfstests.overrideAttrs (old: ({
               inherit (cfg) src;
-              version = "git";
+              version = "git-${cfg.src.rev}";
 
               nativeBuildInputs =
                 old.nativeBuildInputs
