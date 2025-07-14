@@ -217,8 +217,6 @@ in rec {
               lld
               gettext
               libtool
-              qemu_full
-              qemu-utils
               automake
               autoconf
               pahole
