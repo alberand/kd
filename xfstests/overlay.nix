@@ -46,9 +46,8 @@
     {
       src = prev.fetchgit sources;
       version = "git-${sources.rev}";
-      patchPhase =
-        builtins.readFile ./patchPhase.sh
-        + old.patchPhase;
+      patchPhase = old.patchPhase +
+        builtins.readFile ./patchPhase.sh;
       patches =
         (old.patches or [])
         ++ [
@@ -76,6 +75,7 @@
           ln -s @out@/lib/xfstests/$f $f
         done
         export PATH=${prev.lib.makeBinPath [
+          final.xfsprogs
           prev.acl
           prev.attr
           prev.bc
@@ -90,7 +90,6 @@
           prev.quota
           prev.util-linux
           prev.which
-          prev.xfsprogs
           prev.duperemove
           prev.acct
           prev.xfsdump

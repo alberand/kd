@@ -76,7 +76,7 @@ in {
 
     src = mkOption {
       type = types.nullOr types.package;
-      default = pkgs.fetchgit (pkgs.lib.importJSON ../sources/xfsprogs.json);
+      default = pkgs.fetchgit (pkgs.lib.importJSON ../sources/xfstests.json);
     };
 
     repository = mkOption {
