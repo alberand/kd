@@ -64,7 +64,7 @@ config = "./xfstests.config"
 repository = "git@github.com:alberand/xfsprogs.git"
 rev = "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
 
-[dummy]
+[script]
 script = "./test.sh"
 ```
 

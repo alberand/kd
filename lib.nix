@@ -35,7 +35,7 @@ in rec {
       modules = [
         (import ./xfstests/module.nix {inherit enableCcache;})
         (import ./xfsprogs/module.nix {inherit enableCcache;})
-        ./dummy.nix
+        ./script/module.nix
         ./system.nix
         ./vm.nix
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
@@ -54,7 +54,7 @@ in rec {
               inherit (config.kernel) src version;
             };
           };
-          services.dummy = {
+          services.script = {
             enable = true;
           };
           services.xfstests = {
@@ -161,7 +161,7 @@ in rec {
           }
 
           rm -rf "$RUNDIR/results"
-          rm -rf "$RUNDIR/dummy.sh"
+          rm -rf "$RUNDIR/script.sh"
           mkdir -p $RUNDIR
           mkdir -p $RUNDIR/results
 
@@ -173,13 +173,13 @@ in rec {
               exit 1
             fi
 
-            if tq --file $LOCAL_CONFIG 'dummy' > /dev/null; then
-              export DUMMY_TEST="$(tq --file $LOCAL_CONFIG 'dummy.script')"
+            if tq --file $LOCAL_CONFIG 'script' > /dev/null; then
+              export SCRIPT_TEST="$(tq --file $LOCAL_CONFIG 'script.script')"
             fi
 
-            if [[ -f "$DUMMY_TEST" ]]; then
-              eecho "$DUMMY_TEST will be used as simple test"
-              cp "$DUMMY_TEST" "$RUNDIR/dummy.sh"
+            if [[ -f "$SCRIPT_TEST" ]]; then
+              eecho "$SCRIPT_TEST will be used as simple test"
+              cp "$SCRIPT_TEST" "$RUNDIR/script.sh"
             fi
           fi
 

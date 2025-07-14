@@ -94,7 +94,7 @@
               imports = [
                 (import ./xfstests/module.nix {})
                 (import ./xfsprogs/module.nix {})
-                ./dummy.nix
+                ./script/module.nix
                 ./system.nix
                 (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
                 ({config, ...}: let
@@ -115,7 +115,7 @@
                       inherit (config.kernel) src version;
                     };
                   };
-                  services.dummy = {
+                  services.script = {
                     enable = true;
                   };
                   services.xfstests = {

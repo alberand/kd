@@ -5,17 +5,18 @@
   ...
 }:
 with lib; let
-  cfg = config.services.dummy;
+  cfg = config.services.script;
 in {
-  options.services.dummy = {
+  options.services.script = {
     enable = mkEnableOption {
-      name = "dummy";
+      name = "script";
       default = true;
       example = true;
+      description = "Service to execute simple shell script";
     };
 
     arguments = mkOption {
-      description = "arguments to the test script";
+      description = "Arguments for the script";
       default = "";
       example = "-f hello";
       type = types.str;
@@ -35,7 +36,7 @@ in {
       "d /mnt/test 1777 root root"
     ];
 
-    systemd.services.dummy = {
+    systemd.services.script = {
       enable = true;
       serviceConfig = {
         Type = "oneshot";
@@ -71,13 +72,13 @@ in {
           exit 0
         fi
 
-        if [ "$(get_config 'dummy')" == "" ]; then
+        if [ "$(get_config 'script')" == "" ]; then
           exit 0
         fi
 
-        echo "Running test /root/share/dummy.sh"
-        chmod u+x /root/share/dummy.sh
-        ${pkgs.bash}/bin/bash -l -c 'exec /root/share/dummy.sh ${cfg.arguments}'
+        echo "Running test /root/share/script.sh"
+        chmod u+x /root/share/script.sh
+        ${pkgs.bash}/bin/bash -l -c 'exec /root/share/script.sh ${cfg.arguments}'
         exit $?
       '';
     };

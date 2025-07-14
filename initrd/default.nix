@@ -58,7 +58,7 @@
       modules = [
         ./xfstests/module.nix
         ./xfsprogs/module.nix
-        ./dummy.nix
+        ./script/module.nix
         ./system.nix
         ./vm.nix
         (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})

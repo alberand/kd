@@ -53,7 +53,7 @@ pub struct XfsprogsConfig {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct DummyConfig {
+pub struct ScriptConfig {
     pub script: String,
 }
 
@@ -65,7 +65,7 @@ pub struct Config {
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
     pub xfsprogs: Option<XfsprogsConfig>,
-    pub dummy: Option<DummyConfig>,
+    pub script: Option<ScriptConfig>,
 }
 
 impl Config {
