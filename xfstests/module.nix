@@ -262,7 +262,6 @@ in {
         };
       in
         ''
-          set -x
           function get_config {
             ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ || true
           }
