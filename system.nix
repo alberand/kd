@@ -73,7 +73,7 @@
   ];
 
   programs.bcc.enable = false;
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
 
   environment.variables = {
     EDITOR = "nvim";
