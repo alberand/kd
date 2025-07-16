@@ -38,8 +38,6 @@
         inherit system;
         overlays = [
           (import rust-overlay)
-          (import ./xfsprogs/overlay.nix {})
-          (import ./xfstests/overlay.nix {})
           (final: prev: {
             llvmPackages_latest = pkgs-clang.llvmPackages_latest;
           })
@@ -52,10 +50,9 @@
         inherit pkgs nixos-generators nixpkgs;
       };
       default = lib.mkEnv {
-        inherit nixpkgs pkgs;
+        inherit nixpkgs;
         name = "demo";
         root = builtins.toString ./.;
-        stdenv = pkgs.clangStdenv;
       };
     in {
       inherit lib;

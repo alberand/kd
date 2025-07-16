@@ -23,6 +23,7 @@
   ];
 in rec {
   mkVM = {
+    pkgs,
     uconfig,
     enableCcache,
   }:
@@ -71,11 +72,13 @@ in rec {
     };
 
   mkIso = {
+    pkgs,
     uconfig,
     enableCcache,
   }:
     builtins.getAttr "iso" {
       iso = nixos-generators.nixosGenerate {
+        inherit pkgs;
         system = "x86_64-linux";
         modules = [
           (import ./xfstests/module.nix {inherit enableCcache;})
@@ -102,11 +105,13 @@ in rec {
     };
 
   mkQcow = {
+    pkgs,
     uconfig,
     enableCcache,
   }:
     builtins.getAttr "qcow" {
       qcow = nixos-generators.nixosGenerate {
+        inherit pkgs;
         system = "x86_64-linux";
         modules = [
           (import ./xfstests/module.nix {inherit enableCcache;})
@@ -133,6 +138,7 @@ in rec {
     };
 
   mkVmTest = {
+    pkgs,
     name,
     root,
     uconfig,
@@ -141,7 +147,7 @@ in rec {
     builtins.getAttr "runner" rec {
       inherit name root;
       nixos = mkVM {
-        inherit uconfig enableCcache;
+        inherit pkgs uconfig enableCcache;
       };
 
       runner =
@@ -426,11 +432,18 @@ in rec {
     name,
     root,
     nixpkgs,
-    pkgs,
-    stdenv ? pkgs.stdenv,
+    useGcc ? false,
     uconfig ? {},
     enableCcache ? false,
   }: let
+    pkgs = import nixpkgs {
+      system = "x86_64-linux";
+      overlays = [
+        (import ./xfsprogs/overlay.nix {})
+        (import ./xfstests/overlay.nix {})
+      ];
+    };
+    stdenv = if useGcc then pkgs.stdenv else pkgs.clangStdenv;
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {
       inherit stdenv nixpkgs;
     };
@@ -480,7 +493,7 @@ in rec {
     };
 
     iso = mkIso {
-      inherit enableCcache;
+      inherit pkgs enableCcache;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -498,7 +511,7 @@ in rec {
     };
 
     qcow = mkQcow {
-      inherit enableCcache;
+      inherit pkgs enableCcache;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -515,7 +528,7 @@ in rec {
     };
 
     vm = mkVmTest {
-      inherit name root enableCcache;
+      inherit pkgs name root enableCcache;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -530,7 +543,7 @@ in rec {
     };
 
     prebuild = mkVmTest {
-      inherit name root enableCcache;
+      inherit pkgs name root enableCcache;
       uconfig =
         {
           # Same as in .vm
@@ -550,7 +563,7 @@ in rec {
     };
 
     kgdbvm = mkVmTest {
-      inherit name root enableCcache;
+      inherit pkgs name root enableCcache;
       uconfig =
         {
           # Same as in .vm
