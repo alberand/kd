@@ -22,10 +22,9 @@
         uset = (import ./uconfig.nix);
       in
         kd.lib.${system}.mkEnv {
-          inherit nixpkgs pkgs;
+          inherit nixpkgs;
           inherit (uset) name;
           root = builtins.toString ./.;
-          stdenv = pkgs.clangStdenv;
           uconfig = uset.uconfig {inherit pkgs;};
         };
     in {
