@@ -34,9 +34,9 @@ in {
             inherit (cfg) src;
             version = "git-${cfg.src.rev}";
 
-            nativeInstallCheckInputs =
-              prev.xfsprogs.nativeInstallCheckInputs
-              ++ lib.optionals (cfg.kernelHeaders != null) [
+            nativeBuildInputs =
+              prev.xfsprogs.nativeBuildInputs
+              ++ prev.lib.optionals (cfg.kernelHeaders != null) [
                 cfg.kernelHeaders
               ];
 

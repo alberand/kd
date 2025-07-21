@@ -1,6 +1,4 @@
-{
-  enableCcache ? false,
-}: final: prev: let
+{enableCcache ? false}: final: prev: let
   sources = prev.lib.importJSON ../sources/xfsprogs.json;
 in {
   xfsprogs = prev.xfsprogs.overrideAttrs (old:
@@ -20,8 +18,6 @@ in {
           prev.autoreconfHook
           prev.attr
         ];
-
-      patches = [];
 
       postConfigure = ''
         cp include/install-sh install-sh
