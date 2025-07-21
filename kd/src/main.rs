@@ -428,6 +428,18 @@ fn main() {
             let state = State::new();
 
             let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
+
+            if let Some(subconfig) = state.config.kernel {
+                if let Some(prebuild) = &subconfig.prebuild {
+                    if *prebuild {
+                        let kernel = "arch/x86/boot/bzImage";
+                        if !Path::new(kernel).exists() {
+                            println!("Kernel doesn't exists {kernel}");
+                            std:process::exit(1);
+                        }
+                    }
+                }
+            }
             generate_uconfig(&uconfig_path, &state.config)
                 .expect("Failed to generate user environment");
 
