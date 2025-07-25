@@ -58,6 +58,11 @@ pub struct ScriptConfig {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+pub struct QemuConfig {
+    pub options: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(default = "default_name")]
     pub name: String,
@@ -66,6 +71,7 @@ pub struct Config {
     pub xfstests: Option<XfstestsConfig>,
     pub xfsprogs: Option<XfsprogsConfig>,
     pub script: Option<ScriptConfig>,
+    pub qemu: Option<QemuConfig>,
 }
 
 impl Config {

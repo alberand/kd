@@ -292,6 +292,19 @@ fn generate_uconfig(path: &PathBuf, config: &Config) -> Result<(), KdError> {
             }
         };
     };
+    if let Some(subconfig) = &config.qemu {
+        if let Some(qemu_options) = &subconfig.options {
+            let mut list = String::from("[");
+            for option in qemu_options {
+                list.push_str("\"");
+                list.push_str(option);
+                list.push_str("\"\n");
+            }
+            list.push_str("]");
+
+            options.push(set_value("virtualisation.qemu.options", &list));
+        };
+    };
 
     let source = r#"
     {
