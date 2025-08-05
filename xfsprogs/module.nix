@@ -35,10 +35,9 @@ in {
             version = "git-${cfg.src.rev}";
 
             nativeBuildInputs =
-              prev.xfsprogs.nativeBuildInputs
-              ++ prev.lib.optionals (cfg.kernelHeaders != null) [
+              prev.lib.optionals (cfg.kernelHeaders != null) [
                 cfg.kernelHeaders
-              ];
+              ] ++ prev.xfsprogs.nativeBuildInputs;
 
             dontStrip = config.dev.dontStrip;
           }
