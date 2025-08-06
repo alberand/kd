@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use toml;
 use toml::Table;
 
+use super::utils::KdError;
+
 #[derive(Serialize, Deserialize)]
 pub struct KernelConfigOption {
     pub name: String,
@@ -89,5 +91,19 @@ impl Config {
     pub fn _save(&self, path: PathBuf) -> Result<(), Error> {
         let mut buffer = std::fs::File::create(path)?;
         buffer.write_all(toml::to_string(self).unwrap().as_bytes())
+    }
+
+    pub fn validate(&self) -> Result<(), KdError> {
+        if let Some(subconfig) = &self.kernel {
+            let kernel = subconfig.version.is_some() ||
+                subconfig.rev.is_some() ||
+                subconfig.repo.is_some() ||
+                subconfig.config.is_some();
+            if subconfig.prebuild.is_some() && kernel {
+                println!("Note! You're using 'prebuild', none of the [kernel] options applies.");
+            }
+        }
+
+        return Ok(())
     }
 }

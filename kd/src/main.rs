@@ -524,6 +524,11 @@ fn main() {
         Some(Commands::Build { target }) => {
             let mut state = State::new(app_config);
 
+            if let Err(error) = state.config.validate() {
+                println!("Error parsing config: {error}");
+                std::process::exit(1);
+            }
+
             let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &mut state)
                 .expect("Failed to generate user environment");
@@ -548,8 +553,12 @@ fn main() {
         Some(Commands::Run) => {
             let mut state = State::new(app_config);
 
-            let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
+            if let Err(error) = state.config.validate() {
+                println!("Error parsing config: {error}");
+                std::process::exit(1);
+            }
 
+            let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
             generate_uconfig(&uconfig_path, &mut state)
                 .expect("Failed to generate user environment");
 
@@ -584,6 +593,11 @@ fn main() {
         }
         Some(Commands::Config { output }) => {
             let mut state = State::new(app_config);
+
+            if let Err(error) = state.config.validate() {
+                println!("Error parsing config: {error}");
+                std::process::exit(1);
+            }
 
             let uconfig_path = state.envdir.clone().join("uconfig.nix");
             generate_uconfig(&uconfig_path, &mut state)
