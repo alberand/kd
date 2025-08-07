@@ -55,9 +55,11 @@ in rec {
               inherit (config.kernel) src version;
             };
           };
+
           services.script = {
             enable = true;
           };
+
           services.xfstests = {
             enable = true;
             test-dev = pkgs.lib.mkDefault "/dev/vdb";
@@ -119,17 +121,28 @@ in rec {
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
-          ({pkgs, ...}: {
+          ({
+            config,
+            pkgs,
+            ...
+          }: {
             kernel.iso = pkgs.lib.mkForce true;
 
-            services.xfsprogs.enable = true;
-            # Don't shutdown system as libvirtd will remove the VM
-            services.xfstests.autoshutdown = false;
+            services.xfsprogs = {
+              enable = true;
+              kernelHeaders = buildKernelHeaders {
+                inherit (config.kernel) src version;
+              };
+            };
 
             services.xfstests = {
               enable = true;
+              autoshutdown = false;
               test-dev = pkgs.lib.mkDefault "/dev/sda";
               scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
+              kernelHeaders = buildKernelHeaders {
+                inherit (config.kernel) src version;
+              };
             };
           })
         ];
@@ -443,7 +456,10 @@ in rec {
         (import ./xfstests/overlay.nix {})
       ];
     };
-    stdenv = if useGcc then pkgs.stdenv else pkgs.clangStdenv;
+    stdenv =
+      if useGcc
+      then pkgs.stdenv
+      else pkgs.clangStdenv;
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {
       inherit stdenv nixpkgs;
     };
