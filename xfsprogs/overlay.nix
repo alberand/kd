@@ -19,6 +19,10 @@ in {
           prev.attr
         ];
 
+      preConfigure = prev.xfsprogs.preConfigure + ''
+        patchShebangs libfrog/gettext.py.in mkfs/xfs_protofile.py.in
+      '';
+
       postConfigure = ''
         cp include/install-sh install-sh
         patchShebangs ./install-sh
