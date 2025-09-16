@@ -460,38 +460,37 @@ fn main() {
     let cli = Cli::parse();
 
     // Create global config
-    let config_home = match std::env::var("XDG_CONFIG_HOME") {
-        Ok(value) => value,
-        Err(error) => {
-            println!("$XDG_CONFIG_HOME seems to be empty, won't create config: {error}");
-            "".to_string()
-        }
-    };
-
-    let global_config_dir = PathBuf::from(config_home).join("kd");
-    match std::fs::create_dir_all(&global_config_dir) {
-        Ok(()) => {
-            let global_config = global_config_dir.join("config.toml");
-            let mut file = std::fs::File::create(global_config);
-            match &mut file {
-                Ok(file) => {
-                    let res = file.write_all(b"# kd global config");
-                    if res.is_err() {
-                        println!(
-                            "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {:?}",
-                            res
-                        );
+    match std::env::var("XDG_CONFIG_HOME") {
+        Ok(value) => {
+            let global_config_dir = PathBuf::from(value).join("kd");
+            match std::fs::create_dir_all(&global_config_dir) {
+                Ok(()) => {
+                    let global_config = global_config_dir.join("config.toml");
+                    let mut file = std::fs::File::create(global_config);
+                    match &mut file {
+                        Ok(file) => {
+                            let res = file.write_all(b"# kd global config");
+                            if res.is_err() {
+                                println!(
+                                    "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {:?}",
+                                    res
+                                );
+                            }
+                        }
+                        Err(error) => {
+                            println!("Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {error}")
+                        }
                     }
                 }
                 Err(error) => {
-                    println!("Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {error}")
+                    println!("Failed to create $XDG_CONFIG_HOME, won't create config: {error}");
                 }
             }
-        }
+        },
         Err(error) => {
-            println!("Failed to create $XDG_CONFIG_HOME, won't create config: {error}");
+            println!("$XDG_CONFIG_HOME seems to be empty, won't create config: {error}");
         }
-    }
+    };
 
     let app_config = match AppConfig::load() {
         Ok(config) => config,
