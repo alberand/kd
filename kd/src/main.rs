@@ -12,7 +12,7 @@ use toml;
 mod utils;
 use utils::{find_it, is_executable, KdError, KdErrorKind};
 mod config;
-use config::{Config, KernelConfigOption};
+use config::{Config, KernelConfigOption, XfstestsConfig};
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
@@ -57,7 +57,10 @@ enum Commands {
         name: String,
     },
 
+    // Build QCOW or ISO image
     Build {
+        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
+        nix_args: Option<String>,
         /// lists test values
         #[arg(
             default_value_t = Target::Qcow,
@@ -66,10 +69,19 @@ enum Commands {
         target: Target,
     },
 
-    Run,
+    // Run lightweight VM
+    Run {
+        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
+        nix_args: Option<String>,
+    },
 
-    Update,
+    // Update VM system and shell packages
+    Update {
+        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
+        nix_args: Option<String>,
+    },
 
+    // Generate minimal Kernel config for VM
     Config {
         #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
@@ -77,60 +89,119 @@ enum Commands {
 }
 
 #[derive(Deserialize)]
-struct AppConfig {
-    // nothing here yet
-    _name: Option<String>,
+struct NixConfig {
+    args: Option<String>,
 }
 
-impl AppConfig {
-    fn load() -> Result<Self, KdError> {
-        if let Ok(xdg_config_home) = std::env::var("XDG_CONFIG_HOME") {
-            let app_config_path = PathBuf::from(xdg_config_home).join("kd/config.toml");
-            if app_config_path.exists() {
-                match std::fs::read_to_string(app_config_path) {
-                    Ok(data) => {
-                        let data = toml::from_str(&data).map_err(|e| {
-                            KdError::new(
-                                KdErrorKind::ConfigError,
-                                format!("invalid TOML: {}", e.to_string()),
-                            )
-                        });
-                        data
-                    }
-                    Err(error) => {
-                        println!("Failed to read $XDG_CONFIG_HOME/kd/config.toml: {error}");
-                        Ok(AppConfig::default())
-                    }
-                }
-            } else {
-                Ok(AppConfig::default())
-            }
-        } else {
-            Ok(AppConfig::default())
-        }
-    }
+#[derive(Deserialize)]
+struct AppConfig {
+    _name: Option<String>,
+    nix: Option<NixConfig>,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         AppConfig {
             _name: None,
+            nix: None,
         }
     }
 }
 
-struct State {
-    app_config: AppConfig,
+impl AppConfig {
+    fn load(path: &Option<PathBuf>) -> Result<Self, KdError> {
+        let app_config_path = if let Some(path) = path {
+            path
+        } else if let Ok(xdg_config_home) = std::env::var("XDG_CONFIG_HOME") {
+            &PathBuf::from(xdg_config_home).join("kd/config.toml")
+        } else {
+            &PathBuf::from("")
+        };
 
+        if !app_config_path.exists() {
+            return AppConfig::create();
+        }
+
+        match std::fs::read_to_string(app_config_path) {
+            Ok(data) => {
+                let data = toml::from_str(&data).map_err(|e| {
+                    KdError::new(
+                        KdErrorKind::ConfigError,
+                        format!("invalid TOML: {}", e.to_string()),
+                    )
+                });
+                data
+            }
+            Err(error) => {
+                return Err(KdError::new(
+                    KdErrorKind::ConfigError,
+                    format!("Failed to read $XDG_CONFIG_HOME/kd/config.toml: {error}"),
+                ));
+            }
+        }
+    }
+
+    fn create() -> Result<Self, KdError> {
+        // Create global config
+        match std::env::var("XDG_CONFIG_HOME") {
+            Ok(value) => {
+                let global_config_dir = PathBuf::from(value).join("kd");
+                match std::fs::create_dir_all(&global_config_dir) {
+                    Ok(()) => {
+                        let global_config = global_config_dir.join("config.toml");
+                        let mut file = std::fs::File::create(global_config);
+                        match &mut file {
+                            Ok(file) => {
+                                let res = file.write_all(b"# kd global config");
+                                if res.is_err() {
+                                    println!(
+                                        "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {:?}",
+                                        res
+                                    );
+                                }
+                            }
+                            Err(error) => {
+                                println!(
+                                    "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {error}"
+                                )
+                            }
+                        }
+                    }
+                    Err(error) => {
+                        println!("Failed to create $XDG_CONFIG_HOME, won't create config: {error}");
+                    }
+                }
+            }
+            Err(error) => {
+                println!("$XDG_CONFIG_HOME seems to be empty, won't create config: {error}");
+            }
+        };
+
+        Ok(AppConfig::default())
+    }
+}
+
+struct State {
     curdir: PathBuf,
     envdir: PathBuf,
     config: Config,
+
+    app_config: AppConfig,
+    user_config: PathBuf,
 
     cmd_args: Vec<String>,
 }
 
 impl State {
-    fn new(app_config: AppConfig) -> Self {
+    fn new(cli: &Cli) -> Self {
+        let app_config = match AppConfig::load(&cli.config) {
+            Ok(config) => config,
+            Err(error) => {
+                println!("error loading config: {error}");
+                std::process::exit(1);
+            }
+        };
+
         let curdir = std::env::current_dir().expect("Don't have access to current working dir");
         let config_path = curdir.clone().join(".kd.toml");
         let config_path_str = config_path.clone().into_os_string().into_string().unwrap();
@@ -149,12 +220,27 @@ impl State {
         };
 
         let envdir = curdir.clone().join(".kd").join(&config.name);
+
+        let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
+        let args = if let Some(config) = &app_config.nix {
+            if let Some(args) = &config.args {
+                args.split(" ")
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
+
         Self {
-            app_config,
             curdir,
             envdir,
             config,
-            cmd_args: vec![],
+            app_config,
+            user_config,
+            cmd_args: args,
         }
     }
 }
@@ -231,8 +317,7 @@ fn init(name: &str) -> Result<(), KdError> {
 }
 
 /// TODO all this parsing should be just done nrix
-fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
-    let config = &state.config;
+fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     let mut tera = Tera::default();
     let mut context = Context::new();
     let mut options = vec![];
@@ -241,7 +326,7 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
     let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
-    if let Some(packages) = &config.packages {
+    if let Some(packages) = &state.config.packages {
         let mut list = String::from("with pkgs; [");
         for package in packages {
             list.push_str(package);
@@ -252,12 +337,12 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
         options.push(set_value("environment.systemPackages", &list));
     }
 
-    if let Some(subconfig) = &config.xfstests {
+    if let Some(subconfig) = &state.config.xfstests {
         if let Some(rev) = &subconfig.rev {
             let repo = if let Some(repo) = &subconfig.repo {
                 repo
             } else {
-                &config::XfstestsConfig::default().repo.unwrap()
+                &XfstestsConfig::default().repo.unwrap()
             };
 
             let src = nurl(&repo, &rev).unwrap();
@@ -299,7 +384,7 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
         };
     };
 
-    if let Some(subconfig) = &config.xfsprogs {
+    if let Some(subconfig) = &state.config.xfsprogs {
         if let Some(rev) = &subconfig.rev {
             if let Some(repo) = &subconfig.repo {
                 let src = nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
@@ -308,7 +393,8 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
         };
     };
 
-    if let Some(subconfig) = &config.kernel {
+    let mut args = vec![];
+    if let Some(subconfig) = &state.config.kernel {
         if let Some(_) = &subconfig.prebuild {
             let kernel = "arch/x86/boot/bzImage";
             let package: String = format!(
@@ -323,14 +409,14 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
                 println!("Kernel doesn't exists {kernel}");
                 std::process::exit(1);
             }
-            state.cmd_args.push("--impure".to_string());
-            state.cmd_args.push(package);
+            args.push("--impure".to_string());
+            args.push(package);
 
             prebuild_kernel(&state.envdir, &state.curdir);
 
             let path = std::env::current_dir()
                 .expect("Don't have access to current working dir")
-                .join(format!(".kd/{}/build", &config.name));
+                .join(format!(".kd/{}/build", &state.config.name));
             options.push(set_value("kernel.prebuild", path.to_str().unwrap()));
         } else {
             let package: String = format!(
@@ -340,7 +426,7 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
                     .to_str()
                     .expect("Can not convert env path to string")
             );
-            state.cmd_args.push(package);
+            args.push(package);
         }
 
         if subconfig.repo.is_some() && subconfig.rev.is_none() && subconfig.version.is_none() {
@@ -381,7 +467,7 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
             }
         };
     };
-    if let Some(subconfig) = &config.qemu {
+    if let Some(subconfig) = &state.config.qemu {
         if let Some(qemu_options) = &subconfig.options {
             let mut list = String::from("[");
             for option in qemu_options {
@@ -394,6 +480,10 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
             options.push(set_value("virtualisation.qemu.options", &list));
         };
     };
+
+    for arg in args {
+        state.cmd_args.push(arg)
+    }
 
     let source = r#"
     {
@@ -421,16 +511,16 @@ fn generate_uconfig(path: &PathBuf, state: &mut State) -> Result<(), KdError> {
     "#;
     tera.add_raw_template("top", source).unwrap();
 
-    context.insert("name", &config.name);
+    context.insert("name", &state.config.name);
     context.insert("options", &options);
     context.insert("kernel_options", &kernel_options);
     context.insert("kernel_config_options", &kernel_config_options);
 
     let uconfig = tera.render("top", &context).unwrap();
-    let mut file = std::fs::File::create(path).expect("Failed to create user config uconfig.nix");
+    let mut file = std::fs::File::create(&state.user_config)
+        .expect("Failed to create user config uconfig.nix");
     file.write_all(uconfig.as_bytes())
         .expect("Failed to write out uconfig.nix data");
-    // format_nix(&path).unwrap();
 
     Ok(())
 }
@@ -457,49 +547,6 @@ fn prebuild_kernel(envdir: &PathBuf, curdir: &PathBuf) {
 }
 
 fn main() {
-    let cli = Cli::parse();
-
-    // Create global config
-    match std::env::var("XDG_CONFIG_HOME") {
-        Ok(value) => {
-            let global_config_dir = PathBuf::from(value).join("kd");
-            match std::fs::create_dir_all(&global_config_dir) {
-                Ok(()) => {
-                    let global_config = global_config_dir.join("config.toml");
-                    let mut file = std::fs::File::create(global_config);
-                    match &mut file {
-                        Ok(file) => {
-                            let res = file.write_all(b"# kd global config");
-                            if res.is_err() {
-                                println!(
-                                    "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {:?}",
-                                    res
-                                );
-                            }
-                        }
-                        Err(error) => {
-                            println!("Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {error}")
-                        }
-                    }
-                }
-                Err(error) => {
-                    println!("Failed to create $XDG_CONFIG_HOME, won't create config: {error}");
-                }
-            }
-        },
-        Err(error) => {
-            println!("$XDG_CONFIG_HOME seems to be empty, won't create config: {error}");
-        }
-    };
-
-    let app_config = match AppConfig::load() {
-        Ok(config) => config,
-        Err(error) => {
-            println!("Invalid config $XDG_CONFIG_HOME/kd/config.toml: {error}");
-            std::process::exit(1);
-        }
-    };
-
     // Check that these commands exists
     for command in vec!["nix", "nurl"] {
         let path = match find_it(command) {
@@ -516,21 +563,28 @@ fn main() {
         }
     }
 
+    let cli = Cli::parse();
+    let mut state = State::new(&cli);
+
     match &cli.command {
         Some(Commands::Init { name }) => {
             init(name.as_str()).expect("Failed to initialize environment");
         }
-        Some(Commands::Build { target }) => {
-            let mut state = State::new(app_config);
 
+        Some(Commands::Build { nix_args, target }) => {
             if let Err(error) = state.config.validate() {
                 println!("Error parsing config: {error}");
                 std::process::exit(1);
             }
 
-            let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
-            generate_uconfig(&uconfig_path, &mut state)
-                .expect("Failed to generate user environment");
+            if let Some(args) = nix_args {
+                let args = args.split(" ").map(|x| x.to_string());
+                for arg in args {
+                    state.cmd_args.push(arg)
+                }
+            }
+
+            generate_uconfig(&mut state).expect("Failed to generate user environment");
 
             let target = target.to_string();
             let package = format!(
@@ -543,23 +597,30 @@ fn main() {
             );
             Command::new("nix")
                 .arg("build")
+                .args(state.cmd_args)
                 .arg(&package)
                 .spawn()
                 .expect("Failed to spawn 'nix build'")
                 .wait()
                 .expect("'nix build' wasn't running");
         }
-        Some(Commands::Run) => {
-            let mut state = State::new(app_config);
 
+        Some(Commands::Run { nix_args }) => {
             if let Err(error) = state.config.validate() {
                 println!("Error parsing config: {error}");
                 std::process::exit(1);
             }
 
-            let uconfig_path = PathBuf::from(state.envdir.clone()).join("uconfig.nix");
-            generate_uconfig(&uconfig_path, &mut state)
-                .expect("Failed to generate user environment");
+            if let Some(args) = nix_args {
+                let args = args.split(" ").map(|x| x.to_string());
+                for arg in args {
+                    state.cmd_args.push(arg)
+                }
+            }
+
+            generate_uconfig(&mut state).expect("Failed to generate user environment");
+
+            println!("args: {:?}", state.cmd_args);
 
             Command::new("nix")
                 .arg("run")
@@ -569,8 +630,14 @@ fn main() {
                 .wait()
                 .expect("'nix run' wasn't running");
         }
-        Some(Commands::Update) => {
-            let state = State::new(app_config);
+
+        Some(Commands::Update { nix_args }) => {
+            if let Some(args) = nix_args {
+                let args = args.split(" ").map(|x| x.to_string());
+                for arg in args {
+                    state.cmd_args.push(arg)
+                }
+            }
 
             let package = format!(
                 "path:{}",
@@ -590,17 +657,14 @@ fn main() {
                 .wait()
                 .expect("'nix flake update' wasn't running");
         }
-        Some(Commands::Config { output }) => {
-            let mut state = State::new(app_config);
 
+        Some(Commands::Config { output }) => {
             if let Err(error) = state.config.validate() {
                 println!("Error parsing config: {error}");
                 std::process::exit(1);
             }
 
-            let uconfig_path = state.envdir.clone().join("uconfig.nix");
-            generate_uconfig(&uconfig_path, &mut state)
-                .expect("Failed to generate user environment");
+            generate_uconfig(&mut state).expect("Failed to generate user environment");
 
             let package = format!(
                 "path:{}#kconfig",
