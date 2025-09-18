@@ -95,15 +95,6 @@
         #!/usr/bin/env bash
 
         echo "QEMU exit CTRL-A X"
-        echo "libvirtd exit CTRL+]"
-
-        echo "xfsprogs: ${pkgs.xfsprogs.version}"
-        echo "source: ${pkgs.xfsprogs.src}"
-        echo "${builtins.toJSON pkgs.xfsprogs.src}" | ${pkgs.jq}/bin/jq
-
-        echo "xfstests: ${pkgs.xfstests.version}"
-        echo "source: ${pkgs.xfstests.src}"
-        echo "${builtins.toJSON pkgs.xfstests.src}" | ${pkgs.jq}/bin/jq
       '';
   in
     builtins.readFile "${motd}/bin/motd";

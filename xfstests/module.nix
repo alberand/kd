@@ -291,6 +291,15 @@ in {
             scratch_dev="${cfg.scratch-dev}"
           fi;
 
+          echo "xfsprogs: ${pkgs.xfsprogs.version}"
+          echo "source: ${pkgs.xfsprogs.src}"
+
+          echo "xfstests: ${pkgs.xfstests.version}"
+          echo "source: ${pkgs.xfstests.src}"
+
+          echo "kernel: ${config.boot.kernelPackages.kernel.version}"
+          echo "source: ${config.boot.kernelPackages.kernel.src}"
+
           # Prepare disks
           mkfs_initial=$(mktemp)
           if ${pkgs.util-linux}/bin/mountpoint /mnt/test; then
