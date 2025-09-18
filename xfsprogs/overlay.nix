@@ -19,6 +19,8 @@ in {
           prev.attr
         ];
 
+      patches = [];
+
       preConfigure = prev.xfsprogs.preConfigure + ''
         patchShebangs libfrog/gettext.py.in mkfs/xfs_protofile.py.in
       '';
