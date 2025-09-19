@@ -36,15 +36,10 @@ in {
         default = {};
       };
 
-      # TODO this has to be config level options
-      iso = mkOption {
-        type = types.bool;
-        default = false;
-      };
-
-      debug = mkOption {
-        type = types.bool;
-        default = false;
+      flavors = mkOption {
+        type = types.listOf types.attrs;
+        default = [];
+        example = "[ pkgs.kconfigs.xfsprogs ]";
       };
 
       prebuild = mkOption {
@@ -57,16 +52,14 @@ in {
   config = let
     buildKernel = pkgs.callPackage ./kernel-build.nix {};
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {inherit nixpkgs;};
-    configs = pkgs.callPackage ./kconfigs/default.nix {};
     kernelPackages = pkgs.linuxPackagesFor (
       buildKernel {
         inherit (cfg) version src;
         kconfig = buildKernelConfig {
           inherit (cfg) src version;
           kconfig =
-            cfg.kconfig
-            // (pkgs.lib.optionalAttrs cfg.debug configs.debug)
-            // (pkgs.lib.optionalAttrs cfg.iso configs.iso);
+            pkgs.lib.foldl (acc: set: acc // set) {} (cfg.flavors
+              ++ [cfg.kconfig]);
         };
       }
     );

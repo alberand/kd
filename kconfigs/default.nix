@@ -230,4 +230,30 @@ with lib.kernel; {
     ZONE_DEVICE = yes;
     SERIO_PCIPS2 = yes;
   };
+
+  xfstests = {
+    DM_FLAKEY = yes;
+    DM_SNAPSHOT = yes;
+    DM_DELAY = yes;
+    DM_THIN_PROVISIONING = yes;
+    DM_LOG_WRITES = yes;
+    USER_NS = yes;
+    DAX = yes;
+    IO_URING = yes;
+    
+    SCSI_DEBUG = module;
+  };
+
+  xfsprogs = {
+    DM_FLAKEY = yes;
+    DM_SNAPSHOT = yes;
+    DM_DELAY = yes;
+    DM_THIN_PROVISIONING = yes;
+    DM_LOG_WRITES = yes;
+    USER_NS = yes;
+    DAX = yes;
+    IO_URING = yes;
+    
+    SCSI_DEBUG = module;
+  };
 }

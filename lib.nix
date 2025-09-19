@@ -89,7 +89,7 @@ in rec {
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
           ({pkgs, ...}: {
-            kernel.iso = pkgs.lib.mkForce true;
+            kernel.flavors = [pkgs.kconfigs.iso];
 
             services.xfsprogs.enable = true;
             # Don't shutdown system as libvirtd will remove the VM
@@ -454,6 +454,9 @@ in rec {
       overlays = [
         (import ./xfsprogs/overlay.nix {})
         (import ./xfstests/overlay.nix {})
+        (final: prev: {
+          kconfigs = (import ./kconfigs/default.nix {inherit (pkgs) lib;});
+        })
       ];
     };
     stdenv =
@@ -466,7 +469,6 @@ in rec {
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv enableCcache;
     };
-    kconfigs = (import ./kconfigs/default.nix) {inherit (pkgs) lib;};
     sources = (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;}) {
       inherit pkgs;
       config = {};
@@ -487,7 +489,7 @@ in rec {
     kconfigBuild = {config}:
       buildKernelConfig {
         inherit src version;
-        kconfig = kkconfig // kconfigs."${config}";
+        kconfig = kkconfig // pkgs.kconfigs."${config}";
       };
   in rec {
     inherit (pkgs) xfsprogs xfstests;

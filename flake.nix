@@ -41,6 +41,9 @@
           (final: prev: {
             llvmPackages_latest = pkgs-clang.llvmPackages_latest;
           })
+          (final: prev: {
+            kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
+          })
         ];
       };
       specialArgs = {

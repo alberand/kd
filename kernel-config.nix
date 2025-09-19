@@ -10,6 +10,7 @@
   pahole,
   buildPackages,
   nixpkgs,
+  kconfigs,
 }: {
   src,
   version,
@@ -119,12 +120,10 @@ stdenv.mkDerivation rec {
       (lib.evalModules {
         modules = [
           (nixpkgs + "/nixos/modules/system/boot/kernel_config.nix")
-          (let
-            configs = (import ./kconfigs/default.nix) {inherit lib;};
-          in {
+          ({
             settings =
               kconfig
-              // (lib.optionalAttrs default configs.default);
+              // (lib.optionalAttrs default kconfigs.default);
             _file = "structuredExtraConfig";
           })
         ];
