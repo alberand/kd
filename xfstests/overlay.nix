@@ -144,6 +144,7 @@
           prev.thin-provisioning-tools
           prev.file
           prev.openssl
+          prev.checkbashisms # xfs mainteiner test
         ]}:$PATH
         exec ./check "$@"
       '';

@@ -323,6 +323,10 @@ in {
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
+          # These activates some xfsprogs maintaner tests, not strictly
+          # necessary but I'm currently maintaner
+          export WORKAREA=${pkgs.xfsprogs.src}
+          export KWORKAREA=${config.boot.kernelPackages.kernel.src}
           ${cfg.extraEnv}
           ${pkgs.bash}/bin/bash -lc \
             "${pkgs.xfstests}/bin/xfstests-check $arguments"
