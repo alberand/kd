@@ -6,7 +6,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::Stdio;
-use tera::{Context, Tera};
 use toml;
 
 mod utils;
@@ -325,11 +324,10 @@ fn init(name: &str) -> Result<(), KdError> {
 
 /// TODO all this parsing should be just done nrix
 fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
-    let mut tera = Tera::default();
-    let mut context = Context::new();
     let mut options = vec![];
     let mut kernel_options = vec![];
     let mut kernel_config_options: Vec<KernelConfigOption> = vec![];
+
     let set_value = |name: &str, value: &str| format!("{name} = {value};");
     let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
@@ -492,38 +490,34 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         state.cmd_args.push(arg)
     }
 
-    let source = r#"
-    {
-        name = "{{ name }}";
-        uconfig = {pkgs}: with pkgs; {
-            {% for option in options %}
-                {{ option }}
-            {% endfor%}
-            {% if kernel_options %}
-            kernel = {
-                {% for option in kernel_options %}
-                    {{ option }}
-                {% endfor%}
-            };
-            {% endif %}
-            {% if kernel_config_options %}
-            kernel.kconfig = with pkgs.lib.kernel; {
-              {% for option in kernel_config_options %}
-                  {{ option.name }} = {{ option.value }};
-              {% endfor%}
-            };
-            {% endif %}
-        };
-    }
-    "#;
-    tera.add_raw_template("top", source).unwrap();
+    let s_options = options.join("\n");
+    let s_kernel_options = format!("kernel = {{ {} }};", kernel_options.join("\n"));
+    let s_kernel_config_options = format!(
+        "kernel.kconfig = with pkgs.lib.kernel; {{ {} }};",
+        kernel_config_options
+            .into_iter()
+            .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
+            .collect::<Vec<String>>()
+            .join("\n")
+    );
 
-    context.insert("name", &state.config.name);
-    context.insert("options", &options);
-    context.insert("kernel_options", &kernel_options);
-    context.insert("kernel_config_options", &kernel_config_options);
+    let uconfig = format!(
+        r#"
+    {{
+        name = "{name}";
+        uconfig = {{pkgs}}: with pkgs; {{
+            {s_options}
+            {s_kernel_options}
+            {s_kernel_config_options}
+        }};
+    }}
+    "#,
+        name = &state.config.name,
+        s_options = s_options,
+        s_kernel_options = s_kernel_options,
+        s_kernel_config_options = s_kernel_config_options
+    );
 
-    let uconfig = tera.render("top", &context).unwrap();
     let mut file = std::fs::File::create(&state.user_config)
         .expect("Failed to create user config uconfig.nix");
     file.write_all(uconfig.as_bytes())
