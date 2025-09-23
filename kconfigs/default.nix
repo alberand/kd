@@ -256,4 +256,23 @@ with lib.kernel; {
     
     SCSI_DEBUG = module;
   };
+
+  xfs = {
+    XFS_FS = yes;
+    XFS_SUPPORT_V4 = yes;
+    XFS_SUPPORT_ASCII_CI = yes;
+    XFS_QUOTA = yes;
+    XFS_POSIX_ACL = yes;
+    XFS_RT = yes;
+    XFS_DRAIN_INTENTS = yes;
+    XFS_LIVE_HOOKS = yes;
+    XFS_MEMORY_BUFS = yes;
+    XFS_BTREE_IN_MEM = yes;
+    XFS_ONLINE_SCRUB = yes;
+    XFS_ONLINE_SCRUB_STATS = yes;
+    XFS_ONLINE_REPAIR = yes;
+    XFS_DEBUG = yes;
+    XFS_DEBUG_EXPENSIVE = yes;
+    XFS_ASSERT_FATAL = yes;
+  };
 }
