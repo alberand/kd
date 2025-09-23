@@ -34,6 +34,9 @@
       pkgs-clang = import nixpkgs-clang {
         inherit system;
       };
+      overlay = final: prev: {
+        kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
+      };
       pkgs = import nixpkgs {
         inherit system;
         overlays = [
@@ -41,9 +44,7 @@
           (final: prev: {
             llvmPackages_latest = pkgs-clang.llvmPackages_latest;
           })
-          (final: prev: {
-            kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
-          })
+          overlay
         ];
       };
       specialArgs = {
@@ -59,6 +60,8 @@
       };
     in {
       inherit lib;
+
+      overlays.default = overlay;
 
       devShells = {
         default = default.shell;
