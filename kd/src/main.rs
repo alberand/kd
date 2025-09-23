@@ -366,9 +366,9 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         };
 
         if let Some(extra_env) = &subconfig.extra_env {
-            options.push(set_value_str(
+            options.push(set_value(
                 "services.xfstests.extraEnv",
-                &format!("\"\"{}\"\"", &extra_env),
+                &format!("\"\"\n{}\n\"\"", &extra_env),
             ));
         };
 
