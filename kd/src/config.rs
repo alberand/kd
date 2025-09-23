@@ -19,6 +19,7 @@ pub struct KernelConfig {
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,
+    pub flavors: Option<Vec<String>>,
     pub config: Option<Table>,
 }
 

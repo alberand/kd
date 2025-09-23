@@ -460,6 +460,11 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             }
         };
 
+        if let Some(flavors) = &subconfig.flavors {
+            let value = format!(r#"with pkgs.kconfigs; [{}]"#, flavors.join(" "));
+            kernel_options.push(set_value("flavors", &value));
+        };
+
         if let Some(config) = &subconfig.config {
             for (key, value) in config.iter() {
                 kernel_config_options.push(KernelConfigOption {
