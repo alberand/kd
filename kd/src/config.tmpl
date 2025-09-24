@@ -1,0 +1,35 @@
+# Just a name to identify this environment
+name = "{}"
+
+# [kernel]
+# Prebuild kernel, useful for quick 'make && kd run' iterations
+# prebuild = "arch/x86/boot/bzImage"
+# Kernel config base, this keywords enable set of options in kernel config. For
+# example, "xfs" sets all CONFIG_XFS_* to "yes". The "xfstests" sets all
+# necessary options for xfstests to run (tested mainly with XFS)
+# flavors = ["xfstests", "xfs"]
+# With this three options you can set kernel version to build into the VM. Note
+# that if "prebuild" option is set this is not used. The header files of this
+# kernel will be used to build xfsprogs and xfstests.
+# repo = "file:///home/aalbersh/Projects/kernel/file-attr"
+# rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+# version = "6.16"
+#
+# Use any additional options to set, the option can be set to "yes", "no", and
+# "module"
+# [kernel.config]
+# CONFIG_SECURITY = "yes"
+# CONFIG_SECURITY_SELINUX = "yes"
+#
+# [xfsprogs]
+# repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
+# rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
+#
+# The xfstests are run as a systemd service named "xfstests"
+# [xfstests]
+# repo = "file:///home/aalbersh/Projects/xfstests-dev"
+# rev = "c25f471bc76bff506e15403d7832eb64783d8a39"
+# args = "-s xfs_4k xfs/633"
+# extra_env = """
+# export MOUNT_OPTIONS='-o uquota,gquota,pquota'
+# """

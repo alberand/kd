@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
-use std::path::PathBuf;
+use std::path::Path;
 use toml;
 use toml::Table;
 
@@ -15,7 +15,7 @@ pub struct KernelConfigOption {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct KernelConfig {
-    pub prebuild: Option<bool>,
+    pub prebuild: Option<String>,
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,
@@ -78,8 +78,8 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load(path: PathBuf) -> Result<Self, Error> {
-        if !path.exists() {
+    pub fn load<T: AsRef<Path>>(path: T) -> Result<Self, Error> {
+        if !path.as_ref().exists() {
             return Err(Error::new(ErrorKind::NotFound, "config file not found"));
         }
 
@@ -89,7 +89,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn _save(&self, path: PathBuf) -> Result<(), Error> {
+    pub fn _save<T: AsRef<Path>>(&self, path: T) -> Result<(), Error> {
         let mut buffer = std::fs::File::create(path)?;
         buffer.write_all(toml::to_string(self).unwrap().as_bytes())
     }

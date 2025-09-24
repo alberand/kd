@@ -2,19 +2,22 @@ use std::error::Error;
 use std::fmt;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use toml;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug)]
 pub enum KdErrorKind {
-    FlakeInitError,
-    NurlFailed,
+    IOError(std::io::Error),
+    TOMLError(toml::de::Error),
+    RuntimeError,
     ConfigError,
 }
 
 impl fmt::Display for KdErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            KdErrorKind::FlakeInitError => write!(f, "can not create flake"),
-            KdErrorKind::NurlFailed => write!(f, "nurl failed to fetch these repo/rev"),
+            KdErrorKind::IOError(ref source) => source.fmt(f),
+            KdErrorKind::TOMLError(ref source) => source.fmt(f),
+            KdErrorKind::RuntimeError => write!(f, "runtime error"),
             KdErrorKind::ConfigError => write!(f, "config error"),
         }
     }
@@ -22,15 +25,27 @@ impl fmt::Display for KdErrorKind {
 
 impl Error for KdErrorKind {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match *self {
-            KdErrorKind::FlakeInitError => None,
-            KdErrorKind::NurlFailed => None,
+        match self {
+            KdErrorKind::IOError(source) => Some(source),
+            KdErrorKind::TOMLError(source) => Some(source),
+            KdErrorKind::RuntimeError => None,
             KdErrorKind::ConfigError => None,
         }
     }
 }
 
-#[derive(Debug)]
+impl From<std::io::Error> for KdErrorKind {
+    fn from(error: std::io::Error) -> Self {
+        KdErrorKind::IOError(error)
+    }
+}
+
+impl From<toml::de::Error> for KdErrorKind {
+    fn from(error: toml::de::Error) -> Self {
+        KdErrorKind::TOMLError(error)
+    }
+}
+
 pub struct KdError {
     kind: KdErrorKind,
     message: String,
@@ -44,16 +59,17 @@ impl KdError {
 
 impl fmt::Display for KdError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", self.kind, self.message)
+        write!(f, "{}: {}", self.message, self.kind)
     }
 }
 
-impl Clone for KdError {
-    fn clone(&self) -> Self {
-        Self {
-            kind: self.kind.clone(),
-            message: self.message.clone(),
-        }
+impl fmt::Debug for KdError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "KdError {{ kind: {}, message: {} }}",
+            self.kind, self.message
+        )
     }
 }
 
