@@ -17,7 +17,7 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [kd.overlays.default];
+        overlays = [kd.overlays.x86_64-linux.default];
       };
       packages = let
         uset = import ./uconfig.nix;
