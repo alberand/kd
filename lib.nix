@@ -126,7 +126,7 @@ in rec {
             pkgs,
             ...
           }: {
-            kernel.iso = pkgs.lib.mkForce true;
+            kernel.flavors = [pkgs.kconfigs.iso];
 
             services.xfsprogs = {
               enable = true;
