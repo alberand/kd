@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::{Error, ErrorKind, Write};
+use std::io::Write;
 use std::path::Path;
 use toml;
 use toml::Table;
 
-use super::utils::KdError;
+use super::utils::{KdError, KdErrorKind};
 
 #[derive(Serialize, Deserialize)]
 pub struct KernelConfigOption {
@@ -78,33 +78,43 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load<T: AsRef<Path>>(path: T) -> Result<Self, Error> {
+    pub fn load<T: AsRef<Path>>(path: T) -> Result<Self, KdError> {
         if !path.as_ref().exists() {
-            return Err(Error::new(ErrorKind::NotFound, "config file not found"));
+            return Err(KdError::new(
+                KdErrorKind::RuntimeError,
+                "config file not found".to_string(),
+            ));
         }
 
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let config: Config = toml::from_str(&data).unwrap();
+        let data = fs::read_to_string(path)
+            .map_err(|e| KdError::new(KdErrorKind::IOError(e), "can not read".to_string()))?;
+        let config: Config = toml::from_str(&data)
+            .map_err(|e| KdError::new(KdErrorKind::TOMLError(e), "invalid TOML".to_string()))?;
 
         Ok(config)
     }
 
-    pub fn _save<T: AsRef<Path>>(&self, path: T) -> Result<(), Error> {
-        let mut buffer = std::fs::File::create(path)?;
-        buffer.write_all(toml::to_string(self).unwrap().as_bytes())
+    pub fn _save<T: AsRef<Path>>(&self, path: T) -> Result<(), KdError> {
+        let mut buffer = std::fs::File::create(path)
+            .map_err(|e| KdError::new(KdErrorKind::IOError(e), "failed to create".to_string()))?;
+        buffer
+            .write_all(toml::to_string(self).unwrap().as_bytes())
+            .map_err(|e| KdError::new(KdErrorKind::IOError(e), "failed to write".to_string()))?;
+
+        Ok(())
     }
 
     pub fn validate(&self) -> Result<(), KdError> {
         if let Some(subconfig) = &self.kernel {
-            let kernel = subconfig.version.is_some() ||
-                subconfig.rev.is_some() ||
-                subconfig.repo.is_some() ||
-                subconfig.config.is_some();
+            let kernel = subconfig.version.is_some()
+                || subconfig.rev.is_some()
+                || subconfig.repo.is_some()
+                || subconfig.config.is_some();
             if subconfig.prebuild.is_some() && kernel {
                 println!("Note! You're using 'prebuild', none of the [kernel] options applies.");
             }
         }
 
-        return Ok(())
+        return Ok(());
     }
 }

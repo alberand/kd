@@ -215,9 +215,7 @@ impl State {
             ));
         }
 
-        let config = Config::load(&config_path).map_err(|e| {
-            KdError::new(KdErrorKind::IOError(e), "Unable to read config".to_string())
-        })?;
+        let config = Config::load(&config_path)?;
 
         let envdir = curdir.clone().join(".kd").join(&config.name);
 
