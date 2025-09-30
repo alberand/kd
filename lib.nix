@@ -522,7 +522,6 @@ in rec {
 
           services.xfstests = {
             arguments = "-R xunit -s xfs_4k generic/110";
-            upload-results = true;
           };
         }
         // uconfig;
@@ -610,9 +609,9 @@ in rec {
         // uconfig;
     };
 
-    initrd = pkgs.callPackage (import ./initrd/default.nix) {
-      inherit nixpkgs uconfig;
-    };
+    #initrd = pkgs.callPackage (import ./initrd/default.nix) {
+    #  inherit nixpkgs uconfig;
+    #};
 
     shell = mkLinuxShell {
       inherit root name;
@@ -626,11 +625,6 @@ in rec {
     shell-clang18 = mkLinuxShell {
       inherit root name;
       clangVersion = "18";
-    };
-
-    shell-clang17 = mkLinuxShell {
-      inherit root name;
-      clangVersion = "17";
     };
 
     shell-gcc = mkLinuxShell {
