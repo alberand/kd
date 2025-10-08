@@ -17,12 +17,12 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [kd.overlays.x86_64-linux.default];
+        overlays = [kd.overlays.default];
       };
       packages = let
         uset = import ./uconfig.nix;
       in
-        kd.lib.${system}.mkEnv {
+        kd.lib.mkEnv {
           inherit nixpkgs;
           inherit (uset) name;
           root = builtins.toString ./.;
