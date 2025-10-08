@@ -262,8 +262,10 @@ in {
         };
       in
         ''
+          setup_log=$(mktemp)
+
           function get_config {
-            ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ || true
+            ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ 2>$setup_log || true
           }
 
           if [ ! -f "/root/share/kd.toml" ] && [ "${cfg.arguments}" == "" ]; then
@@ -291,35 +293,33 @@ in {
             scratch_dev="${cfg.scratch-dev}"
           fi;
 
+          echo "Package Versions"
           echo "xfsprogs: ${pkgs.xfsprogs.version}"
           echo "source: ${pkgs.xfsprogs.src}"
-
           echo "xfstests: ${pkgs.xfstests.version}"
           echo "source: ${pkgs.xfstests.src}"
-
           echo "kernel: ${config.boot.kernelPackages.kernel.version}"
           echo "source: ${config.boot.kernelPackages.kernel.src}"
 
           # Prepare disks
-          mkfs_initial=$(mktemp)
-          if ${pkgs.util-linux}/bin/mountpoint /mnt/test; then
-            ${pkgs.util-linux}/bin/umount $test_dev 2>&1 >> $mkfs_initial
+          if ${pkgs.util-linux}/bin/mountpoint /mnt/test &> $setup_log; then
+            ${pkgs.util-linux}/bin/umount $test_dev &> $setup_log
           fi
-          if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch; then
-            ${pkgs.util-linux}/bin/umount $scratch_dev 2>&1 >> $mkfs_initial
+          if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch &> $setup_log; then
+            ${pkgs.util-linux}/bin/umount $scratch_dev &> $setup_log
           fi
 
           ${pkgs.util-linux}/bin/mkfs \
             -t ${cfg.filesystem} \
             ${mkfs-options} \
             -L test $test_dev \
-            2>&1 >> $mkfs_initial
+            2>&1 >> $setup_log
           ${pkgs.util-linux}/bin/mkfs \
             -t ${cfg.filesystem} \
             ${mkfs-options} \
             -L scratch $scratch_dev \
-            2>&1 >> $mkfs_initial
-          echo "Initial mkfs output for test/scratch can be found at $mkfs_initial"
+            2>&1 >> $setup_log
+          echo "Initial mkfs output for test/scratch can be found at $setup_log"
 
           export TEST_DEV="$test_dev"
           export SCRATCH_DEV="$scratch_dev"
@@ -328,6 +328,16 @@ in {
           export WORKAREA=${pkgs.xfsprogs.src}
           export KWORKAREA=${config.boot.kernelPackages.kernel.src}
           ${cfg.extraEnv}
+
+
+          env_log=$(mktemp)
+          env > $env_log
+          echo "Environment can be found in $env_log"
+
+          echo "xfstests config is at ${config.environment.variables.HOST_OPTIONS}"
+
+          echo "Running:"
+          echo "\txfstests-check $arguments"
           ${pkgs.bash}/bin/bash -lc \
             "${pkgs.xfstests}/bin/xfstests-check $arguments"
 
