@@ -70,6 +70,7 @@
     lvm2
     fscrypt-experimental
     lsof
+    vim
   ];
 
   programs.bcc.enable = false;

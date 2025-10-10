@@ -106,28 +106,20 @@ in {
       "To upload results set services.xfstests.repository"
     );
 
-    nixpkgs.overlays = [
-      (
-        final: prev: {
-          xfstests = prev.xfstests.overrideAttrs (old: ({
-              inherit (cfg) src;
-              version = "git-${cfg.src.rev}";
-
-              nativeBuildInputs =
-                old.nativeBuildInputs
-                ++ prev.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
-
-              dontStrip = config.dev.dontStrip;
-            }
-            // prev.lib.optionalAttrs false {
-              stdenv = prev.ccacheStdenv;
-            }));
-        }
-      )
-    ];
-
     environment.systemPackages = with pkgs; [
-      xfstests
+      (xfstests.overrideAttrs (_final: prev: ({
+          inherit (cfg) src;
+          version = "git-${cfg.src.rev}";
+
+          nativeBuildInputs =
+            prev.nativeBuildInputs
+            ++ pkgs.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+
+          dontStrip = config.dev.dontStrip;
+        }
+        // pkgs.lib.optionalAttrs false {
+          stdenv = pkgs.ccacheStdenv;
+        })))
       xfsprogs
     ];
 

@@ -447,8 +447,8 @@ in rec {
     pkgs = import nixpkgs {
       system = "x86_64-linux";
       overlays = [
-        (import ./xfsprogs/overlay.nix {})
-        (import ./xfstests/overlay.nix {})
+        (import ./xfsprogs/overlay.nix)
+        (import ./xfstests/overlay.nix)
         (final: prev: {
           kconfigs = (import ./kconfigs/default.nix {inherit (pkgs) lib;});
         })
@@ -459,7 +459,7 @@ in rec {
       then pkgs.stdenv
       else pkgs.clangStdenv;
     buildKernelConfig = pkgs.callPackage ./kernel-config.nix {
-      inherit stdenv nixpkgs;
+      inherit stdenv;
     };
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv;

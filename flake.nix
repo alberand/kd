@@ -29,24 +29,22 @@
     rust-overlay,
   }: let
     system = "x86_64-linux";
-    pkgs-clang = import nixpkgs-clang {
-      inherit system;
-    };
     overlay = final: prev: {
       kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
+    };
+    pkgs-clang = import nixpkgs-clang {
+      inherit system;
     };
     pkgs = import nixpkgs {
       inherit system;
       overlays = [
-        (import rust-overlay)
         (final: prev: {
           llvmPackages_latest = pkgs-clang.llvmPackages_latest;
         })
         overlay
+        (import ./xfstests/overlay.nix)
+        (import ./xfsprogs/overlay.nix)
       ];
-    };
-    specialArgs = {
-      inherit pkgs-clang pkgs;
     };
     lib = import ./lib.nix {
       inherit pkgs nixos-generators nixpkgs;
@@ -61,7 +59,7 @@
 
     overlays.default = overlay;
 
-    devShells.${system} = {
+    devShells."${system}" = {
       default = default.shell;
       clang = default.shell;
       clang20 = default.shell-clang20;
@@ -74,9 +72,16 @@
       xfsprogs = lib.mkXfsprogsShell {};
       xfstests = lib.mkXfstestsShell {};
 
-      kd-dev = with pkgs;
-        mkShell {
-          buildInputs = [
+      kd-dev = let
+        rust-pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            (import rust-overlay)
+          ];
+        };
+      in
+        rust-pkgs.mkShell {
+          buildInputs = with rust-pkgs; [
             cargo
             rustc
             pkg-config
@@ -87,7 +92,7 @@
         };
     };
 
-    packages.${system} =
+    packages."${system}" =
       default
       // {
         kd = pkgs.callPackage (import ./kd/derivation.nix) {};
@@ -98,45 +103,49 @@
       description = "kd kernel environment";
     };
 
-    checks.${system} = {
+    checks."${system}" = {
       default = pkgs.testers.runNixOSTest {
         name = "basic-test";
         nodes = {
-          machine = {pkgs, config, ...}: let
+          machine = {
+            pkgs,
+            config,
+            ...
+          }: let
             buildKernelHeaders = pkgs.makeLinuxHeaders;
             sources = pkgs.lib.importJSON ./sources/kernel.json;
           in {
-            modules = [
-              (import ./xfstests/module.nix {})
-              (import ./xfsprogs/module.nix {})
-              (./script/module.nix)
-              (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+            imports = [
+              ./xfstests/module.nix
+              ./xfsprogs/module.nix
+              ./script/module.nix
+              ./input.nix
             ];
 
-            networking.hostName = "kd-test";
-            kernel = {
-              src = pkgs.fetchgit sources;
-              version = sources.rev;
-            };
-            vm.workdir = "/tmp/kd-test/";
-            vm.disks = [12000 12000 2000 2000];
+            config = {
+              networking.hostName = "kd-test";
+              kernel = {
+                src = pkgs.fetchgit sources;
+                version = sources.rev;
+              };
 
-            services.xfsprogs = {
-              enable = true;
-              kernelHeaders = buildKernelHeaders {
-                inherit (config.kernel) src version;
+              services.xfsprogs = {
+                enable = true;
+                kernelHeaders = buildKernelHeaders {
+                  inherit (config.kernel) src version;
+                };
               };
-            };
-            services.xfstests = {
-              enable = true;
-              test-dev = pkgs.lib.mkDefault "/dev/vdb";
-              scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
-              arguments = "-R xunit -s xfs_4k generic/110";
-              kernelHeaders = buildKernelHeaders {
-                inherit (config.kernel) src version;
+              services.xfstests = {
+                enable = true;
+                test-dev = pkgs.lib.mkDefault "/dev/vdb";
+                scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
+                arguments = "-R xunit -s xfs_4k generic/110";
+                kernelHeaders = buildKernelHeaders {
+                  inherit (config.kernel) src version;
+                };
               };
+              environment.systemPackages = [pkgs.curl];
             };
-            environment.systemPackages = [pkgs.curl];
           };
         };
 

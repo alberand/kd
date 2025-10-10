@@ -27,28 +27,22 @@ in {
   };
 
   config = mkIf cfg.enable {
-    nixpkgs.overlays = [
-      (_final: prev: {
-        xfsprogs =
-          prev.xfsprogs.overrideAttrs {
-            inherit (cfg) src;
-            version = "git-${cfg.src.rev}";
-
-            nativeBuildInputs =
-              prev.lib.optionals (cfg.kernelHeaders != null) [
-                cfg.kernelHeaders
-              ] ++ prev.xfsprogs.nativeBuildInputs;
-
-            dontStrip = config.dev.dontStrip;
-          }
-          // lib.optionalAttrs false {
-            stdenv = prev.ccacheStdenv;
-          };
-      })
-    ];
-
     environment.systemPackages = with pkgs; [
-      xfsprogs
+      (xfsprogs.overrideAttrs (_final: prev: ({
+          inherit (cfg) src;
+          version = "git-${cfg.src.rev}";
+
+          nativeBuildInputs =
+            pkgs.lib.optionals (cfg.kernelHeaders != null) [
+              cfg.kernelHeaders
+            ]
+            ++ prev.nativeBuildInputs;
+
+          dontStrip = config.dev.dontStrip;
+        }
+        // lib.optionalAttrs false {
+          stdenv = pkgs.ccacheStdenv;
+        })))
     ];
   };
 }
