@@ -270,9 +270,9 @@ in {
             exit 0
           fi
 
-          arguments=$(get_config 'xfstests.args')
+          arguments="$(get_config 'xfstests.args')"
           if [ "$arguments" == "" ]; then
-            arguments=${cfg.arguments}
+            arguments="${cfg.arguments}"
           fi;
 
           test_dev="$(get_config 'xfstests.test_dev')"
