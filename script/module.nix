@@ -64,8 +64,10 @@ in {
           ${pkgs.systemd}/bin/systemctl poweroff;
         '';
       script = ''
+        setup_log=$(mktemp)
+
         function get_config {
-          ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@
+          ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ 2>$setup_log || true
         }
 
         if [ ! -f "/root/share/kd.toml" ]; then
