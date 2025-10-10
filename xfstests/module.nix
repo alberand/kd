@@ -278,9 +278,9 @@ in {
             exit 0
           fi
 
-          arguments="$(get_config 'xfstests.args')"
+          arguments=$(get_config 'xfstests.args')
           if [ "$arguments" == "" ]; then
-            arguments="${cfg.arguments}"
+            arguments=${cfg.arguments}
           fi;
 
           test_dev="$(get_config 'xfstests.test_dev')"
@@ -337,9 +337,9 @@ in {
           echo "xfstests config is at ${config.environment.variables.HOST_OPTIONS}"
 
           echo "Running:"
-          echo "\txfstests-check $arguments"
+          echo -e "\txfstests-check $arguments"
           ${pkgs.bash}/bin/bash -lc \
-            "${pkgs.xfstests}/bin/xfstests-check $arguments"
+            "${pkgs.xfstests}/bin/xfstests-check arguments"
 
         ''
         + (optionalString (cfg.upload-results) ''
