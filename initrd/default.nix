@@ -61,7 +61,7 @@
         ./script/module.nix
         ./system.nix
         ./vm.nix
-        (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+        ./input.nix
         ({...}: uconfig)
       ];
       format = "vm";

@@ -1,7 +1,7 @@
 # This is guest module. In other words, it's options which could be set in the
 # VM or ISO. These options are just convenient wrappers. However, they also
 # set default values to these options.
-{nixpkgs}: {
+{
   pkgs,
   config,
   ...
@@ -51,7 +51,7 @@ in {
 
   config = let
     buildKernel = pkgs.callPackage ./kernel-build.nix {};
-    buildKernelConfig = pkgs.callPackage ./kernel-config.nix {inherit nixpkgs;};
+    buildKernelConfig = pkgs.callPackage ./kernel-config.nix {};
     kernelPackages = pkgs.linuxPackagesFor (
       buildKernel {
         inherit (cfg) version src;

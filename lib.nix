@@ -38,7 +38,7 @@ in rec {
         ./script/module.nix
         ./system.nix
         ./vm.nix
-        (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+        ./input.nix
         ({...}: uconfig)
         ({config, ...}: {
           #assertions = [
@@ -84,7 +84,7 @@ in rec {
           ./xfstests/module.nix
           ./xfsprogs/module.nix
           ./system.nix
-          (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+          ./input.nix
           ({...}: uconfig)
           ({pkgs, ...}: {
             kernel.flavors = [pkgs.kconfigs.iso];
@@ -116,7 +116,7 @@ in rec {
           ./xfstests/module.nix
           ./xfsprogs/module.nix
           ./system.nix
-          (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
+          ./input.nix
           ({...}: uconfig)
           ({
             config,
@@ -464,7 +464,7 @@ in rec {
     buildKernel = pkgs.callPackage ./kernel-build.nix {
       inherit stdenv;
     };
-    sources = (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;}) {
+    sources = (import ./input.nix) {
       inherit pkgs;
       config = {};
     };
