@@ -1,4 +1,4 @@
-{enableCcache ? false}: final: prev: rec {
+final: prev: rec {
   xfstests-configs = prev.stdenv.mkDerivation {
     name = "xfstests-configs";
     version = "v1";
@@ -149,7 +149,7 @@
         exec ./check "$@"
       '';
     }
-    // prev.lib.optionalAttrs enableCcache {
+    // prev.lib.optionalAttrs false {
       stdenv = prev.ccacheStdenv;
     });
 }

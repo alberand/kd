@@ -1,4 +1,4 @@
-{enableCcache ? false}: {
+{
   lib,
   pkgs,
   config,
@@ -41,7 +41,7 @@ in {
 
             dontStrip = config.dev.dontStrip;
           }
-          // lib.optionalAttrs enableCcache {
+          // lib.optionalAttrs false {
             stdenv = prev.ccacheStdenv;
           };
       })

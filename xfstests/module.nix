@@ -1,4 +1,4 @@
-{enableCcache ? false}: {
+{
   lib,
   pkgs,
   config,
@@ -119,7 +119,7 @@ in {
 
               dontStrip = config.dev.dontStrip;
             }
-            // prev.lib.optionalAttrs enableCcache {
+            // prev.lib.optionalAttrs false {
               stdenv = prev.ccacheStdenv;
             }));
         }
@@ -339,7 +339,7 @@ in {
           echo "Running:"
           echo -e "\txfstests-check $arguments"
           ${pkgs.bash}/bin/bash -lc \
-            "${pkgs.xfstests}/bin/xfstests-check arguments"
+            "${pkgs.xfstests}/bin/xfstests-check $arguments"
 
         ''
         + (optionalString (cfg.upload-results) ''

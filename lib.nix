@@ -25,7 +25,6 @@ in rec {
   mkVM = {
     pkgs,
     uconfig,
-    enableCcache,
   }:
     nixos-generators.nixosGenerate {
       inherit pkgs;
@@ -34,8 +33,8 @@ in rec {
         diskSize = "20000";
       };
       modules = [
-        (import ./xfstests/module.nix {inherit enableCcache;})
-        (import ./xfsprogs/module.nix {inherit enableCcache;})
+        ./xfstests/module.nix
+        ./xfsprogs/module.nix
         ./script/module.nix
         ./system.nix
         ./vm.nix
@@ -76,15 +75,14 @@ in rec {
   mkIso = {
     pkgs,
     uconfig,
-    enableCcache,
   }:
     builtins.getAttr "iso" {
       iso = nixos-generators.nixosGenerate {
         inherit pkgs;
         system = "x86_64-linux";
         modules = [
-          (import ./xfstests/module.nix {inherit enableCcache;})
-          (import ./xfsprogs/module.nix {inherit enableCcache;})
+          ./xfstests/module.nix
+          ./xfsprogs/module.nix
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
@@ -109,15 +107,14 @@ in rec {
   mkQcow = {
     pkgs,
     uconfig,
-    enableCcache,
   }:
     builtins.getAttr "qcow" {
       qcow = nixos-generators.nixosGenerate {
         inherit pkgs;
         system = "x86_64-linux";
         modules = [
-          (import ./xfstests/module.nix {inherit enableCcache;})
-          (import ./xfsprogs/module.nix {inherit enableCcache;})
+          ./xfstests/module.nix
+          ./xfsprogs/module.nix
           ./system.nix
           (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;})
           ({...}: uconfig)
@@ -155,12 +152,11 @@ in rec {
     name,
     root,
     uconfig,
-    enableCcache,
   }:
     builtins.getAttr "runner" rec {
       inherit name root;
       nixos = mkVM {
-        inherit pkgs uconfig enableCcache;
+        inherit pkgs uconfig;
       };
 
       runner =
@@ -447,7 +443,6 @@ in rec {
     nixpkgs,
     useGcc ? false,
     uconfig ? {},
-    enableCcache ? false,
   }: let
     pkgs = import nixpkgs {
       system = "x86_64-linux";
@@ -467,7 +462,7 @@ in rec {
       inherit stdenv nixpkgs;
     };
     buildKernel = pkgs.callPackage ./kernel-build.nix {
-      inherit stdenv enableCcache;
+      inherit stdenv;
     };
     sources = (pkgs.callPackage (import ./input.nix) {inherit nixpkgs;}) {
       inherit pkgs;
@@ -511,7 +506,7 @@ in rec {
     };
 
     iso = mkIso {
-      inherit pkgs enableCcache;
+      inherit pkgs;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -528,7 +523,7 @@ in rec {
     };
 
     qcow = mkQcow {
-      inherit pkgs enableCcache;
+      inherit pkgs;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -545,7 +540,7 @@ in rec {
     };
 
     vm = mkVmTest {
-      inherit pkgs name root enableCcache;
+      inherit pkgs name root;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -560,7 +555,7 @@ in rec {
     };
 
     prebuild = mkVmTest {
-      inherit pkgs name root enableCcache;
+      inherit pkgs name root;
       uconfig =
         {
           # Same as in .vm
@@ -580,7 +575,7 @@ in rec {
     };
 
     kgdbvm = mkVmTest {
-      inherit pkgs name root enableCcache;
+      inherit pkgs name root;
       uconfig =
         {
           # Same as in .vm

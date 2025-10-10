@@ -1,4 +1,4 @@
-{enableCcache ? false}: final: prev: let
+final: prev: let
   sources = prev.lib.importJSON ../sources/xfsprogs.json;
 in {
   xfsprogs = prev.xfsprogs.overrideAttrs (old:
@@ -30,7 +30,7 @@ in {
         patchShebangs ./install-sh
       '';
     }
-    // prev.lib.optionalAttrs enableCcache {
+    // prev.lib.optionalAttrs false {
       stdenv = prev.ccacheStdenv;
     });
 }
