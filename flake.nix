@@ -120,6 +120,7 @@
               ./xfsprogs/module.nix
               ./script/module.nix
               ./input.nix
+              ./vm.nix
             ];
 
             config = {
@@ -128,6 +129,8 @@
                 src = pkgs.fetchgit sources;
                 version = sources.rev;
               };
+              vm.workdir = "/tmp/kd-test/";
+              vm.disks = [12000 12000 2000 2000];
 
               services.xfsprogs = {
                 enable = true;
@@ -139,7 +142,7 @@
                 enable = true;
                 test-dev = pkgs.lib.mkDefault "/dev/vdb";
                 scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
-                arguments = "-R xunit -s xfs_4k generic/110";
+                arguments = "-s xfs_4k -s ext4_4k generic/110";
                 kernelHeaders = buildKernelHeaders {
                   inherit (config.kernel) src version;
                 };
@@ -151,9 +154,10 @@
 
         testScript = ''
           machine.start()
-          machine.wait_for_unit("xfstests")
+          machine.wait_for_unit("default.target")
+          machine.wait_until_fails("systemctl is-active xfstests.service")
           status = machine.succeed("systemctl show --property=ExecMainStatus xfstests.service")
-          assert status == "ExecMainStatus=1"
+          assert ' '.join(status.split()) == "ExecMainStatus=0"
         '';
       };
     };
