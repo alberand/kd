@@ -135,6 +135,15 @@ with lib.kernel; {
     FTRACE = yes;
     # Creates /proc/pid/stack which shows current stack for each process
     STACKTRACE = yes;
+
+    NFS_FS = no;
+    ACPI = no;
+    THERMAL = no;
+    I2C = no;
+    INPUT_MOUSE = no;
+    INPUT_JOYSTICK = no;
+    INPUT_TABLET = no;
+    INPUT_TOUCHSCREEN = no;
   };
 
   debug = {
