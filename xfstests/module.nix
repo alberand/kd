@@ -100,7 +100,21 @@ in {
     };
   };
 
-  config =
+  config = let
+    xfstests = pkgs.xfstests.overrideAttrs (_final: prev: ({
+        inherit (cfg) src;
+        version = "git-${cfg.src.rev}";
+
+        nativeBuildInputs =
+          prev.nativeBuildInputs
+          ++ pkgs.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+
+        dontStrip = config.dev.dontStrip;
+      }
+      // pkgs.lib.optionalAttrs false {
+        stdenv = pkgs.ccacheStdenv;
+      }));
+  in
     mkIf cfg.enable
     {
       warnings = (
@@ -109,19 +123,6 @@ in {
       );
 
       environment.systemPackages = with pkgs; [
-        (xfstests.overrideAttrs (_final: prev: ({
-            inherit (cfg) src;
-            version = "git-${cfg.src.rev}";
-
-            nativeBuildInputs =
-              prev.nativeBuildInputs
-              ++ pkgs.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
-
-            dontStrip = config.dev.dontStrip;
-          }
-          // pkgs.lib.optionalAttrs false {
-            stdenv = pkgs.ccacheStdenv;
-          })))
       ];
 
       # Setup envirionment
@@ -306,8 +307,8 @@ in {
             echo "Package Versions"
             echo "xfsprogs: ${xfsprogs.version}"
             echo "source: ${xfsprogs.src}"
-            echo "xfstests: ${pkgs.xfstests.version}"
-            echo "source: ${pkgs.xfstests.src}"
+            echo "xfstests: ${xfstests.version}"
+            echo "source: ${xfstests.src}"
             echo "kernel: ${config.boot.kernelPackages.kernel.version}"
             echo "source: ${config.boot.kernelPackages.kernel.src}"
 
@@ -349,7 +350,7 @@ in {
             echo "Running:"
             echo -e "\txfstests-check $arguments"
             ${pkgs.bash}/bin/bash -lc \
-              "${pkgs.xfstests}/bin/xfstests-check $arguments"
+              "${xfstests}/bin/xfstests-check $arguments"
 
           ''
           + (optionalString (cfg.upload-results) ''
