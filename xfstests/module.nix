@@ -122,9 +122,6 @@ in {
         "To upload results set services.xfstests.repository"
       );
 
-      environment.systemPackages = with pkgs; [
-      ];
-
       # Setup envirionment
       environment.variables = {
         HOST_OPTIONS =
@@ -350,7 +347,7 @@ in {
             echo "Running:"
             echo -e "\txfstests-check $arguments"
             ${pkgs.bash}/bin/bash -lc \
-              "${xfstests}/bin/xfstests-check $arguments"
+              "echo $arguments | xargs ${xfstests}/bin/xfstests-check"
 
           ''
           + (optionalString (cfg.upload-results) ''
