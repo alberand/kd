@@ -374,12 +374,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 std::process::exit(1);
             }
 
-            println!(
-                "setting '{}' to '{}'",
-                format!("NIXPKGS_QEMU_KERNEL_{}", &state.config.name),
-                path.display()
-            );
-
             state.envs.insert(
                 format!("NIXPKGS_QEMU_KERNEL_{}", &state.config.name),
                 path.display().to_string(),
