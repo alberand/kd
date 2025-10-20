@@ -50,6 +50,14 @@
   system.nssModules = lib.mkForce [];
   services.logrotate.enable = false;
   security.audit.enable = false;
+  services.speechd.enable = false;
+  hardware.graphics.enable = false;
+  services.pipewire.enable = false;
+  services.libinput.enable = false;
+
+  fonts.enableDefaultPackages = false;
+  fonts.fontconfig.enable = false;
+  fonts.packages = lib.mkForce [ pkgs.dejavu_fonts ];
 
   # Not needed in VM
   documentation.doc.enable = false;
