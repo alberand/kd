@@ -101,6 +101,22 @@ in {
   };
 
   config = let
+    xfspcfg = config.services.xfsprogs;
+    xfsprogs = pkgs.xfsprogs.overrideAttrs (_final: prev: ({
+        inherit (xfspcfg) src;
+        version = "git-${xfspcfg.src.rev}";
+
+        nativeBuildInputs =
+          pkgs.lib.optionals (xfspcfg.kernelHeaders != null) [
+            xfspcfg.kernelHeaders
+          ]
+          ++ prev.nativeBuildInputs;
+
+        dontStrip = config.dev.dontStrip;
+      }
+      // lib.optionalAttrs false {
+        stdenv = pkgs.ccacheStdenv;
+      }));
     xfstests = pkgs.xfstests.overrideAttrs (_final: prev: ({
         inherit (cfg) src;
         version = "git-${cfg.src.rev}";
@@ -110,6 +126,48 @@ in {
           ++ pkgs.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
 
         dontStrip = config.dev.dontStrip;
+
+        wrapperScript = pkgs.writeScript "xfstests-check" ''
+          #!${pkgs.runtimeShell}
+          set -e
+
+          dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
+          trap "rm -rf $dir" EXIT
+
+          chmod a+rx "$dir"
+          cd "$dir"
+          for f in $(cd @out@/lib/xfstests; echo *); do
+            ln -s @out@/lib/xfstests/$f $f
+          done
+          export PATH=${pkgs.lib.makeBinPath [
+            xfsprogs
+            pkgs.acl
+            pkgs.attr
+            pkgs.bc
+            pkgs.e2fsprogs
+            pkgs.gawk
+            pkgs.keyutils
+            pkgs.libcap
+            pkgs.lvm2
+            pkgs.perl
+            pkgs.procps
+            pkgs.killall
+            pkgs.quota
+            pkgs.util-linux
+            pkgs.which
+            pkgs.duperemove
+            pkgs.acct
+            pkgs.xfsdump
+            pkgs.indent
+            pkgs.man
+            pkgs.fio
+            pkgs.thin-provisioning-tools
+            pkgs.file
+            pkgs.openssl
+            pkgs.checkbashisms # xfs mainteiner test
+          ]}:$PATH
+          exec ./check "$@"
+        '';
       }
       // pkgs.lib.optionalAttrs false {
         stdenv = pkgs.ccacheStdenv;
@@ -216,22 +274,6 @@ in {
         };
 
       systemd.services.xfstests = let
-        xfspcfg = config.services.xfsprogs;
-        xfsprogs = pkgs.xfsprogs.overrideAttrs (_final: prev: ({
-            inherit (xfspcfg) src;
-            version = "git-${xfspcfg.src.rev}";
-
-            nativeBuildInputs =
-              pkgs.lib.optionals (xfspcfg.kernelHeaders != null) [
-                xfspcfg.kernelHeaders
-              ]
-              ++ prev.nativeBuildInputs;
-
-            dontStrip = config.dev.dontStrip;
-          }
-          // lib.optionalAttrs false {
-            stdenv = pkgs.ccacheStdenv;
-          }));
       in {
         enable = true;
         serviceConfig = {
