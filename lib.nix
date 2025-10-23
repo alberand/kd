@@ -471,7 +471,7 @@ in rec {
         (import ./xfsprogs/overlay.nix)
         (import ./xfstests/overlay.nix)
         (final: prev: {
-          kconfigs = (import ./kconfigs/default.nix {inherit (pkgs) lib;});
+          kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
         })
       ];
     };

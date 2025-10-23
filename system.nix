@@ -65,10 +65,17 @@
   documentation.nixos.enable = false;
   documentation.info.enable = false;
   programs.command-not-found.enable = false;
+  programs.bcc.enable = false;
+  services.pulseaudio.enable = false;
+  services.openssh.enable = false;
+
+  system.tools = {
+    nixos-generate-config.enable = false;
+    nixos-rebuild.enable = false;
+  };
 
   # Add packages to VM
   environment.systemPackages = with pkgs; [
-    htop
     util-linux
     fsverity-utils
     trace-cmd
@@ -78,35 +85,9 @@
     lvm2
     fscrypt-experimental
     lsof
-    vim
   ];
 
-  programs.bcc.enable = false;
-  services.pulseaudio.enable = false;
-
-  environment.variables = {
-    EDITOR = "nvim";
-  };
-
-  services.openssh = {
-    enable = false;
-  };
-
-  system.tools = {
-    nixos-generate-config.enable = false;
-    nixos-rebuild.enable = false;
-  };
-
-  programs.bash.interactiveShellInit = let
-    motd =
-      pkgs.writeShellScriptBin "motd"
-      ''
-        #!/usr/bin/env bash
-
-        echo "QEMU exit CTRL-A X"
-      '';
-  in
-    builtins.readFile "${motd}/bin/motd";
+  environment.variables.EDITOR = "nvim";
 
   system.stateVersion = "25.05";
 }
