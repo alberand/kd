@@ -155,12 +155,12 @@ in {
             pkgs.quota
             pkgs.util-linux
             pkgs.which
-            pkgs.duperemove
+            # pkgs.duperemove pulls glib
             pkgs.acct
             pkgs.xfsdump
             pkgs.indent
             pkgs.man
-            pkgs.fio
+            # pkgs.fio brings Python 3
             pkgs.thin-provisioning-tools
             pkgs.file
             pkgs.openssl
@@ -343,14 +343,6 @@ in {
               scratch_dev="${cfg.scratch-dev}"
             fi;
 
-            echo "Package Versions"
-            echo "xfsprogs: ${xfsprogs.version}"
-            echo "source: ${xfsprogs.src}"
-            echo "xfstests: ${xfstests.version}"
-            echo "source: ${xfstests.src}"
-            echo "kernel: ${config.boot.kernelPackages.kernel.version}"
-            echo "source: ${config.boot.kernelPackages.kernel.src}"
-
             # Prepare disks
             if ${pkgs.util-linux}/bin/mountpoint /mnt/test &> $setup_log; then
               ${pkgs.util-linux}/bin/umount $test_dev &> $setup_log
@@ -376,7 +368,6 @@ in {
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
             export WORKAREA=${xfsprogs.src}
-            export KWORKAREA=${config.boot.kernelPackages.kernel.src}
             ${cfg.extraEnv}
 
 
