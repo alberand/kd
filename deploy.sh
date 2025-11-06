@@ -18,6 +18,8 @@ NODE="$PREFIX-$2"
 echo "Removing /tmp/$NODE from $TEST_HOST"
 ssh $TEST_HOST "sudo rm /tmp/$NODE"
 
+virsh --connect $SYSURI destroy $NODE
+
 echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE'"
 rsync -avz -P \
        $TEST_ISO \
