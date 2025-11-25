@@ -1,4 +1,4 @@
-From a15b95351cf3006e0c7eede669fc9a71d8c38936 Mon Sep 17 00:00:00 2001
+From abef76bd780b3b379bf0ca54190a653be9efb166 Mon Sep 17 00:00:00 2001
 From: Andrey Albershteyn <andrey.albershteyn@gmail.com>
 Date: Tue, 26 Sep 2023 22:27:42 +0200
 Subject: [PATCH] common: link .out file to the output directory
@@ -14,10 +14,10 @@ permission in any way, as .out.good.
  3 files changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/check b/check
-index 71b9fbd0..c12da16b 100755
+index c897afbb41..58a441cea2 100755
 --- a/check
 +++ b/check
-@@ -1043,7 +1043,11 @@ function run_section()
+@@ -1042,7 +1042,11 @@
  		$timestamp && _timestamp
  		stop=`_wallclock`
  
@@ -30,7 +30,7 @@ index 71b9fbd0..c12da16b 100755
  			_dump_err "no qualified output"
  			tc_status="fail"
  			_stash_test_status "$seqnum" "$tc_status"
-@@ -1054,7 +1058,7 @@ function run_section()
+@@ -1053,7 +1057,7 @@
  		# from `foo' to 'foo'. Filter old versions to match the new
  		# version.
  		sed -i "s/\`/\'/g" $tmp.out
@@ -39,7 +39,7 @@ index 71b9fbd0..c12da16b 100755
  			if [ "$tc_status" != "fail" ]; then
  				echo "$seqnum `expr $stop - $start`" >>$tmp.time
  				echo -n " `expr $stop - $start`s"
-@@ -1063,13 +1067,13 @@ function run_section()
+@@ -1062,13 +1066,13 @@
  		else
  			_dump_err "- output mismatch (see $seqres.out.bad)"
  			mv $tmp.out $seqres.out.bad
@@ -56,23 +56,23 @@ index 71b9fbd0..c12da16b 100755
  			fi; } | sed -e 's/^\(.\)/    \1/'
  			tc_status="fail"
 diff --git a/common/rc b/common/rc
-index 30c44ddd..0f5cc748 100644
+index cb91c00d24..cd942fb56e 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -3474,7 +3474,7 @@ _link_out_file_named()
+@@ -3824,7 +3824,7 @@
  		print $result
  		' <$seqfull.cfg)
  	rm -f $1 || _fail "_link_out_file_named: failed to remove existing output file"
 -	ln -fs $(basename $1).$suffix $1 || _fail "$(basename $1).$suffix: could not setup output file"
 +	ln -fs $(realpath $1.$suffix) $seqres.out.good || _fail "$(basename $1).$suffix: could not setup output file"
+ 	test -r $1 || _fail "$(basename $1).$suffix: output file for feature set \"$2\" not found"
  }
  
- _link_out_file()
 diff --git a/tests/xfs/071 b/tests/xfs/071
-index 8373878a..91716705 100755
+index c4722f6718..930f82c364 100755
 --- a/tests/xfs/071
 +++ b/tests/xfs/071
-@@ -24,9 +24,9 @@ bitsperlong=`$here/src/feature -w`
+@@ -24,9 +24,9 @@
  # link correct .out file
  rm -f $seqfull.out
  if [ "$bitsperlong" -eq 32 ]; then
@@ -84,6 +84,3 @@ index 8373878a..91716705 100755
  fi
  
  _filter_io()
--- 
-2.42.0
-
