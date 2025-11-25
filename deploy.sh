@@ -16,7 +16,7 @@ SYSURI="qemu+ssh://$TEST_HOST/system"
 NODE="$PREFIX-$2"
 
 echo "Removing /tmp/$NODE from $TEST_HOST"
-ssh $TEST_HOST "sudo rm /tmp/$NODE"
+ssh $TEST_HOST "sudo rm -f -- /tmp/$NODE"
 
 virsh --connect $SYSURI destroy $NODE
 
