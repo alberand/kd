@@ -146,3 +146,4 @@ rev = "v6.14.0"
 - [ ] Add Initrd generator without kernel/modules
 - [ ] Make `kd run` without Nix evaluation, it can put all the things in right
       places and execute a script with qemu
+- [ ] Minimize image as in https://nixcademy.com/posts/minimizing-nixos-images/
