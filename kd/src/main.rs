@@ -512,7 +512,7 @@ fn main() {
             cmd.arg("flake")
                 .arg("init")
                 .arg("--template")
-                .arg("github:alberand/kd#x86_64-linux.default")
+                .arg("github:alberand/kd#default")
                 .current_dir(&path);
 
             if cli.debug {
