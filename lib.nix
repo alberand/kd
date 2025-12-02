@@ -259,6 +259,7 @@ in rec {
               trace-cmd
               python312Packages.ply # b4 prep --check and ./script/checkpatch
               python312Packages.gitpython # b4 prep --check and ./script/checkpatch
+              tomlq
               (vmtest-deploy {})
 
               (callPackage (import ./kd/derivation.nix) {})
@@ -308,7 +309,6 @@ in rec {
               numactl
               guilt
               nix-prefetch-git
-              tomlq
               # probably better to move it to separate module
               sqlite
               openssl
