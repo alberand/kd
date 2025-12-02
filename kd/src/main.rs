@@ -90,6 +90,7 @@ struct State {
     curdir: PathBuf,
     envdir: PathBuf,
     config: Config,
+    debug: bool,
     user_config: PathBuf,
     args: Vec<String>,
     envs: HashMap<String, String>,
@@ -126,6 +127,7 @@ impl State {
             config,
             user_config,
             envs: envs,
+            debug: false,
             ..Default::default()
         })
     }
@@ -362,6 +364,8 @@ fn main() {
         }
     });
 
+    state.debug = cli.debug;
+
     match &cli.command {
         Some(Commands::Init { name }) => {
             let name = name.as_str();
@@ -385,7 +389,7 @@ fn main() {
                 .arg("github:alberand/kd#default")
                 .current_dir(&path);
 
-            if cli.debug {
+            if state.debug {
                 println!("command: {:?}", cmd);
             }
 
@@ -440,7 +444,7 @@ fn main() {
             let mut cmd = Command::new("nix");
             cmd.arg("build").args(state.args).arg(&package);
 
-            if cli.debug {
+            if state.debug {
                 println!("command: {:?}", cmd);
             }
 
@@ -477,7 +481,7 @@ fn main() {
             let mut cmd = Command::new("nix");
             cmd.arg("run").args(state.args).envs(state.envs);
 
-            if cli.debug {
+            if state.debug {
                 println!("command: {:?}", cmd);
             }
 
@@ -503,7 +507,7 @@ fn main() {
                 .arg(&package)
                 .current_dir(&state.envdir);
 
-            if cli.debug {
+            if state.debug {
                 println!("command: {:?}", &cmd);
             }
 
@@ -531,7 +535,7 @@ fn main() {
             let mut cmd = Command::new("nix");
             cmd.arg("build").arg(&package).current_dir(&state.envdir);
 
-            if cli.debug {
+            if state.debug {
                 println!("command: {:?}", cmd);
             }
 
