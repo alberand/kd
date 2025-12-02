@@ -204,13 +204,13 @@ in rec {
           if [ -f "$LOCAL_CONFIG" ]; then
             cp "$LOCAL_CONFIG" "$RUNDIR/kd.toml"
 
-            if ! tq --file $LOCAL_CONFIG . > /dev/null; then
+            if ! ${pkgs.tomlq}/bin/tq --file $LOCAL_CONFIG . > /dev/null; then
               echo "Invalid $LOCAL_CONFIG"
               exit 1
             fi
 
-            if tq --file $LOCAL_CONFIG 'script' > /dev/null; then
-              export SCRIPT_TEST="$(tq --file $LOCAL_CONFIG 'script.script')"
+            if ${pkgs.tomlq}/bin/tq --file $LOCAL_CONFIG 'script' > /dev/null; then
+              export SCRIPT_TEST="$(${pkgs.tomlq}/bin/tq --file $LOCAL_CONFIG 'script.script')"
             fi
 
             if [[ -f "$SCRIPT_TEST" ]]; then
