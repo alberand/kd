@@ -1,17 +1,18 @@
-From abef76bd780b3b379bf0ca54190a653be9efb166 Mon Sep 17 00:00:00 2001
+From 4a4af20083ec6955b4cffb9da4425e9a75096f35 Mon Sep 17 00:00:00 2001
 From: Andrey Albershteyn <andrey.albershteyn@gmail.com>
 Date: Tue, 26 Sep 2023 22:27:42 +0200
 Subject: [PATCH] common: link .out file to the output directory
 
-On the systems which source packages are read-only (e.g. NixOS) ln
-will fail to link necessary .out file to the tests/ directory.
-Therefore, link it to the final output directory, which has write
-permission in any way, as .out.good.
+On the systems with readonly system packages 'ln' will fail to link .out
+files to xfstests root directory. Fix this by linking golden output file
+to the final output directory as .out.good.
+
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
  check         | 12 ++++++++----
- common/rc     |  2 +-
+ common/rc     |  4 ++--
  tests/xfs/071 |  4 ++--
- 3 files changed, 11 insertions(+), 7 deletions(-)
+ 3 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/check b/check
 index c897afbb41..58a441cea2 100755
@@ -56,18 +57,20 @@ index c897afbb41..58a441cea2 100755
  			fi; } | sed -e 's/^\(.\)/    \1/'
  			tc_status="fail"
 diff --git a/common/rc b/common/rc
-index cb91c00d24..cd942fb56e 100644
+index cb91c00d24..1d90ea31e4 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -3824,7 +3824,7 @@
+@@ -3824,8 +3824,8 @@
  		print $result
  		' <$seqfull.cfg)
  	rm -f $1 || _fail "_link_out_file_named: failed to remove existing output file"
 -	ln -fs $(basename $1).$suffix $1 || _fail "$(basename $1).$suffix: could not setup output file"
-+	ln -fs $(realpath $1.$suffix) $seqres.out.good || _fail "$(basename $1).$suffix: could not setup output file"
- 	test -r $1 || _fail "$(basename $1).$suffix: output file for feature set \"$2\" not found"
+-	test -r $1 || _fail "$(basename $1).$suffix: output file for feature set \"$2\" not found"
++	ln -fs $(realpath $1).$suffix $seqres.out.good || _fail "$(basename $1).$suffix: could not setup output file"
++	test -r $seqres.out.good || _fail "$(basename $1).$suffix: output file for feature set \"$2\" not found"
  }
  
+ _link_out_file()
 diff --git a/tests/xfs/071 b/tests/xfs/071
 index c4722f6718..930f82c364 100755
 --- a/tests/xfs/071
