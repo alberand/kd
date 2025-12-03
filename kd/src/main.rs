@@ -37,6 +37,12 @@ enum Target {
     Qcow,
 }
 
+impl Default for Target {
+    fn default() -> Self {
+        Target::Qcow
+    }
+}
+
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -88,6 +94,7 @@ enum Commands {
 struct State {
     name: String,
     debug: bool,
+    target: Target,
     curdir: PathBuf,
     envdir: PathBuf,
     config: Config,
@@ -101,6 +108,7 @@ impl Default for State {
         Self {
             name: "default".to_string(),
             debug: false,
+            target: Target::default(),
             curdir: PathBuf::default(),
             envdir: PathBuf::default(),
             config: Config::default(),
@@ -139,6 +147,7 @@ impl State {
         Ok(Self {
             name: config.name.clone(),
             debug: false,
+            target: Target::default(),
             curdir,
             envdir,
             config,
@@ -416,6 +425,113 @@ fn cmd_init(state: &State) {
 
     println!("Update your .kd.toml configuration");
 }
+
+fn cmd_build(state: &mut State) {
+    match generate_uconfig(state) {
+        Ok(_) => {}
+        Err(error) => {
+            println!("Failed to generate nix config: {error}");
+            std::process::exit(1);
+        }
+    }
+
+    let package = format!("path:{}#{}", state.envdir.display(), &state.target);
+
+    let mut cmd = Command::new("nix");
+    cmd.arg("build").args(&state.args).arg(&package);
+
+    if state.debug {
+        println!("command: {:?}", cmd);
+    }
+
+    cmd.spawn()
+        .expect("Failed to spawn 'nix build'")
+        .wait()
+        .expect("'nix build' wasn't running");
+}
+
+fn cmd_run(state: &mut State) {
+    match generate_uconfig(state) {
+        Ok(_) => {}
+        Err(error) => {
+            println!("Failed to generate nix config: {error}");
+            std::process::exit(1);
+        }
+    }
+
+    state
+        .args
+        .push(format!("path:{}#vm", state.envdir.display()));
+    let mut cmd = Command::new("nix");
+    cmd.arg("run")
+        .args(state.args.clone())
+        .envs(state.envs.clone());
+
+    if state.debug {
+        println!("command: {:?}", cmd);
+    }
+
+    cmd.spawn()
+        .expect("Failed to spawn 'nix run'")
+        .wait()
+        .expect("'nix run' wasn't running");
+}
+
+fn cmd_update(state: &State) {
+    let package = format!("path:{}", state.envdir.display());
+    let mut cmd = Command::new("nix");
+    cmd.arg("flake")
+        .arg("update")
+        .arg("--flake")
+        .arg(&package)
+        .current_dir(&state.envdir);
+
+    if state.debug {
+        println!("command: {:?}", &cmd);
+    }
+
+    cmd.spawn()
+        .expect("Failed to spawn 'nix flake update'")
+        .wait()
+        .expect("'nix flake update' wasn't running");
+}
+
+fn cmd_config(state: &State, output: Option<String>) {
+    let package = format!("path:{}#kconfig", state.envdir.display());
+    let mut cmd = Command::new("nix");
+    cmd.arg("build").arg(&package).current_dir(&state.envdir);
+
+    if state.debug {
+        println!("command: {:?}", cmd);
+    }
+
+    cmd.spawn()
+        .expect("Failed to spawn 'nix build .#kconfig'")
+        .wait()
+        .expect("'nix build .#kconfig' wasn't running");
+
+    let output = if let Some(output) = output {
+        PathBuf::from(output)
+    } else {
+        state.curdir.clone().join(".config")
+    };
+
+    if output.exists() {
+        let mut backup = output.clone();
+        backup.set_extension("bup");
+        std::fs::copy(&output, backup).unwrap();
+    }
+
+    let source = state
+        .curdir
+        .clone()
+        .join(".kd")
+        .join(&state.config.name)
+        .join("result");
+    std::fs::copy(source, &output).unwrap();
+    std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
+}
+
 fn main() {
     let cli = Cli::parse();
     let mut state = State::new().unwrap_or_else(|error| {
@@ -437,6 +553,8 @@ fn main() {
         }
 
         Some(Commands::Build { nix_args, target }) => {
+            state.target = target.clone();
+
             if let Err(error) = state.config.validate() {
                 println!("Invalid config: {error}");
                 std::process::exit(1);
@@ -449,27 +567,7 @@ fn main() {
                 }
             }
 
-            match generate_uconfig(&mut state) {
-                Ok(_) => {}
-                Err(error) => {
-                    println!("Failed to generate nix config: {error}");
-                    std::process::exit(1);
-                }
-            }
-
-            let package = format!("path:{}#{}", state.envdir.display(), target.to_string());
-
-            let mut cmd = Command::new("nix");
-            cmd.arg("build").args(state.args).arg(&package);
-
-            if state.debug {
-                println!("command: {:?}", cmd);
-            }
-
-            cmd.spawn()
-                .expect("Failed to spawn 'nix build'")
-                .wait()
-                .expect("'nix build' wasn't running");
+            cmd_build(&mut state);
         }
 
         Some(Commands::Run { nix_args }) => {
@@ -485,28 +583,7 @@ fn main() {
                 }
             }
 
-            match generate_uconfig(&mut state) {
-                Ok(_) => {}
-                Err(error) => {
-                    println!("Failed to generate nix config: {error}");
-                    std::process::exit(1);
-                }
-            }
-
-            state
-                .args
-                .push(format!("path:{}#vm", state.envdir.display()));
-            let mut cmd = Command::new("nix");
-            cmd.arg("run").args(state.args).envs(state.envs);
-
-            if state.debug {
-                println!("command: {:?}", cmd);
-            }
-
-            cmd.spawn()
-                .expect("Failed to spawn 'nix run'")
-                .wait()
-                .expect("'nix run' wasn't running");
+            cmd_run(&mut state);
         }
 
         Some(Commands::Update { nix_args }) => {
@@ -517,22 +594,7 @@ fn main() {
                 }
             }
 
-            let package = format!("path:{}", state.envdir.display());
-            let mut cmd = Command::new("nix");
-            cmd.arg("flake")
-                .arg("update")
-                .arg("--flake")
-                .arg(&package)
-                .current_dir(&state.envdir);
-
-            if state.debug {
-                println!("command: {:?}", &cmd);
-            }
-
-            cmd.spawn()
-                .expect("Failed to spawn 'nix flake update'")
-                .wait()
-                .expect("'nix flake update' wasn't running");
+            cmd_update(&state);
         }
 
         Some(Commands::Config { output }) => {
@@ -549,39 +611,7 @@ fn main() {
                 }
             }
 
-            let package = format!("path:{}#kconfig", state.envdir.display());
-            let mut cmd = Command::new("nix");
-            cmd.arg("build").arg(&package).current_dir(&state.envdir);
-
-            if state.debug {
-                println!("command: {:?}", cmd);
-            }
-
-            cmd.spawn()
-                .expect("Failed to spawn 'nix build .#kconfig'")
-                .wait()
-                .expect("'nix build .#kconfig' wasn't running");
-
-            let output = if let Some(output) = output {
-                PathBuf::from(output)
-            } else {
-                state.curdir.clone().join(".config")
-            };
-
-            if output.exists() {
-                let mut backup = output.clone();
-                backup.set_extension("bup");
-                std::fs::copy(&output, backup).unwrap();
-            }
-
-            let source = state
-                .curdir
-                .clone()
-                .join(".kd")
-                .join(&state.config.name)
-                .join("result");
-            std::fs::copy(source, &output).unwrap();
-            std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
+            cmd_config(&state, output.clone());
         }
         None => {}
     }
