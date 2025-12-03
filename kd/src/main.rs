@@ -85,15 +85,30 @@ enum Commands {
     },
 }
 
-#[derive(Default)]
 struct State {
+    name: String,
+    debug: bool,
     curdir: PathBuf,
     envdir: PathBuf,
     config: Config,
-    debug: bool,
     user_config: PathBuf,
     args: Vec<String>,
     envs: HashMap<String, String>,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            name: "default".to_string(),
+            debug: false,
+            curdir: PathBuf::default(),
+            envdir: PathBuf::default(),
+            config: Config::default(),
+            user_config: PathBuf::default(),
+            args: Vec::<String>::default(),
+            envs: HashMap::<String, String>::default(),
+        }
+    }
 }
 
 impl State {
@@ -122,13 +137,14 @@ impl State {
         let envs = HashMap::new();
 
         Ok(Self {
+            name: config.name.clone(),
+            debug: false,
             curdir,
             envdir,
             config,
             user_config,
+            args: vec![],
             envs: envs,
-            debug: false,
-            ..Default::default()
         })
     }
 }
@@ -352,6 +368,54 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     Ok(())
 }
 
+fn cmd_init(state: &State) {
+    let curdir = std::env::current_dir().unwrap_or_else(|e| {
+        println!("No able to get current working directory: {}", e);
+        std::process::exit(1);
+    });
+
+    let path = PathBuf::from(&curdir).join(".kd").join(&state.name);
+    if let Err(error) = std::fs::create_dir_all(&path) {
+        println!("Unable to create {}: {}", path.display(), error);
+        std::process::exit(1);
+    }
+
+    println!("Creating new environment '{}'", state.name);
+    let mut cmd = Command::new("nix");
+    cmd.arg("flake")
+        .arg("init")
+        .arg("--template")
+        .arg("github:alberand/kd#default")
+        .current_dir(&path);
+
+    if state.debug {
+        println!("command: {:?}", cmd);
+    }
+
+    let output = cmd.output().expect("Failed to execute command");
+
+    if !output.status.success() {
+        println!("Failed to create Nix Flake:");
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+        std::process::exit(1);
+    }
+
+    let target = PathBuf::from(&curdir).join(".kd.toml");
+    if target.exists() {
+        // nothing to do, config already here
+        std::process::exit(0);
+    }
+    let mut writer = std::fs::File::create(target).unwrap_or_else(|e| {
+        println!("Failed to create .kd.toml config: {e}");
+        std::process::exit(1);
+    });
+    writeln!(writer, include_str!("config.tmpl"), state.name).unwrap_or_else(|e| {
+        println!("Failed to write env name to .kd.toml: {e}");
+        std::process::exit(1);
+    });
+
+    println!("Update your .kd.toml configuration");
+}
 fn main() {
     let cli = Cli::parse();
     let mut state = State::new().unwrap_or_else(|error| {
@@ -368,54 +432,8 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Init { name }) => {
-            let name = name.as_str();
-
-            let curdir = std::env::current_dir().unwrap_or_else(|e| {
-                println!("No able to get current working directory: {}", e);
-                std::process::exit(1);
-            });
-
-            let path = PathBuf::from(&curdir).join(".kd").join(name);
-            if let Err(error) = std::fs::create_dir_all(&path) {
-                println!("Unable to create {}: {}", path.display(), error);
-                std::process::exit(1);
-            }
-
-            println!("Creating new environment '{}'", name);
-            let mut cmd = Command::new("nix");
-            cmd.arg("flake")
-                .arg("init")
-                .arg("--template")
-                .arg("github:alberand/kd#default")
-                .current_dir(&path);
-
-            if state.debug {
-                println!("command: {:?}", cmd);
-            }
-
-            let output = cmd.output().expect("Failed to execute command");
-
-            if !output.status.success() {
-                println!("Failed to create Nix Flake:");
-                println!("{}", String::from_utf8_lossy(&output.stderr));
-                std::process::exit(1);
-            }
-
-            let target = PathBuf::from(&curdir).join(".kd.toml");
-            if target.exists() {
-                // nothing to do, config already here
-                std::process::exit(0);
-            }
-            let mut writer = std::fs::File::create(target).unwrap_or_else(|e| {
-                println!("Failed to create .kd.toml config: {e}");
-                std::process::exit(1);
-            });
-            writeln!(writer, include_str!("config.tmpl"), name).unwrap_or_else(|e| {
-                println!("Failed to write env name to .kd.toml: {e}");
-                std::process::exit(1);
-            });
-
-            println!("Update your .kd.toml configuration");
+            state.name = name.clone();
+            cmd_init(&state);
         }
 
         Some(Commands::Build { nix_args, target }) => {
