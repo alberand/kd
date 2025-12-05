@@ -1,12 +1,10 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{self, PathBuf};
 use std::process::Command;
-use toml;
 
 mod utils;
 use utils::{find_it, is_executable, KdError, KdErrorKind};
@@ -87,119 +85,18 @@ enum Commands {
     },
 }
 
-#[derive(Deserialize)]
-struct NixConfig {
-    args: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct AppConfig {
-    _name: Option<String>,
-    nix: Option<NixConfig>,
-}
-
-impl Default for AppConfig {
-    fn default() -> Self {
-        AppConfig {
-            _name: None,
-            nix: None,
-        }
-    }
-}
-
-impl AppConfig {
-    fn load(path: &Option<PathBuf>) -> Result<Self, KdError> {
-        let app_config_path = if let Some(path) = path {
-            path
-        } else if let Ok(xdg_config_home) = std::env::var("XDG_CONFIG_HOME") {
-            &PathBuf::from(xdg_config_home).join("kd/config.toml")
-        } else if let Ok(home) = std::env::var("HOME") {
-            &PathBuf::from(home).join(".config/kd/config.toml")
-        } else {
-            &PathBuf::from("")
-        };
-
-        if !app_config_path.exists() {
-            return AppConfig::create();
-        }
-
-        match std::fs::read_to_string(app_config_path) {
-            Ok(data) => {
-                let data = toml::from_str(&data)
-                    .map_err(|e| KdError::new(KdErrorKind::TOMLError(e), format!("invalid TOML")));
-                data
-            }
-            Err(error) => {
-                return Err(KdError::new(
-                    KdErrorKind::IOError(error),
-                    format!("Failed to read {}", app_config_path.display()),
-                ));
-            }
-        }
-    }
-
-    fn create() -> Result<Self, KdError> {
-        // Create global config
-        for var in vec!["XDG_CONFIG_HOME", "HOME"] {
-            match std::env::var(var) {
-                Ok(value) => {
-                    let kd_path = if var == "HOME" { ".config/kd" } else { "kd" };
-                    let global_config_dir = PathBuf::from(value).join(kd_path);
-                    match std::fs::create_dir_all(&global_config_dir) {
-                        Ok(()) => {
-                            let global_config = global_config_dir.join("config.toml");
-                            let mut file = std::fs::File::create(global_config);
-                            match &mut file {
-                                Ok(file) => {
-                                    let res = file.write_all(b"# kd global config");
-                                    if res.is_err() {
-                                        println!(
-                                        "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {:?}",
-                                        res
-                                    );
-                                    }
-                                }
-                                Err(error) => {
-                                    println!(
-                                    "Failed to write to $XDG_CONFIG_HOME/kd/config.toml: {error}"
-                                )
-                                }
-                            }
-                        }
-                        Err(error) => {
-                            println!(
-                                "Failed to create $XDG_CONFIG_HOME, won't create config: {error}"
-                            );
-                        }
-                    }
-                }
-                Err(error) => {
-                    println!("$XDG_CONFIG_HOME seems to be empty, won't create config: {error}");
-                }
-            };
-        }
-
-        Ok(AppConfig::default())
-    }
-}
-
 #[derive(Default)]
 struct State {
     curdir: PathBuf,
     envdir: PathBuf,
     config: Config,
-
-    app_config: AppConfig,
     user_config: PathBuf,
-
     args: Vec<String>,
     envs: HashMap<String, String>,
 }
 
 impl State {
-    fn new(cli: &Cli) -> Result<Self, KdError> {
-        let app_config = AppConfig::load(&cli.config)?;
-
+    fn new() -> Result<Self, KdError> {
         let curdir = std::env::current_dir().map_err(|e| {
             KdError::new(
                 KdErrorKind::IOError(e),
@@ -220,17 +117,6 @@ impl State {
         let envdir = curdir.clone().join(".kd").join(&config.name);
 
         let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
-        let args = if let Some(config) = &app_config.nix {
-            if let Some(args) = &config.args {
-                args.split(" ")
-                    .map(|x| x.to_string())
-                    .collect::<Vec<String>>()
-            } else {
-                vec![]
-            }
-        } else {
-            vec![]
-        };
 
         let envs = HashMap::new();
 
@@ -238,10 +124,9 @@ impl State {
             curdir,
             envdir,
             config,
-            app_config,
             user_config,
-            args: args,
             envs: envs,
+            ..Default::default()
         })
     }
 }
@@ -482,7 +367,7 @@ fn main() {
     }
 
     let cli = Cli::parse();
-    let mut state = State::new(&cli).unwrap_or_else(|error| {
+    let mut state = State::new().unwrap_or_else(|error| {
         if let Some(Commands::Init {ref name}) = &cli.command {
             // we good to go as we doing init
             State::default()
