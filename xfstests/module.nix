@@ -94,9 +94,15 @@ in {
     };
 
     kernelHeaders = mkOption {
-      type = types.nullOr types.package;
+      type = types.package;
       description = "Linux kernel headers to compile xfstests against";
-      default = null;
+      default = let
+        src = pkgs.fetchgit (pkgs.lib.importJSON ../sources/kernel.json);
+      in
+        pkgs.makeLinuxHeaders {
+          version = src.rev;
+          inherit src;
+        };
     };
   };
 
@@ -106,11 +112,7 @@ in {
         inherit (xfspcfg) src;
         version = "git-${xfspcfg.src.rev}";
 
-        nativeBuildInputs =
-          pkgs.lib.optionals (xfspcfg.kernelHeaders != null) [
-            xfspcfg.kernelHeaders
-          ]
-          ++ prev.nativeBuildInputs;
+        nativeBuildInputs = [xfspcfg.kernelHeaders] ++ prev.nativeBuildInputs;
 
         dontStrip = config.dev.dontStrip;
       }
@@ -121,9 +123,7 @@ in {
         inherit (cfg) src;
         version = "git-${cfg.src.rev}";
 
-        nativeBuildInputs =
-          prev.nativeBuildInputs
-          ++ pkgs.lib.optionals (cfg.kernelHeaders != null) [cfg.kernelHeaders];
+        nativeBuildInputs = prev.nativeBuildInputs ++ [cfg.kernelHeaders];
 
         dontStrip = config.dev.dontStrip;
 

@@ -50,9 +50,6 @@ in rec {
 
           services.xfsprogs = {
             enable = true;
-            kernelHeaders = buildKernelHeaders {
-              inherit (config.kernel) src version;
-            };
           };
 
           services.script = {
@@ -63,9 +60,6 @@ in rec {
             enable = true;
             test-dev = pkgs.lib.mkDefault "/dev/vdb";
             scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
-            kernelHeaders = buildKernelHeaders {
-              inherit (config.kernel) src version;
-            };
           };
 
           virtualisation = {
@@ -148,9 +142,6 @@ in rec {
 
             services.xfsprogs = {
               enable = true;
-              kernelHeaders = buildKernelHeaders {
-                inherit (config.kernel) src version;
-              };
             };
 
             services.xfstests = {
@@ -158,9 +149,6 @@ in rec {
               autoshutdown = false;
               test-dev = pkgs.lib.mkDefault "/dev/sda";
               scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
-              kernelHeaders = buildKernelHeaders {
-                inherit (config.kernel) src version;
-              };
             };
           })
         ];

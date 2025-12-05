@@ -26,7 +26,7 @@
           inherit nixpkgs;
           inherit (uset) name;
           root = builtins.toString ./.;
-          uconfig = uset.uconfig {inherit pkgs;};
+          uconfig = uset.uconfig {inherit pkgs kd;};
         };
     in {
       inherit packages;

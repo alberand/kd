@@ -20,9 +20,15 @@ in {
     };
 
     kernelHeaders = mkOption {
-      type = types.nullOr types.package;
+      type = types.package;
       description = "Linux kernel headers to compile xfsprogs against";
-      default = null;
+      default = let
+        src = pkgs.fetchgit (pkgs.lib.importJSON ../sources/kernel.json);
+      in
+        pkgs.makeLinuxHeaders {
+          version = src.rev;
+          inherit src;
+        };
     };
   };
 
@@ -32,12 +38,7 @@ in {
           inherit (cfg) src;
           version = "git-${cfg.src.rev}";
 
-          nativeBuildInputs =
-            pkgs.lib.optionals (cfg.kernelHeaders != null) [
-              cfg.kernelHeaders
-            ]
-            ++ prev.nativeBuildInputs;
-
+          nativeBuildInputs = [cfg.kernelHeaders] ++ prev.nativeBuildInputs;
           dontStrip = config.dev.dontStrip;
         }
         // lib.optionalAttrs false {
