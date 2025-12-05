@@ -13,6 +13,13 @@ pub struct KernelConfigOption {
     pub value: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct KernelHeaders {
+    pub version: Option<String>,
+    pub rev: Option<String>,
+    pub repo: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Default)]
 pub struct KernelConfig {
     pub prebuild: Option<String>,
@@ -38,6 +45,7 @@ pub struct XfstestsConfig {
     pub extra_env: Option<String>,
     pub filesystem: Option<String>,
     pub hooks: Option<String>,
+    pub kernel_headers: Option<KernelHeaders>,
 }
 
 fn default_xfsprogs() -> Option<String> {
@@ -53,6 +61,7 @@ pub struct XfsprogsConfig {
     #[serde(default = "default_xfsprogs")]
     pub repo: Option<String>,
     pub rev: Option<String>,
+    pub kernel_headers: Option<KernelHeaders>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -112,6 +121,52 @@ impl Config {
                 || subconfig.config.is_some();
             if subconfig.prebuild.is_some() && kernel {
                 println!("Note! You're using 'prebuild', none of the [kernel] options applies.");
+            }
+        }
+
+        if let Some(subconfig) = &self.xfsprogs {
+            if let Some(subconfig) = &subconfig.kernel_headers {
+                if subconfig.repo.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'repo' parameter for kernel headers".to_owned(),
+                    ))
+                }
+                if subconfig.rev.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'rev' parameter for kernel headers".to_owned(),
+                    ))
+                }
+                if subconfig.version.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'version' parameter for kernel headers".to_owned(),
+                    ))
+                }
+            }
+        }
+
+        if let Some(subconfig) = &self.xfstests {
+            if let Some(subconfig) = &subconfig.kernel_headers {
+                if subconfig.repo.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'repo' parameter for kernel headers".to_owned(),
+                    ))
+                }
+                if subconfig.rev.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'rev' parameter for kernel headers".to_owned(),
+                    ))
+                }
+                if subconfig.version.is_none() {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        "You are missing 'version' parameter for kernel headers".to_owned(),
+                    ))
+                }
             }
         }
 

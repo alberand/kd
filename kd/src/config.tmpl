@@ -25,6 +25,14 @@ name = "{}"
 # repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
 # rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
 #
+# You also change Kernel header used to compile xfsprogs or xfstests. By
+# default, if this section is not changed, xfsprogs will be compiled against
+# default project kernel (which is latest kernel).
+# [xfsprogs.kernel_headers]
+# repo = "file:///home/aalbersh/Projects/kernel/file-attr"
+# rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+# version = "6.16"
+#
 # The xfstests are run as a systemd service named "xfstests"
 # [xfstests]
 # repo = "file:///home/aalbersh/Projects/xfstests-dev"

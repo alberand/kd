@@ -232,6 +232,18 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             let path = path.to_str().expect("Failed to retrieve hooks path");
             options.push(set_value("services.xfstests.hooks", path));
         };
+
+        if let Some(headers) = &subconfig.kernel_headers {
+            if let (Some(version), Some(rev), Some(repo)) =
+                (&headers.version, &headers.rev, &headers.repo)
+            {
+                let src =
+                    nurl(&repo, &rev).expect("Failed to fetch kernel source for xfstests headers");
+                let value =
+                    format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                options.push(set_value("services.xfstests.kernelHeaders", &value));
+            };
+        }
     };
 
     if let Some(subconfig) = &state.config.xfsprogs {
@@ -241,6 +253,18 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 options.push(set_value("services.xfsprogs.src", &src));
             }
         };
+
+        if let Some(headers) = &subconfig.kernel_headers {
+            if let (Some(version), Some(rev), Some(repo)) =
+                (&headers.version, &headers.rev, &headers.repo)
+            {
+                let src =
+                    nurl(&repo, &rev).expect("Failed to fetch kernel source for xfsprogs headers");
+                let value =
+                    format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                options.push(set_value("services.xfsprogs.kernelHeaders", &value));
+            };
+        }
     };
 
     if let Some(subconfig) = &state.config.kernel {
@@ -368,7 +392,7 @@ fn main() {
 
     let cli = Cli::parse();
     let mut state = State::new().unwrap_or_else(|error| {
-        if let Some(Commands::Init {ref name}) = &cli.command {
+        if let Some(Commands::Init { ref name }) = &cli.command {
             // we good to go as we doing init
             State::default()
         } else {
