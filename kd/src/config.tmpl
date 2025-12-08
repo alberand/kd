@@ -41,3 +41,33 @@ name = "{}"
 # extra_env = """
 # export MOUNT_OPTIONS='-o uquota,gquota,pquota'
 # """
+#
+# This matrix execution setup for testing of multiple configurations. The
+# 'common' section is default configuration for all other sections. Then, you
+# can add as many [run.name] variants as necessary.
+#
+# Run with:
+# 	kd run --matrix alpha
+#
+# If [matrix] is used at least one [matrix.run] should be defined
+#
+# [matrix]
+# [matrix.common]
+# [matrix.common.xfstests]
+# repo = "file:///home/aalbersh/Projects/xfstests-dev"
+# rev = "c25f471bc76bff506e15403d7832eb64783d8a39"
+# args = "-s xfs_4k xfs/633"
+# 
+# [[matrix.run]]
+# 
+# [matrix.run.alpha]
+# [matrix.run.alpha.xfsprogs]
+# repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
+# rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
+# 
+# [[matrix.run.beta]]
+# [matrix.run.beta.xfsprogs]
+# repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
+# rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
+
+# vim: syntax=toml

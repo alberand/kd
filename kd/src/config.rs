@@ -75,6 +75,20 @@ pub struct QemuConfig {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+pub struct SystemConfig {
+    pub kernel: Option<KernelConfig>,
+    pub xfstests: Option<XfstestsConfig>,
+    pub xfsprogs: Option<XfsprogsConfig>,
+    pub script: Option<ScriptConfig>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct MatrixConfig {
+    pub common: Option<SystemConfig>,
+    pub run: Vec<SystemConfig>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(default = "default_name")]
     pub name: String,
@@ -84,6 +98,7 @@ pub struct Config {
     pub xfsprogs: Option<XfsprogsConfig>,
     pub script: Option<ScriptConfig>,
     pub qemu: Option<QemuConfig>,
+    pub matrix: Option<MatrixConfig>,
 }
 
 impl Config {

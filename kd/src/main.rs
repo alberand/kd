@@ -76,6 +76,8 @@ enum Commands {
     Run {
         #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
         nix_args: Option<String>,
+        #[arg(long, help = "Matrix's 'run' config to use")]
+        matrix: Option<String>,
     },
 
     // Update VM system and shell packages
@@ -570,7 +572,7 @@ fn main() {
             cmd_build(&mut state);
         }
 
-        Some(Commands::Run { nix_args }) => {
+        Some(Commands::Run { nix_args, matrix }) => {
             if let Err(error) = state.config.validate() {
                 println!("Invalid config: {error}");
                 std::process::exit(1);
