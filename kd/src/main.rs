@@ -224,11 +224,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
 
         if let Some(hooks) = &subconfig.hooks {
             let path = PathBuf::from(hooks);
-            if !path.exists() {
-                let cwd = std::env::current_dir().expect("Failed to retrieve current working dir");
-                println!("Failed to find '{:?}' dir (cwd is {:?})", path, cwd);
-                std::process::exit(1);
-            }
             let path = path.to_str().expect("Failed to retrieve hooks path");
             options.push(set_value("services.xfstests.hooks", path));
         };
@@ -278,25 +273,10 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 })
                 .unwrap();
 
-            if !(path.exists()) {
-                println!("Kernel doesn't exists at: {kernel}");
-                std::process::exit(1);
-            }
-
             state.envs.insert(
                 format!("NIXPKGS_QEMU_KERNEL_{}", &state.config.name),
                 path.display().to_string(),
             );
-        }
-
-        if subconfig.repo.is_some() && subconfig.rev.is_none() && subconfig.version.is_none() {
-            println!("While using 'repo' rev/version need to be set");
-            std::process::exit(1);
-        }
-
-        if subconfig.rev.is_some() && subconfig.version.is_none() {
-            println!("Revision can not be used without 'version'");
-            std::process::exit(1);
         }
 
         if let Some(rev) = &subconfig.rev {
@@ -309,9 +289,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
                 kernel_options.push(set_value_str("version", version));
                 kernel_options.push(set_value("src", &src));
-            } else {
-                println!("If rev is set version need to be set to the latest kernel release");
-                std::process::exit(1);
             }
         };
 

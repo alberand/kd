@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{absolute, Path, PathBuf};
 use toml;
 use toml::Table;
 
@@ -130,19 +130,19 @@ impl Config {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'repo' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
                 }
                 if subconfig.rev.is_none() {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'rev' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
                 }
                 if subconfig.version.is_none() {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'version' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
                 }
             }
         }
@@ -153,19 +153,72 @@ impl Config {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'repo' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
                 }
                 if subconfig.rev.is_none() {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'rev' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
                 }
                 if subconfig.version.is_none() {
                     return Err(KdError::new(
                         KdErrorKind::ConfigError,
                         "You are missing 'version' parameter for kernel headers".to_owned(),
-                    ))
+                    ));
+                }
+            }
+
+            if let Some(hooks) = &subconfig.hooks {
+                let path = PathBuf::from(hooks);
+                if !path.exists() {
+                    let cwd =
+                        std::env::current_dir().expect("Failed to retrieve current working dir");
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        format!("Failed to find '{:?}' dir (cwd is {:?})", path, cwd),
+                    ));
+                }
+            }
+        }
+
+        if let Some(subconfig) = &self.kernel {
+            if subconfig.repo.is_some() && subconfig.rev.is_none() && subconfig.version.is_none() {
+                return Err(KdError::new(
+                    KdErrorKind::ConfigError,
+                    "While using 'repo' rev/version need to be set".to_owned(),
+                ));
+            }
+
+            if subconfig.rev.is_some() && subconfig.version.is_none() {
+                return Err(KdError::new(
+                    KdErrorKind::ConfigError,
+                    "Revision can not be used without 'version'".to_owned(),
+                ));
+            }
+
+            if let Some(kernel) = &subconfig.prebuild {
+                let curdir = std::env::current_dir().map_err(|e| {
+                    KdError::new(
+                        KdErrorKind::IOError(e),
+                        "No able to get current working directory".to_string(),
+                    )
+                })?;
+
+                let path = absolute(curdir.join(kernel))
+                    .map_err(|e| {
+                        KdError::new(
+                            KdErrorKind::ConfigError,
+                            format!("Failed to parse kernel path: {}", e.to_string()),
+                        )
+                    })
+                    .unwrap();
+
+                if !(path.exists()) {
+                    return Err(KdError::new(
+                        KdErrorKind::ConfigError,
+                        format!("Kernel doesn't exists: {}", kernel),
+                    ));
                 }
             }
         }
