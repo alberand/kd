@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fmt;
+use std::process::Command;
 use toml;
 
 #[derive(Debug)]
@@ -69,4 +70,40 @@ impl fmt::Debug for KdError {
             self.kind, self.message
         )
     }
+}
+
+pub fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
+    println!("Fetching source for {} at {}", repo, rev);
+    let output = Command::new("nurl")
+        .arg("--fetcher")
+        .arg("builtins.fetchGit")
+        .arg("--arg")
+        .arg("allRefs")
+        .arg("true")
+        .arg(repo)
+        .arg(rev)
+        .output()
+        .map_err(|_| {
+            KdError::new(
+                KdErrorKind::RuntimeError,
+                "Failed to execute command".to_string(),
+            )
+        })
+        .unwrap();
+
+    if !output.status.success() {
+        // TODO need to throw and error
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+        return Err(KdError::new(
+            KdErrorKind::RuntimeError,
+            "command failed".to_string(),
+        ));
+    }
+
+    String::from_utf8(output.stdout).map_err(|_| {
+        KdError::new(
+            KdErrorKind::RuntimeError,
+            "Failed to parse Nurl output".to_string(),
+        )
+    })
 }

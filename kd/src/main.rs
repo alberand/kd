@@ -160,42 +160,6 @@ impl State {
     }
 }
 
-fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
-    println!("Fetching source for {} at {}", repo, rev);
-    let output = Command::new("nurl")
-        .arg("--fetcher")
-        .arg("builtins.fetchGit")
-        .arg("--arg")
-        .arg("allRefs")
-        .arg("true")
-        .arg(repo)
-        .arg(rev)
-        .output()
-        .map_err(|_| {
-            KdError::new(
-                KdErrorKind::RuntimeError,
-                "Failed to execute command".to_string(),
-            )
-        })
-        .unwrap();
-
-    if !output.status.success() {
-        // TODO need to throw and error
-        println!("{}", String::from_utf8_lossy(&output.stderr));
-        return Err(KdError::new(
-            KdErrorKind::RuntimeError,
-            "command failed".to_string(),
-        ));
-    }
-
-    String::from_utf8(output.stdout).map_err(|_| {
-        KdError::new(
-            KdErrorKind::RuntimeError,
-            "Failed to parse Nurl output".to_string(),
-        )
-    })
-}
-
 /// TODO all this parsing should be just done nrix
 fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     let mut options = vec![];
@@ -224,7 +188,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 &XfstestsConfig::default().repo.unwrap()
             };
 
-            let src = nurl(&repo, &rev).unwrap();
+            let src = utils::nurl(&repo, &rev).unwrap();
             options.push(set_value("services.xfstests.src", &src));
         };
 
@@ -261,10 +225,11 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             if let (Some(version), Some(rev), Some(repo)) =
                 (&headers.version, &headers.rev, &headers.repo)
             {
-                let src =
-                    nurl(&repo, &rev).expect("Failed to fetch kernel source for xfstests headers");
-                let value =
-                    format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                let src = utils::nurl(&repo, &rev)
+                    .expect("Failed to fetch kernel source for xfstests headers");
+                let value = format!(
+                    "kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}"
+                );
                 options.push(set_value("services.xfstests.kernelHeaders", &value));
             };
         }
@@ -273,7 +238,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     if let Some(subconfig) = &state.config.xfsprogs {
         if let Some(rev) = &subconfig.rev {
             if let Some(repo) = &subconfig.repo {
-                let src = nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
+                let src = utils::nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
                 options.push(set_value("services.xfsprogs.src", &src));
             }
         };
@@ -282,10 +247,11 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             if let (Some(version), Some(rev), Some(repo)) =
                 (&headers.version, &headers.rev, &headers.repo)
             {
-                let src =
-                    nurl(&repo, &rev).expect("Failed to fetch kernel source for xfsprogs headers");
-                let value =
-                    format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                let src = utils::nurl(&repo, &rev)
+                    .expect("Failed to fetch kernel source for xfsprogs headers");
+                let value = format!(
+                    "kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}"
+                );
                 options.push(set_value("services.xfsprogs.kernelHeaders", &value));
             };
         }
@@ -315,7 +281,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 } else {
                     "git@github.com:torvalds/linux.git"
                 };
-                let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
+                let src = utils::nurl(&repo, &rev).expect("Failed to parse kernel source repo");
                 kernel_options.push(set_value_str("version", version));
                 kernel_options.push(set_value("src", &src));
             }
@@ -536,6 +502,8 @@ fn cmd_config(state: &State, output: Option<String>) {
 
 fn main() {
     let cli = Cli::parse();
+
+    // All the command require .kd.toml. Only init can go without the config as it creates it
     let mut state = State::new().unwrap_or_else(|error| {
         if let Some(Commands::Init { ref name }) = &cli.command {
             // we good to go as we doing init
