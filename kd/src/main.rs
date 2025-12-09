@@ -10,7 +10,9 @@ use std::process::Command;
 mod utils;
 use utils::{find_it, is_executable, KdError, KdErrorKind};
 mod config;
-use config::{Config, KernelConfig, KernelConfigOption, XfsprogsConfig, XfstestsConfig};
+use config::{
+    Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
+};
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
@@ -100,6 +102,7 @@ struct State {
     user_config: PathBuf,
     args: Vec<String>,
     envs: HashMap<String, String>,
+    matrix: String,
 }
 
 impl Default for State {
@@ -113,6 +116,7 @@ impl Default for State {
             user_config: PathBuf::default(),
             args: Vec::<String>::default(),
             envs: HashMap::<String, String>::default(),
+            matrix: String::default(),
         }
     }
 }
@@ -140,6 +144,7 @@ impl State {
             user_config,
             args: vec![],
             envs: HashMap::new(),
+            matrix: String::default(),
         })
     }
 }
@@ -194,24 +199,15 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
     };
 
     if let Some(test_dev) = &config.test_dev {
-        options.push(uconfig_set_value_str(
-            "test-dev",
-            &test_dev,
-        ));
+        options.push(uconfig_set_value_str("test-dev", &test_dev));
     };
 
     if let Some(scratch_dev) = &config.scratch_dev {
-        options.push(uconfig_set_value_str(
-            "scratch-dev",
-            &scratch_dev,
-        ));
+        options.push(uconfig_set_value_str("scratch-dev", &scratch_dev));
     };
 
     if let Some(filesystem) = &config.filesystem {
-        options.push(uconfig_set_value_str(
-            "filesystem",
-            &filesystem,
-        ));
+        options.push(uconfig_set_value_str("filesystem", &filesystem));
     };
 
     if let Some(extra_env) = &config.extra_env {
@@ -303,15 +299,52 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         options.push(uconfig_set_value("environment.systemPackages", &list));
     }
 
-    if let Some(subconfig) = &state.config.xfstests {
-        options.push(uconfig_xfstests(&subconfig));
+    let mut merged: &mut SystemConfig = if let Some(matrix) = &state.config.matrix {
+        if let Some(common) = &matrix.common {
+            &mut common.clone()
+        } else {
+            &mut SystemConfig::default()
+        }
+    } else {
+        &mut SystemConfig {
+            xfstests: state.config.xfstests.clone(),
+            xfsprogs: state.config.xfsprogs.clone(),
+            kernel: state.config.kernel.clone(),
+            ..SystemConfig::default()
+        }
     };
 
-    if let Some(subconfig) = &state.config.xfsprogs {
+    dbg!(&state.matrix);
+    if state.matrix != "" {
+        if let Some(matrix) = &state.config.matrix {
+            let mut found = false;
+            for (key, value) in matrix.run.iter() {
+                if key == &state.matrix {
+                    found = true;
+                    let run_config: SystemConfig = value.clone().try_into().unwrap();
+                    merged = merged.merge(run_config);
+                }
+            }
+            if !found {
+                return Err(KdError::new(
+                    KdErrorKind::ConfigError,
+                    format!("Matrix config '{}' not found", &state.matrix),
+                ));
+            }
+        };
+    }
+
+    dbg!(&merged);
+
+    if let Some(config) = &merged.xfstests {
+        options.push(uconfig_xfstests(&config));
+    };
+
+    if let Some(subconfig) = &merged.xfsprogs {
         options.push(uconfig_xfsprogs(&subconfig));
     };
 
-    if let Some(subconfig) = &state.config.kernel {
+    if let Some(subconfig) = &merged.kernel {
         if let Some(kernel) = &subconfig.prebuild {
             let path = path::absolute(&state.curdir.join(kernel)).map_err(|e| {
                 KdError::new(
@@ -612,6 +645,10 @@ fn main() {
                 for arg in args {
                     state.args.push(arg)
                 }
+            }
+
+            if let Some(matrix) = &matrix {
+                state.matrix = matrix.clone();
             }
 
             cmd_run(&mut state);

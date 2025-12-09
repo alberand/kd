@@ -7,20 +7,20 @@ use toml::Table;
 
 use super::utils::{KdError, KdErrorKind};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct KernelConfigOption {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct KernelHeaders {
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct KernelConfig {
     pub prebuild: Option<String>,
     pub version: Option<String>,
@@ -30,13 +30,8 @@ pub struct KernelConfig {
     pub config: Option<Table>,
 }
 
-fn default_xfstests() -> Option<String> {
-    Some("git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git".to_string())
-}
-
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct XfstestsConfig {
-    #[serde(default = "default_xfstests")]
     pub repo: Option<String>,
     pub rev: Option<String>,
     pub args: Option<String>,
@@ -48,33 +43,24 @@ pub struct XfstestsConfig {
     pub kernel_headers: Option<KernelHeaders>,
 }
 
-fn default_xfsprogs() -> Option<String> {
-    Some("git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git".to_string())
-}
-
-fn default_name() -> String {
-    "default".to_string()
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct XfsprogsConfig {
-    #[serde(default = "default_xfsprogs")]
     pub repo: Option<String>,
     pub rev: Option<String>,
     pub kernel_headers: Option<KernelHeaders>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct ScriptConfig {
     pub script: String,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct QemuConfig {
     pub options: Option<Vec<String>>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct SystemConfig {
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
@@ -82,16 +68,114 @@ pub struct SystemConfig {
     pub script: Option<ScriptConfig>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
-pub struct MatrixConfig {
-    pub common: Option<SystemConfig>,
-    pub run: Vec<SystemConfig>,
+impl SystemConfig {
+    pub fn merge(&mut self, config: SystemConfig) -> &mut Self {
+        if let Some(kernel) = config.kernel {
+            let mut new = KernelConfig::default();
+
+            if let Some(prebuild) = kernel.prebuild {
+                new.prebuild = Some(prebuild);
+            }
+
+            if let Some(version) = kernel.version {
+                new.version = Some(version);
+            }
+
+            if let Some(rev) = kernel.rev {
+                new.rev = Some(rev);
+            }
+
+            if let Some(repo) = kernel.repo {
+                new.repo = Some(repo);
+            }
+
+            if let Some(flavors) = kernel.flavors {
+                new.flavors = Some(flavors);
+            }
+
+            if let Some(config) = kernel.config {
+                new.config = Some(config);
+            }
+
+            self.kernel = Some(new);
+        }
+
+        if let Some(xfstests) = config.xfstests {
+            let mut new = XfstestsConfig::default();
+
+            if let Some(repo) = xfstests.repo {
+                new.repo = Some(repo);
+            }
+
+            if let Some(rev) = xfstests.rev {
+                new.rev = Some(rev);
+            }
+
+            if let Some(args) = xfstests.args {
+                new.args = Some(args);
+            }
+
+            if let Some(test_dev) = xfstests.test_dev {
+                new.test_dev = Some(test_dev);
+            }
+
+            if let Some(scratch_dev) = xfstests.scratch_dev {
+                new.scratch_dev = Some(scratch_dev);
+            }
+
+            if let Some(extra_env) = xfstests.extra_env {
+                new.extra_env = Some(extra_env);
+            }
+
+            if let Some(filesystem) = xfstests.filesystem {
+                new.filesystem = Some(filesystem);
+            }
+
+            if let Some(hooks) = xfstests.hooks {
+                new.hooks = Some(hooks);
+            }
+
+            if let Some(kernel_headers) = xfstests.kernel_headers {
+                new.kernel_headers = Some(kernel_headers);
+            }
+
+            self.xfstests = Some(new);
+        }
+
+        if let Some(xfsprogs) = config.xfsprogs {
+            let mut new = XfsprogsConfig::default();
+
+            if let Some(repo) = xfsprogs.repo {
+                new.repo = Some(repo);
+            }
+
+            if let Some(rev) = xfsprogs.rev {
+                new.rev = Some(rev);
+            }
+
+            if let Some(kernel_headers) = xfsprogs.kernel_headers {
+                new.kernel_headers = Some(kernel_headers);
+            }
+
+            self.xfsprogs = Some(new);
+        }
+
+        if let Some(script) = config.script {
+            self.script = Some(script);
+        }
+
+        self
+    }
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct MatrixConfig {
+    pub common: Option<SystemConfig>,
+    pub run: Table,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct Config {
-    #[serde(default = "default_name")]
-    pub name: String,
     pub packages: Option<Vec<String>>,
     pub kernel: Option<KernelConfig>,
     pub xfstests: Option<XfstestsConfig>,
