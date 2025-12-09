@@ -1,7 +1,5 @@
 use std::error::Error;
 use std::fmt;
-use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
 use toml;
 
 #[derive(Debug)]
@@ -71,31 +69,4 @@ impl fmt::Debug for KdError {
             self.kind, self.message
         )
     }
-}
-
-pub fn find_it<P>(exe_name: P) -> Option<PathBuf>
-where
-    P: AsRef<Path>,
-{
-    std::env::var_os("PATH").and_then(|paths| {
-        std::env::split_paths(&paths)
-            .filter_map(|dir| {
-                let full_path = dir.join(&exe_name);
-                if full_path.is_file() {
-                    Some(full_path)
-                } else {
-                    None
-                }
-            })
-            .next()
-    })
-}
-
-pub fn is_executable(path: &PathBuf) -> bool {
-    let metadata = match path.metadata() {
-        Ok(metadata) => metadata,
-        Err(_) => return false,
-    };
-    let permissions = metadata.permissions();
-    metadata.is_file() && permissions.mode() & 0o111 != 0
 }

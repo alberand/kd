@@ -7,7 +7,7 @@ use std::path::{self, PathBuf};
 use std::process::Command;
 
 mod utils;
-use utils::{find_it, is_executable, KdError, KdErrorKind};
+use utils::{KdError, KdErrorKind};
 mod config;
 use config::{Config, KernelConfigOption, XfstestsConfig};
 
@@ -351,22 +351,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
 }
 
 fn main() {
-    // Check that these commands exists
-    for command in vec!["nix", "nurl"] {
-        let path = match find_it(command) {
-            Some(value) => value,
-            None => {
-                println!("Can not find '{}' in $PATH", command);
-                std::process::exit(1);
-            }
-        };
-
-        if !is_executable(&path) {
-            println!("'{}' is not an executable", path.display());
-            std::process::exit(1);
-        }
-    }
-
     let cli = Cli::parse();
     let mut state = State::new().unwrap_or_else(|error| {
         if let Some(Commands::Init { ref name }) = &cli.command {
