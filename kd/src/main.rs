@@ -10,7 +10,7 @@ use std::process::Command;
 mod utils;
 use utils::{find_it, is_executable, KdError, KdErrorKind};
 mod config;
-use config::{Config, KernelConfigOption, XfstestsConfig};
+use config::{Config, KernelConfig, KernelConfigOption, XfsprogsConfig, XfstestsConfig};
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
@@ -144,14 +144,153 @@ impl State {
     }
 }
 
+fn uconfig_set_value(name: &str, value: &str) -> String {
+    format!("{name} = {value};")
+}
+fn uconfig_set_value_str(name: &str, value: &str) -> String {
+    uconfig_set_value(name, &format!("\"{}\"", &value))
+}
+
+fn uconfig_xfsprogs(config: &XfsprogsConfig) -> String {
+    let mut options: Vec<String> = vec![];
+    if let Some(rev) = &config.rev {
+        if let Some(repo) = &config.repo {
+            let src = utils::nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
+            options.push(uconfig_set_value("src", &src));
+        }
+    };
+
+    if let Some(headers) = &config.kernel_headers {
+        if let (Some(version), Some(rev), Some(repo)) =
+            (&headers.version, &headers.rev, &headers.repo)
+        {
+            let src = utils::nurl(&repo, &rev)
+                .expect("Failed to fetch kernel source for xfsprogs headers");
+            let value =
+                format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+            options.push(uconfig_set_value("kernelHeaders", &value));
+        };
+    }
+
+    format!("services.xfsprogs = {{ {} }};", &options.join("\n"))
+}
+
+fn uconfig_xfstests(config: &XfstestsConfig) -> String {
+    let mut options: Vec<String> = vec![];
+
+    if let Some(rev) = &config.rev {
+        let repo = if let Some(repo) = &config.repo {
+            repo
+        } else {
+            &XfstestsConfig::default().repo.unwrap()
+        };
+
+        let src = utils::nurl(&repo, &rev).expect("Failed to fetch xfstests");
+        options.push(uconfig_set_value("src", &src));
+    };
+
+    if let Some(args) = &config.args {
+        options.push(uconfig_set_value_str("arguments", &args));
+    };
+
+    if let Some(test_dev) = &config.test_dev {
+        options.push(uconfig_set_value_str(
+            "test-dev",
+            &test_dev,
+        ));
+    };
+
+    if let Some(scratch_dev) = &config.scratch_dev {
+        options.push(uconfig_set_value_str(
+            "scratch-dev",
+            &scratch_dev,
+        ));
+    };
+
+    if let Some(filesystem) = &config.filesystem {
+        options.push(uconfig_set_value_str(
+            "filesystem",
+            &filesystem,
+        ));
+    };
+
+    if let Some(extra_env) = &config.extra_env {
+        options.push(uconfig_set_value(
+            "extraEnv",
+            &format!("''\n{}\n''", &extra_env),
+        ));
+    };
+
+    if let Some(hooks) = &config.hooks {
+        let path = PathBuf::from(hooks);
+        let path = path.to_str().expect("Failed to retrieve hooks path");
+        options.push(uconfig_set_value("hooks", path));
+    };
+
+    if let Some(headers) = &config.kernel_headers {
+        if let (Some(version), Some(rev), Some(repo)) =
+            (&headers.version, &headers.rev, &headers.repo)
+        {
+            let src = utils::nurl(&repo, &rev)
+                .expect("Failed to fetch kernel source for xfstests headers");
+            let value =
+                format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+            options.push(uconfig_set_value("kernelHeaders", &value));
+        };
+    }
+
+    format!("services.xfstests = {{ {} }};", &options.join("\n"))
+}
+
+fn uconfig_kernel(config: &KernelConfig) -> String {
+    let mut options: Vec<String> = vec![];
+
+    if let Some(rev) = &config.rev {
+        if let Some(version) = &config.version {
+            let repo = if let Some(repo) = &config.repo {
+                repo
+            } else {
+                "git@github.com:torvalds/linux.git"
+            };
+            let src = utils::nurl(&repo, &rev).expect("Failed to parse kernel source repo");
+            options.push(uconfig_set_value_str("version", version));
+            options.push(uconfig_set_value("src", &src));
+        }
+    };
+
+    if let Some(flavors) = &config.flavors {
+        let value = format!(r#"with pkgs.kconfigs; [{}]"#, flavors.join(" "));
+        options.push(uconfig_set_value("flavors", &value));
+    };
+
+    if let Some(config) = &config.config {
+        let mut config_options: Vec<KernelConfigOption> = vec![];
+        for (key, value) in config.iter() {
+            config_options.push(KernelConfigOption {
+                name: key
+                    .strip_prefix("CONFIG_")
+                    .expect("Option doesn't start with CONFIG_")
+                    .to_string(),
+                value: value.to_string().replace("\"", ""),
+            });
+        }
+        let kernel_config_options = format!(
+            "with pkgs.lib.kernel; {{ {} }}",
+            config_options
+                .into_iter()
+                .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
+                .collect::<Vec<String>>()
+                .join("\n")
+        );
+        options.push(uconfig_set_value("kconfig", &kernel_config_options))
+    };
+
+    format!("kernel = {{ {} }};", options.join("\n"))
+}
+
 /// TODO all this parsing should be just done nrix
 fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     let mut options = vec![];
-    let mut kernel_options = vec![];
-    let mut kernel_config_options: Vec<KernelConfigOption> = vec![];
-
-    let set_value = |name: &str, value: &str| format!("{name} = {value};");
-    let set_value_str = |name: &str, value: &str| set_value(name, &format!("\"{}\"", &value));
 
     if let Some(packages) = &state.config.packages {
         let mut list = String::from("with pkgs; [");
@@ -161,133 +300,35 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         }
         list.push_str("]");
 
-        options.push(set_value("environment.systemPackages", &list));
+        options.push(uconfig_set_value("environment.systemPackages", &list));
     }
 
     if let Some(subconfig) = &state.config.xfstests {
-        if let Some(rev) = &subconfig.rev {
-            let repo = if let Some(repo) = &subconfig.repo {
-                repo
-            } else {
-                &XfstestsConfig::default().repo.unwrap()
-            };
-
-            let src = utils::nurl(&repo, &rev).expect("Failed to fetch xfstests");
-            options.push(set_value("services.xfstests.src", &src));
-        };
-
-        if let Some(args) = &subconfig.args {
-            options.push(set_value_str("services.xfstests.arguments", &args));
-        };
-
-        if let Some(test_dev) = &subconfig.test_dev {
-            options.push(set_value_str("services.xfstests.test-dev", &test_dev));
-        };
-
-        if let Some(scratch_dev) = &subconfig.scratch_dev {
-            options.push(set_value_str("services.xfstests.scratch-dev", &scratch_dev));
-        };
-
-        if let Some(filesystem) = &subconfig.filesystem {
-            options.push(set_value_str("services.xfstests.filesystem", &filesystem));
-        };
-
-        if let Some(extra_env) = &subconfig.extra_env {
-            options.push(set_value(
-                "services.xfstests.extraEnv",
-                &format!("''\n{}\n''", &extra_env),
-            ));
-        };
-
-        if let Some(hooks) = &subconfig.hooks {
-            let path = PathBuf::from(hooks);
-            let path = path.to_str().expect("Failed to retrieve hooks path");
-            options.push(set_value("services.xfstests.hooks", path));
-        };
-
-        if let Some(headers) = &subconfig.kernel_headers {
-            if let (Some(version), Some(rev), Some(repo)) =
-                (&headers.version, &headers.rev, &headers.repo)
-            {
-                let src = utils::nurl(&repo, &rev)
-                    .expect("Failed to fetch kernel source for xfstests headers");
-                let value = format!(
-                    "kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}"
-                );
-                options.push(set_value("services.xfstests.kernelHeaders", &value));
-            };
-        }
+        options.push(uconfig_xfstests(&subconfig));
     };
 
     if let Some(subconfig) = &state.config.xfsprogs {
-        if let Some(rev) = &subconfig.rev {
-            if let Some(repo) = &subconfig.repo {
-                let src = utils::nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
-                options.push(set_value("services.xfsprogs.src", &src));
-            }
-        };
-
-        if let Some(headers) = &subconfig.kernel_headers {
-            if let (Some(version), Some(rev), Some(repo)) =
-                (&headers.version, &headers.rev, &headers.repo)
-            {
-                let src = utils::nurl(&repo, &rev)
-                    .expect("Failed to fetch kernel source for xfsprogs headers");
-                let value = format!(
-                    "kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}"
-                );
-                options.push(set_value("services.xfsprogs.kernelHeaders", &value));
-            };
-        }
+        options.push(uconfig_xfsprogs(&subconfig));
     };
 
     if let Some(subconfig) = &state.config.kernel {
         if let Some(kernel) = &subconfig.prebuild {
-            let path = path::absolute(&state.curdir.join(kernel))
-                .map_err(|e| {
-                    KdError::new(
-                        KdErrorKind::ConfigError,
-                        format!("Failed to parse kernel path: {}", e.to_string()),
-                    )
-                })
-                .unwrap();
+            let path = path::absolute(&state.curdir.join(kernel)).map_err(|e| {
+                KdError::new(
+                    KdErrorKind::ConfigError,
+                    format!("Failed to parse kernel path: {}", e.to_string()),
+                )
+            })?;
 
             state.envs.insert(
                 format!("NIXPKGS_QEMU_KERNEL_kd"),
                 path.display().to_string(),
             );
+        } else {
+            options.push(uconfig_kernel(&subconfig));
         }
-
-        if let Some(rev) = &subconfig.rev {
-            if let Some(version) = &subconfig.version {
-                let repo = if let Some(repo) = &subconfig.repo {
-                    repo
-                } else {
-                    "git@github.com:torvalds/linux.git"
-                };
-                let src = utils::nurl(&repo, &rev).expect("Failed to parse kernel source repo");
-                kernel_options.push(set_value_str("version", version));
-                kernel_options.push(set_value("src", &src));
-            }
-        };
-
-        if let Some(flavors) = &subconfig.flavors {
-            let value = format!(r#"with pkgs.kconfigs; [{}]"#, flavors.join(" "));
-            kernel_options.push(set_value("flavors", &value));
-        };
-
-        if let Some(config) = &subconfig.config {
-            for (key, value) in config.iter() {
-                kernel_config_options.push(KernelConfigOption {
-                    name: key
-                        .strip_prefix("CONFIG_")
-                        .expect("Option doesn't start with CONFIG_")
-                        .to_string(),
-                    value: value.to_string().replace("\"", ""),
-                });
-            }
-        };
     };
+
     if let Some(subconfig) = &state.config.qemu {
         if let Some(qemu_options) = &subconfig.options {
             let mut list = String::from("[");
@@ -298,27 +339,11 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             }
             list.push_str("]");
 
-            options.push(set_value("virtualisation.qemu.options", &list));
+            options.push(uconfig_set_value("virtualisation.qemu.options", &list));
         };
     };
 
-    let s_options = options.join("\n");
-    let s_kernel_options = format!("kernel = {{ {} }};", kernel_options.join("\n"));
-    let s_kernel_config_options = format!(
-        "kernel.kconfig = with pkgs.lib.kernel; {{ {} }};",
-        kernel_config_options
-            .into_iter()
-            .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
-            .collect::<Vec<String>>()
-            .join("\n")
-    );
-
-    let uconfig = format!(
-        include_str!("uconfig.tmpl"),
-        s_options = s_options,
-        s_kernel_options = s_kernel_options,
-        s_kernel_config_options = s_kernel_config_options
-    );
+    let uconfig = format!(include_str!("uconfig.tmpl"), s_options = options.join("\n"));
 
     let mut file = std::fs::File::create(&state.user_config)
         .expect("Failed to create user config uconfig.nix");
@@ -328,7 +353,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     Ok(())
 }
 
-fn cmd_init(state: &State) -> Result<(), KdError> {
+fn cmd_init(_: &State) -> Result<(), KdError> {
     let curdir = std::env::current_dir().map_err(|e| {
         KdError::new(
             KdErrorKind::IOError(e),
@@ -353,7 +378,6 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         }
     };
 
-    let config = Config::load(&config_path)?;
     let envdir = curdir.clone().join(".kd");
     if let Err(error) = std::fs::create_dir_all(&envdir) {
         return Err(KdError::new(
