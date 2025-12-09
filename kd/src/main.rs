@@ -556,6 +556,10 @@ fn main() {
     });
 
     state.debug = cli.debug;
+    if let Err(error) = state.config.validate() {
+        println!("Invalid config: {error}");
+        std::process::exit(1);
+    }
 
     match &cli.command {
         Some(Commands::Init {}) => {
@@ -568,11 +572,6 @@ fn main() {
         Some(Commands::Build { nix_args, target }) => {
             state.target = target.clone();
 
-            if let Err(error) = state.config.validate() {
-                println!("Invalid config: {error}");
-                std::process::exit(1);
-            }
-
             if let Some(args) = nix_args {
                 let args = args.split(" ").map(|x| x.to_string());
                 for arg in args {
@@ -584,11 +583,6 @@ fn main() {
         }
 
         Some(Commands::Run { nix_args, matrix }) => {
-            if let Err(error) = state.config.validate() {
-                println!("Invalid config: {error}");
-                std::process::exit(1);
-            }
-
             if let Some(args) = nix_args {
                 let args = args.split(" ").map(|x| x.to_string());
                 for arg in args {
@@ -611,11 +605,6 @@ fn main() {
         }
 
         Some(Commands::Config { output }) => {
-            if let Err(error) = state.config.validate() {
-                println!("Invalid config: {error}");
-                std::process::exit(1);
-            }
-
             match generate_uconfig(&mut state) {
                 Ok(_) => {}
                 Err(error) => {
