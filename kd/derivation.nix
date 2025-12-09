@@ -6,6 +6,7 @@
   makeBinPath,
   makeWrapper,
   nix,
+  gitMinimal
 }:
 rustPlatform.buildRustPackage {
   pname = "kd";
@@ -25,6 +26,7 @@ rustPlatform.buildRustPackage {
     wrapProgram $out/bin/kd \
       --set PATH ${
       makeBinPath [
+        gitMinimal
         nurl
         nix
       ]
