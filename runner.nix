@@ -23,12 +23,12 @@ runCommand "${binName}"
     meta = {
       mainProgram = "${binName}";
     };
-    NIXOS_QEMU = nixos;
   }
   ''
     mkdir -p $out/bin
     install -m +x ${src} $out/bin/${binName}
 
     wrapProgram $out/bin/${binName} \
-      --prefix PATH : ${lib.makeBinPath deps}
+      --prefix PATH : ${lib.makeBinPath deps} \
+      --prefix NIXOS_QEMU : ${nixos}
   ''

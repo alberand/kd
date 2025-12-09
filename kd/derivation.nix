@@ -6,7 +6,8 @@
   makeBinPath,
   makeWrapper,
   nix,
-  gitMinimal
+  gitMinimal,
+  openssh
 }:
 rustPlatform.buildRustPackage {
   pname = "kd";
@@ -27,6 +28,7 @@ rustPlatform.buildRustPackage {
       --set PATH ${
       makeBinPath [
         gitMinimal
+        openssh
         nurl
         nix
       ]
