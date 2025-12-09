@@ -370,8 +370,6 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         .arg("github:alberand/kd#default")
         .current_dir(&envdir);
 
-    dbg!("command: {:?}", &cmd);
-
     let output = cmd.output().expect("Failed to execute command");
 
     if !output.status.success() {
@@ -423,7 +421,6 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         if is_executable(&binary) {
             let mut cmd = Command::new("direnv");
             cmd.arg("allow").current_dir(&envdir);
-            dbg!("command: {:?}", &cmd);
 
             let output = cmd.output().expect("Failed to execute command");
 
