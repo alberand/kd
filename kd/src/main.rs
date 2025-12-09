@@ -400,7 +400,7 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
 
     match &mut File::create(&direnv) {
         Ok(target) => {
-            writeln!(target, "use flake .kd").map_err(|e| {
+            writeln!(target, "use flake path:.kd").map_err(|e| {
                 KdError::new(
                     KdErrorKind::IOError(e),
                     "Failed to overwrite .envrc: {e}".to_owned(),
