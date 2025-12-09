@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use std::collections::HashMap;
 use std::fmt;
+use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{self, PathBuf};
@@ -131,20 +132,9 @@ impl State {
         })?;
         let config_path = curdir.clone().join(".kd.toml");
 
-        if !config_path.exists() {
-            return Err(KdError::new(
-                KdErrorKind::RuntimeError,
-                "Not in directory with .kd.toml config. Call 'kd init' first".to_string(),
-            ));
-        }
-
         let config = Config::load(&config_path)?;
-
         let envdir = curdir.clone().join(".kd").join(&config.name);
-
         let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
-
-        let envs = HashMap::new();
 
         Ok(Self {
             name: config.name.clone(),
@@ -155,7 +145,7 @@ impl State {
             config,
             user_config,
             args: vec![],
-            envs: envs,
+            envs: HashMap::new(),
         })
     }
 }
@@ -345,16 +335,38 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
     Ok(())
 }
 
-fn cmd_init(state: &State) {
-    let curdir = std::env::current_dir().unwrap_or_else(|e| {
-        println!("No able to get current working directory: {}", e);
-        std::process::exit(1);
-    });
+fn cmd_init(state: &State) -> Result<(), KdError> {
+    let curdir = std::env::current_dir().map_err(|e| {
+        KdError::new(
+            KdErrorKind::IOError(e),
+            "No able to get current working directory".to_string(),
+        )
+    })?;
+    let config_path = curdir.clone().join(".kd.toml");
+    match &mut File::create(&config_path) {
+        Ok(target) => {
+            writeln!(target, include_str!("config.tmpl"), &state.name).map_err(|e| {
+                KdError::new(
+                    KdErrorKind::IOError(e),
+                    "Failed to write env name to .kd.toml: {e}".to_owned(),
+                )
+            })?;
+        }
+        Err(error) => {
+            return Err(KdError::new(
+                KdErrorKind::RuntimeError,
+                format!("Unable to create {}: {}", config_path.display(), error),
+            ));
+        }
+    };
 
-    let path = PathBuf::from(&curdir).join(".kd").join(&state.name);
-    if let Err(error) = std::fs::create_dir_all(&path) {
-        println!("Unable to create {}: {}", path.display(), error);
-        std::process::exit(1);
+    let config = Config::load(&config_path)?;
+    let envdir = curdir.clone().join(".kd").join(&config.name);
+    if let Err(error) = std::fs::create_dir_all(&envdir) {
+        return Err(KdError::new(
+            KdErrorKind::RuntimeError,
+            format!("Unable to create {}: {}", envdir.display(), error),
+        ));
     }
 
     println!("Creating new environment '{}'", state.name);
@@ -363,11 +375,9 @@ fn cmd_init(state: &State) {
         .arg("init")
         .arg("--template")
         .arg("github:alberand/kd#default")
-        .current_dir(&path);
+        .current_dir(&envdir);
 
-    if state.debug {
-        println!("command: {:?}", cmd);
-    }
+    dbg!("command: {:?}", &cmd);
 
     let output = cmd.output().expect("Failed to execute command");
 
@@ -377,21 +387,17 @@ fn cmd_init(state: &State) {
         std::process::exit(1);
     }
 
-    let target = PathBuf::from(&curdir).join(".kd.toml");
-    if target.exists() {
-        // nothing to do, config already here
-        std::process::exit(0);
+    let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
+    if let Err(error) = File::create(&user_config) {
+        return Err(KdError::new(
+            KdErrorKind::RuntimeError,
+            format!("Unable to create {}: {}", user_config.display(), error),
+        ));
     }
-    let mut writer = std::fs::File::create(target).unwrap_or_else(|e| {
-        println!("Failed to create .kd.toml config: {e}");
-        std::process::exit(1);
-    });
-    writeln!(writer, include_str!("config.tmpl"), state.name).unwrap_or_else(|e| {
-        println!("Failed to write env name to .kd.toml: {e}");
-        std::process::exit(1);
-    });
+
 
     println!("Update your .kd.toml configuration");
+    Ok(())
 }
 
 fn cmd_build(state: &mut State) {
@@ -519,7 +525,10 @@ fn main() {
     match &cli.command {
         Some(Commands::Init { name }) => {
             state.name = name.clone();
-            cmd_init(&state);
+            if let Err(error) = cmd_init(&state) {
+                println!("{}", error);
+                std::process::exit(1);
+            }
         }
 
         Some(Commands::Build { nix_args, target }) => {
