@@ -8,7 +8,7 @@ use std::path::{self, PathBuf};
 use std::process::Command;
 
 mod utils;
-use utils::{KdError, KdErrorKind};
+use utils::{find_it, is_executable, KdError, KdErrorKind};
 mod config;
 use config::{Config, KernelConfigOption, XfstestsConfig};
 
@@ -56,7 +56,7 @@ impl fmt::Display for Target {
 #[derive(Subcommand)]
 enum Commands {
     /// Initialize development environment
-    Init { },
+    Init {},
 
     // Build QCOW or ISO image
     Build {
@@ -417,16 +417,26 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         }
     };
 
-    let mut cmd = Command::new("direnv");
-    cmd.arg("allow").current_dir(&envdir);
-    dbg!("command: {:?}", &cmd);
+    // Check that these commands exists
+    let command = "direnv";
+    if let Some(binary) = find_it(command) {
+        if is_executable(&binary) {
+            let mut cmd = Command::new("direnv");
+            cmd.arg("allow").current_dir(&envdir);
+            dbg!("command: {:?}", &cmd);
 
-    let output = cmd.output().expect("Failed to execute command");
+            let output = cmd.output().expect("Failed to execute command");
 
-    if !output.status.success() {
-        println!("Failed to reactivate direnv environment.");
-        println!("{}", String::from_utf8_lossy(&output.stderr));
-        std::process::exit(1);
+            if !output.status.success() {
+                println!("Failed to reactivate direnv environment.");
+                println!("{}", String::from_utf8_lossy(&output.stderr));
+                std::process::exit(1);
+            }
+        }
+    } else {
+        println!("'direnv' not found. Can not activate shell environment");
+        println!("Install 'direnv' and run 'direnv allow' to activate");
+        return Ok(());
     }
 
     println!("Update your .kd.toml configuration");
@@ -529,11 +539,7 @@ fn cmd_config(state: &State, output: Option<String>) {
         std::fs::copy(&output, backup).unwrap();
     }
 
-    let source = state
-        .curdir
-        .clone()
-        .join(".kd")
-        .join("result");
+    let source = state.curdir.clone().join(".kd").join("result");
     std::fs::copy(source, &output).unwrap();
     std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
 }
@@ -555,7 +561,7 @@ fn main() {
     state.debug = cli.debug;
 
     match &cli.command {
-        Some(Commands::Init { }) => {
+        Some(Commands::Init {}) => {
             if let Err(error) = cmd_init(&state) {
                 println!("{}", error);
                 std::process::exit(1);
