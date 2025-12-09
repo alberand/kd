@@ -25,7 +25,6 @@
         kd.lib.mkEnv {
           inherit nixpkgs;
           inherit (uset) name;
-          root = builtins.toString ./.;
           uconfig = uset.uconfig {inherit pkgs kd;};
         };
     in {

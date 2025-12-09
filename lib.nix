@@ -159,11 +159,10 @@ in rec {
   mkVmTest = {
     pkgs,
     name,
-    root,
     uconfig,
   }:
     builtins.getAttr "runner" rec {
-      inherit name root;
+      inherit name;
       nixos = mkVM {
         inherit pkgs uconfig;
       };
@@ -217,8 +216,6 @@ in rec {
     };
 
   mkLinuxShell = {
-    root,
-    name,
     clangVersion ? "",
     gcc ? false,
     gccVersion ? "",
@@ -323,7 +320,6 @@ in rec {
             zlib
           ];
 
-          NODE_NAME = "${name}";
           KBUILD_BUILD_TIMESTAMP = "";
           # Disable all automatically applied hardening. The Linux
           # kernel will take care of itself.
@@ -448,7 +444,6 @@ in rec {
 
   mkEnv = {
     name,
-    root,
     nixpkgs,
     useGcc ? false,
     uconfig ? {},
@@ -549,7 +544,7 @@ in rec {
     };
 
     vm = mkVmTest {
-      inherit pkgs name root;
+      inherit pkgs name;
       uconfig =
         {
           networking.hostName = "${name}";
@@ -564,7 +559,7 @@ in rec {
     };
 
     prebuild = mkVmTest {
-      inherit pkgs name root;
+      inherit pkgs name;
       uconfig =
         {
           # Same as in .vm
@@ -584,7 +579,7 @@ in rec {
     };
 
     kgdbvm = mkVmTest {
-      inherit pkgs name root;
+      inherit pkgs name;
       uconfig =
         {
           # Same as in .vm
@@ -617,39 +612,31 @@ in rec {
     #  inherit nixpkgs uconfig;
     #};
 
-    shell = mkLinuxShell {
-      inherit root name;
-    };
+    shell = mkLinuxShell { };
 
     shell-clang20 = mkLinuxShell {
-      inherit root name;
       clangVersion = "20";
     };
 
     shell-clang18 = mkLinuxShell {
-      inherit root name;
       clangVersion = "18";
     };
 
     shell-gcc = mkLinuxShell {
-      inherit root name;
       gcc = true;
     };
 
     shell-gcc15 = mkLinuxShell {
-      inherit root name;
       gcc = true;
       gccVersion = "15";
     };
 
     shell-gcc14 = mkLinuxShell {
-      inherit root name;
       gcc = true;
       gccVersion = "14";
     };
 
     shell-gcc13 = mkLinuxShell {
-      inherit root name;
       gcc = true;
       gccVersion = "13";
     };

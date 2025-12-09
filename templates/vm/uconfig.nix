@@ -1,4 +1,4 @@
 {
-  name = "demo";
+  name = "default";
   uconfig = {...}: {};
 }

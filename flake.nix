@@ -51,8 +51,7 @@
     };
     default = lib.mkEnv {
       inherit nixpkgs;
-      name = "demo";
-      root = builtins.toString ./.;
+      name = "default";
     };
   in {
     inherit lib;
