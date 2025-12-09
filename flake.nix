@@ -93,7 +93,9 @@
     packages."${system}" =
       default
       // {
-        kd = pkgs.callPackage (import ./kd/derivation.nix) {};
+        kd = pkgs.callPackage (import ./kd/derivation.nix) {
+          inherit (pkgs.lib) makeBinPath;
+        };
       };
 
     templates.default = {

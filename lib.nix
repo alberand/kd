@@ -243,7 +243,9 @@ in rec {
               python312Packages.gitpython # b4 prep --check and ./script/checkpatch
               (vmtest-deploy {})
 
-              (callPackage (import ./kd/derivation.nix) {})
+              (callPackage (import ./kd/derivation.nix) {
+                inherit (pkgs.lib) makeBinPath;
+             })
             ]
             ++ (
               if gcc
