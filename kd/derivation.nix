@@ -17,4 +17,6 @@ rustPlatform.buildRustPackage {
   buildInputs = [
     openssl
   ];
+
+  PATH = "$PATH:${nurl}/bin";
 }
