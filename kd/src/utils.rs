@@ -58,7 +58,7 @@ impl KdError {
 
 impl fmt::Display for KdError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", self.message, self.kind)
+        write!(f, "{}", self.message)
     }
 }
 
