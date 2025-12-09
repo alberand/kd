@@ -90,11 +90,9 @@ pub fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
                 KdErrorKind::RuntimeError,
                 "Failed to execute command".to_string(),
             )
-        })
-        .unwrap();
+        })?;
 
     if !output.status.success() {
-        // TODO need to throw and error
         println!("{}", String::from_utf8_lossy(&output.stderr));
         return Err(KdError::new(
             KdErrorKind::RuntimeError,

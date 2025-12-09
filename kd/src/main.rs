@@ -172,7 +172,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 &XfstestsConfig::default().repo.unwrap()
             };
 
-            let src = utils::nurl(&repo, &rev).unwrap();
+            let src = utils::nurl(&repo, &rev).expect("Failed to fetch xfstests");
             options.push(set_value("services.xfstests.src", &src));
         };
 
