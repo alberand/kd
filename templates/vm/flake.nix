@@ -24,7 +24,6 @@
       in
         kd.lib.mkEnv {
           inherit nixpkgs;
-          inherit (uset) name;
           uconfig = uset.uconfig {inherit pkgs kd;};
         };
     in {

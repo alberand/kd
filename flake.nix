@@ -51,7 +51,6 @@
     };
     default = lib.mkEnv {
       inherit nixpkgs;
-      name = "default";
     };
   in {
     inherit lib;

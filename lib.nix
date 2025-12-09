@@ -158,11 +158,9 @@ in rec {
 
   mkVmTest = {
     pkgs,
-    name,
     uconfig,
   }:
     builtins.getAttr "runner" rec {
-      inherit name;
       nixos = mkVM {
         inherit pkgs uconfig;
       };
@@ -173,8 +171,7 @@ in rec {
           # TODO find where .kd is
           # ROOTDIR="$(git rev-parse --show-toplevel)"
           export ROOTDIR="$PWD"
-          export ENVNAME="${name}"
-          export ENVDIR="$ROOTDIR/.kd/$ENVNAME"
+          export ENVDIR="$ROOTDIR/.kd"
           export LOCAL_CONFIG="$ROOTDIR/.kd.toml"
           export RUNDIR="$ENVDIR/share"
           export LOG_FILE="$RUNDIR/execution_$(date +"%Y-%m-%d_%H-%M").log"
@@ -443,7 +440,6 @@ in rec {
     };
 
   mkEnv = {
-    name,
     nixpkgs,
     useGcc ? false,
     uconfig ? {},
@@ -513,7 +509,7 @@ in rec {
       inherit pkgs;
       uconfig =
         {
-          networking.hostName = "${name}";
+          networking.hostName = "kd";
           kernel = {
             inherit src version;
             kconfig = kconfig-iso.structuredConfig;
@@ -530,7 +526,7 @@ in rec {
       inherit pkgs;
       uconfig =
         {
-          networking.hostName = "${name}";
+          networking.hostName = "kd";
           services.xfstests = {
             arguments = "-R xunit -s xfs_4k generic/110";
           };
@@ -544,10 +540,10 @@ in rec {
     };
 
     vm = mkVmTest {
-      inherit pkgs name;
+      inherit pkgs;
       uconfig =
         {
-          networking.hostName = "${name}";
+          networking.hostName = "kd";
           kernel = {
             inherit src version;
             kconfig = kkconfig;
@@ -559,11 +555,11 @@ in rec {
     };
 
     prebuild = mkVmTest {
-      inherit pkgs name;
+      inherit pkgs;
       uconfig =
         {
           # Same as in .vm
-          networking.hostName = "${name}-prebuild";
+          networking.hostName = "kd";
           kernel = {
             inherit src version;
             kconfig = kkconfig;
@@ -579,11 +575,11 @@ in rec {
     };
 
     kgdbvm = mkVmTest {
-      inherit pkgs name;
+      inherit pkgs;
       uconfig =
         {
           # Same as in .vm
-          networking.hostName = "${name}-kgdb";
+          networking.hostName = "kd";
           kernel = {
             inherit src version;
             kconfig = kkconfig;

@@ -56,10 +56,7 @@ impl fmt::Display for Target {
 #[derive(Subcommand)]
 enum Commands {
     /// Initialize development environment
-    Init {
-        #[arg(default_value = "default", help = "Environment name")]
-        name: String,
-    },
+    Init { },
 
     // Build QCOW or ISO image
     Build {
@@ -95,7 +92,6 @@ enum Commands {
 }
 
 struct State {
-    name: String,
     debug: bool,
     target: Target,
     curdir: PathBuf,
@@ -109,7 +105,6 @@ struct State {
 impl Default for State {
     fn default() -> Self {
         Self {
-            name: "default".to_string(),
             debug: false,
             target: Target::default(),
             curdir: PathBuf::default(),
@@ -133,11 +128,10 @@ impl State {
         let config_path = curdir.clone().join(".kd.toml");
 
         let config = Config::load(&config_path)?;
-        let envdir = curdir.clone().join(".kd").join(&config.name);
+        let envdir = curdir.clone().join(".kd");
         let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
 
         Ok(Self {
-            name: config.name.clone(),
             debug: false,
             target: Target::default(),
             curdir,
@@ -259,7 +253,7 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
                 .unwrap();
 
             state.envs.insert(
-                format!("NIXPKGS_QEMU_KERNEL_{}", &state.config.name),
+                format!("NIXPKGS_QEMU_KERNEL_kd"),
                 path.display().to_string(),
             );
         }
@@ -321,7 +315,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
 
     let uconfig = format!(
         include_str!("uconfig.tmpl"),
-        name = &state.config.name,
         s_options = s_options,
         s_kernel_options = s_kernel_options,
         s_kernel_config_options = s_kernel_config_options
@@ -345,7 +338,7 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
     let config_path = curdir.clone().join(".kd.toml");
     match &mut File::create(&config_path) {
         Ok(target) => {
-            writeln!(target, include_str!("config.tmpl"), &state.name).map_err(|e| {
+            writeln!(target, include_str!("config.tmpl")).map_err(|e| {
                 KdError::new(
                     KdErrorKind::IOError(e),
                     "Failed to write env name to .kd.toml: {e}".to_owned(),
@@ -361,7 +354,7 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
     };
 
     let config = Config::load(&config_path)?;
-    let envdir = curdir.clone().join(".kd").join(&config.name);
+    let envdir = curdir.clone().join(".kd");
     if let Err(error) = std::fs::create_dir_all(&envdir) {
         return Err(KdError::new(
             KdErrorKind::RuntimeError,
@@ -369,7 +362,7 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         ));
     }
 
-    println!("Creating new environment '{}'", state.name);
+    println!("Creating new environment");
     let mut cmd = Command::new("nix");
     cmd.arg("flake")
         .arg("init")
@@ -395,6 +388,46 @@ fn cmd_init(state: &State) -> Result<(), KdError> {
         ));
     }
 
+    let direnv = curdir.join(".envrc");
+    if direnv.exists() {
+        let mut backup = direnv.clone();
+        backup.set_extension("bup");
+        std::fs::copy(&direnv, backup).map_err(|e| {
+            KdError::new(
+                KdErrorKind::IOError(e),
+                "Failed to make backup of .envrc: {e}".to_owned(),
+            )
+        })?;
+    }
+
+    match &mut File::create(&direnv) {
+        Ok(target) => {
+            writeln!(target, "use flake .kd").map_err(|e| {
+                KdError::new(
+                    KdErrorKind::IOError(e),
+                    "Failed to overwrite .envrc: {e}".to_owned(),
+                )
+            })?;
+        }
+        Err(error) => {
+            return Err(KdError::new(
+                KdErrorKind::RuntimeError,
+                format!("Unable to create {}: {}", direnv.display(), error),
+            ));
+        }
+    };
+
+    let mut cmd = Command::new("direnv");
+    cmd.arg("allow").current_dir(&envdir);
+    dbg!("command: {:?}", &cmd);
+
+    let output = cmd.output().expect("Failed to execute command");
+
+    if !output.status.success() {
+        println!("Failed to reactivate direnv environment.");
+        println!("{}", String::from_utf8_lossy(&output.stderr));
+        std::process::exit(1);
+    }
 
     println!("Update your .kd.toml configuration");
     Ok(())
@@ -500,7 +533,6 @@ fn cmd_config(state: &State, output: Option<String>) {
         .curdir
         .clone()
         .join(".kd")
-        .join(&state.config.name)
         .join("result");
     std::fs::copy(source, &output).unwrap();
     std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
@@ -511,7 +543,7 @@ fn main() {
 
     // All the command require .kd.toml. Only init can go without the config as it creates it
     let mut state = State::new().unwrap_or_else(|error| {
-        if let Some(Commands::Init { ref name }) = &cli.command {
+        if let Some(Commands::Init {}) = &cli.command {
             // we good to go as we doing init
             State::default()
         } else {
@@ -523,8 +555,7 @@ fn main() {
     state.debug = cli.debug;
 
     match &cli.command {
-        Some(Commands::Init { name }) => {
-            state.name = name.clone();
+        Some(Commands::Init { }) => {
             if let Err(error) = cmd_init(&state) {
                 println!("{}", error);
                 std::process::exit(1);
