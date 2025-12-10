@@ -137,8 +137,7 @@ with lib.kernel; {
     STACKTRACE = yes;
 
     NFS_FS = no;
-    ACPI = no;
-    THERMAL = no;
+    ACPI = yes;
     I2C = no;
     INPUT_MOUSE = no;
     INPUT_JOYSTICK = no;
