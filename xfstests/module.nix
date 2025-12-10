@@ -182,6 +182,7 @@ in {
 
       # Setup envirionment
       environment.variables = {
+        XFSTESTS_SRC = "${xfstests.src}";
         HOST_OPTIONS =
           pkgs.writeText "xfstests.config"
           (builtins.readFile cfg.testconfig);

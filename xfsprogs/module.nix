@@ -32,18 +32,32 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [
-      (xfsprogs.overrideAttrs (_final: prev: ({
-          inherit (cfg) src;
-          version = "git-${cfg.src.rev}";
+  config = mkIf cfg.enable (
+    let
+      xfsprogs = (
+        pkgs.xfsprogs.overrideAttrs (
+          _final: prev: (
+            {
+              inherit (cfg) src;
+              version = "git-${cfg.src.rev}";
 
-          nativeBuildInputs = [cfg.kernelHeaders] ++ prev.nativeBuildInputs;
-          dontStrip = config.dev.dontStrip;
-        }
-        // lib.optionalAttrs false {
-          stdenv = pkgs.ccacheStdenv;
-        })))
-    ];
-  };
+              nativeBuildInputs = [cfg.kernelHeaders] ++ prev.nativeBuildInputs;
+              dontStrip = config.dev.dontStrip;
+            }
+            // lib.optionalAttrs false {
+              stdenv = pkgs.ccacheStdenv;
+            }
+          )
+        )
+      );
+    in {
+      environment.variables = {
+        XFSPROGS_SRC = "${xfsprogs.src}";
+      };
+
+      environment.systemPackages = [
+        xfsprogs
+      ];
+    }
+  );
 }
