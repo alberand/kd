@@ -60,7 +60,7 @@ impl KdError {
 
 impl fmt::Display for KdError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
+        write!(f, "{}: {}", self.message, self.kind)
     }
 }
 
@@ -85,10 +85,10 @@ pub fn nurl(repo: &str, rev: &str) -> Result<String, KdError> {
         .arg(repo)
         .arg(rev)
         .output()
-        .map_err(|_| {
+        .map_err(|e| {
             KdError::new(
                 KdErrorKind::RuntimeError,
-                "Failed to execute command".to_string(),
+                format!("Failed to execute command: {}", e),
             )
         })?;
 
