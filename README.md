@@ -2,106 +2,122 @@
 
 Development environment for Linux kernel.
 
-In development, everything changing :) That's my setup for linux kernel work.
+**Note!** In development, everything changing :) That's my setup for linux
+kernel work.
 
-NixOS/Nix and direnv is necessary.
+NixOS/Nix and direnv are required.
 
 # Usage
 
-Activate environment in the kernel directory:
+Initial step to get kd on your system:
 
     $ echo "use flake github:alberand/kd" > .envrc && direnv allow
     ... will take a long time
 
-Now create environment with your feature name:
+The command above just created `.envrc` file which tells `direnv` to use shell
+environment from the "Nix Flake". The flake itself is located at github.
 
-    # Init env
-    $ kd init kfeature
+Now create environment:
 
-Run VM:
+    $ kd init
 
-    # Run VM
+The command above creates a "Nix Flake" in `.kd` directory. This flake defines
+shell to work with Linux kernel. Along the `.kd` dir, command above updated
+`.envrc` to point to the local `.kd` directory instead of github.com.
+
+Now you can modify `.kd.toml` file and run VM:
+
     $ kd run
 
 You can also generate minimal config or build a deployable image for longer test
 runs:
 
-    # Generate minimal kernel config for QEMU
     $ kd config
 
-    # Build QCOW2 or ISO
+    # Very handy for a longer test runs. I deploy these qcow images with `virsh`
+    # to my remote test machine running libvirtd
     $ kd build [qcow|iso]
 
-Edit your `.kd.toml` config to adjust environment to your needs.
-
 If you know Nix you can edit VM configuration direction in
-`.kd/kfeature/uconfig.nix`. **Note** that `kd build` command overwrites
-`uconfig.nix`!
+`.kd/kfeature/uconfig.nix`.
 
-The `run` command runs flake in the `./.kd/kfeature`.
+**Note** that `kd build/run` command overwrites `uconfig.nix`!
 
 # Config Examples
 
-## Developing new feature with userspace commands and new tests
+## Simple
 
-The `prebuild = true` is quite important. Instead of using Nix to build your
-kernel in reproducible way, the `kd` will just take your compiled kernel from
-the current directory.
+The following config will build a VM with latest kernel (see
+`sources/kernel.json` at the github.com/alberand/kd), xfstests pinned to
+`eb01a1...` and xfsprogs pinned to `dc00e8f...`. When VM boots, `xfstests`
+systemd unit will run `auto` test group.
 
 ```toml
-[kernel]
-# Use already build kernel from the current directory
-prebuild = true
-
 [xfstests]
 repository = "git@github.com:alberand/xfstests.git"
 rev = "eb01a1c8b1007bcad534730d38a8dda4c005c15e"
-args = ""
-hooks = "/home/aalbersh/Projects/kernel/fsverity/hooks"
-config = "./xfstests.config"
+args = "-g auto"
 
 [xfsprogs]
 repository = "git@github.com:alberand/xfsprogs.git"
 rev = "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
-
-[script]
-script = "./test.sh"
 ```
 
-## Developing kernel, xfsprogs and xfstests at the same time
+What's great is that all the compiled utilities are stored on the host, in the
+`/nix/store`. So, if you update xfsprogs's commit, only xfsprogs is getting
+recompiled.
 
-This config has a `gdb` package included into VM. The xfstests and xfsprogs
-packages are pointing to local repositories for quicker iterations.
+## Custom Kernel
+
+Let's say you are working on a kernel feature of fix and need to test it. The
+following config pins kernel to specific commits and enables some necessary
+configuration options.
 
 ```toml
-name = "default"
-packages = [ "gdb" ]
-
 [kernel]
-prebuild = true
+repo = "git@github.com:alberand/linux.git"
+rev = "7d0a66e4bb9081d75c82ec4957c50034cb0ea449"
+version = "v6.18"
 
 [kernel.config]
-CONFIG_XFS_FS = "yes"
-CONFIG_XFS_QUOTA = "yes"
-CONFIG_XFS_RT = "yes"
-CONFIG_XFS_ONLINE_SCRUB = "yes"
-CONFIG_XFS_ONLINE_REPAIR = "yes"
-CONFIG_XFS_POSIX_ACL = "yes"
-CONFIG_XFS_DEBUG = "yes"
-
 CONFIG_FS_VERITY = "yes"
 CONFIG_FS_VERITY_BUILTIN_SIGNATURES = "yes"
-
-[xfstests]
-repo = "file:///home/aalbersh/Projects/xfstests-dev"
-rev = "b602eccc851aae190e5a4319171481bc4c90888b"
-args = "-d -s xfs_1k_quota generic/572 generic/574"
-hooks = "/home/aalbersh/Projects/kernel/fsverity/tmp/hooks"
-
-[xfsprogs]
-repo = "file:///home/aalbersh/Projects/xfsprogs-dev"
-rev = "adf2358f1aa2f625d910c1c84fd89a9cd4412d2b"
 ```
+
+## Prebuild kernel
+
+Ok, that's good, but what if you already compiled kernel to check that your
+changes are correct. You can use `prebuild` option. Instead of compiling kernel
+again, `kd` will take your kernel at `arch/x86/boot/bzImage`.
+
+```toml
+[kernel]
+prebuild = true
+```
+
+Note that none of the options in `[kernel]` or `[kernel.config]` do anything
+when used with `preubild`.
+
+Note that we just using an artifact (compiled kernel) and generated system will
+not fully correspond to it (no kernel modules in initrd, no kernel headers, all
+app built against headers will be built against default kernel, no Nix adhocs
+for specific kernel versions etc.).
+
+## Adding tools
+
+Booted system is NixOS, this is small system defined in system.nix. As of 2025 I
+haven't done any network configuration, so, no way to install tools directly
+from the system buy you can add them in config.
+
+```toml
+packages = ["gdb"]
+
+[kernel]
+# Use already build kernel from the current directory
+prebuild = true
+```
+
+List of the packages can be found at https://search.nixos.org/packages
 
 ## Testing xfsprogs package
 
@@ -153,8 +169,6 @@ like to try and then run them (manually so far, but I'm playing with kexec) with
 section for all of them.
 
 ```
-[matrix]
-[matrix.common]
 [matrix.common.kernel]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
@@ -164,7 +178,6 @@ CONFIG_QUOTA = "yes"
 CONFIG_XFS_QUOTA = "yes"
 
 [matrix.common.xfstests]
-#args = "-s xfs_4k_quota xfs/305 xfs/330 xfs/438 xfs/440 xfs/441 xfs/442 xfs/508 xfs/511 xfs/515 xfs/518 xfs/527 xfs/529 xfs/648 xfs/820 xfs/821"
 args = "-s xfs_4k_quota xfs/508"
 rev = "4936d48ac0d3632d07f6dec310be145d973212a6"
 repo = "file:///home/alberand/Projects/xfstests-dev"
@@ -172,7 +185,6 @@ repo = "file:///home/alberand/Projects/xfstests-dev"
 [matrix.common.xfsprogs]
 repo = "file:///home/alberand/Projects/xfsprogs-dev"
 
-[[matrix.run]]
 [matrix.run.alpha.xfsprogs]
 # Good - yes; Good - yes
 # both fixes
