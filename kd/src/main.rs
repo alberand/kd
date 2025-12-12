@@ -70,6 +70,8 @@ enum Commands {
             value_enum
         )]
         target: Target,
+        #[arg(long, help = "Matrix's 'run' config to use")]
+        matrix: Option<String>,
     },
 
     // Run lightweight VM
@@ -623,7 +625,7 @@ fn main() {
             }
         }
 
-        Some(Commands::Build { nix_args, target }) => {
+        Some(Commands::Build { nix_args, target, matrix }) => {
             state.target = target.clone();
 
             if let Some(args) = nix_args {
@@ -631,6 +633,10 @@ fn main() {
                 for arg in args {
                     state.args.push(arg)
                 }
+            }
+
+            if let Some(matrix) = &matrix {
+                state.matrix = matrix.clone();
             }
 
             cmd_build(&mut state);
