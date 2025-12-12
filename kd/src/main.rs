@@ -301,39 +301,49 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         options.push(uconfig_set_value("environment.systemPackages", &list));
     }
 
-    let mut merged: &mut SystemConfig = if let Some(matrix) = &state.config.matrix {
-        if let Some(common) = &matrix.common {
-            &mut common.clone()
+    if state.matrix != ""
+        && (state.config.matrix.is_none()
+            || !state.config.matrix.as_ref().unwrap().run.contains_key(&state.matrix))
+    {
+        return Err(KdError::new(
+            KdErrorKind::RuntimeError,
+            format!("Config doesn't define requested run: {}", &state.matrix),
+        ));
+    }
+
+    let merged: SystemConfig = if state.matrix != "" {
+        if let Some(matrix) = &state.config.matrix {
+            let mut result = if let Some(common) = &matrix.common {
+                common.clone()
+            } else {
+                SystemConfig::default()
+            };
+
+            let run_config: SystemConfig = matrix
+                .run
+                .get(&state.matrix)
+                .unwrap()
+                .clone()
+                .try_into()
+                .unwrap();
+            result = result.merge(run_config).clone();
+            result
         } else {
-            &mut SystemConfig::default()
+            SystemConfig {
+                xfstests: state.config.xfstests.clone(),
+                xfsprogs: state.config.xfsprogs.clone(),
+                kernel: state.config.kernel.clone(),
+                ..SystemConfig::default()
+            }
         }
     } else {
-        &mut SystemConfig {
+        SystemConfig {
             xfstests: state.config.xfstests.clone(),
             xfsprogs: state.config.xfsprogs.clone(),
             kernel: state.config.kernel.clone(),
             ..SystemConfig::default()
         }
     };
-
-    if state.matrix != "" {
-        if let Some(matrix) = &state.config.matrix {
-            let mut found = false;
-            for (key, value) in matrix.run.iter() {
-                if key == &state.matrix {
-                    found = true;
-                    let run_config: SystemConfig = value.clone().try_into().unwrap();
-                    merged = merged.merge(run_config);
-                }
-            }
-            if !found {
-                return Err(KdError::new(
-                    KdErrorKind::ConfigError,
-                    format!("Matrix config '{}' not found", &state.matrix),
-                ));
-            }
-        };
-    }
 
     if let Some(config) = &merged.xfstests {
         options.push(uconfig_xfstests(&config));
@@ -625,7 +635,11 @@ fn main() {
             }
         }
 
-        Some(Commands::Build { nix_args, target, matrix }) => {
+        Some(Commands::Build {
+            nix_args,
+            target,
+            matrix,
+        }) => {
             state.target = target.clone();
 
             if let Some(args) = nix_args {

@@ -69,7 +69,7 @@ pub struct SystemConfig {
 }
 
 impl SystemConfig {
-    pub fn merge(&mut self, config: SystemConfig) -> &mut Self {
+    pub fn merge(&mut self, config: SystemConfig) -> &Self {
         if let Some(kernel) = config.kernel {
             let mut new = KernelConfig::default();
 
