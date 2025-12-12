@@ -314,7 +314,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         }
     };
 
-    dbg!(&state.matrix);
     if state.matrix != "" {
         if let Some(matrix) = &state.config.matrix {
             let mut found = false;
@@ -333,8 +332,6 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
             }
         };
     }
-
-    dbg!(&merged);
 
     if let Some(config) = &merged.xfstests {
         options.push(uconfig_xfstests(&config));
