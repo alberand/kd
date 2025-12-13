@@ -168,7 +168,7 @@ like to try and then run them (manually so far, but I'm playing with kexec) with
 `kd run --matrix name`. Here is config for 8 different configs with common
 section for all of them.
 
-```
+```toml
 [matrix.common.kernel]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
