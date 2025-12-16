@@ -58,8 +58,10 @@ in rec {
 
           services.xfstests = {
             enable = true;
-            test-dev = pkgs.lib.mkDefault "/dev/vdb";
-            scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
+            dev = {
+              test = pkgs.lib.mkDefault "/dev/vdb";
+              scratch = pkgs.lib.mkDefault "/dev/vdc";
+            };
           };
 
           virtualisation = {
@@ -110,8 +112,10 @@ in rec {
 
             services.xfstests = {
               enable = true;
-              test-dev = pkgs.lib.mkDefault "/dev/sda";
-              scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
+              dev = {
+                test = pkgs.lib.mkDefault "/dev/sda";
+                scratch = pkgs.lib.mkDefault "/dev/sdb";
+              };
             };
           })
         ];
@@ -147,8 +151,10 @@ in rec {
             services.xfstests = {
               enable = true;
               autoshutdown = false;
-              test-dev = pkgs.lib.mkDefault "/dev/sda";
-              scratch-dev = pkgs.lib.mkDefault "/dev/sdb";
+              dev = {
+                test = pkgs.lib.mkDefault "/dev/sda";
+                scratch = pkgs.lib.mkDefault "/dev/sdb";
+              };
             };
           })
         ];

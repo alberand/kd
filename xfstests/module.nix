@@ -22,18 +22,20 @@ in {
       type = types.str;
     };
 
-    test-dev = mkOption {
-      description = "Path to disk used as TEST_DEV";
-      default = "";
-      example = "/dev/sda";
-      type = types.str;
-    };
+    dev = {
+      test = mkOption {
+        description = "Path to disk used as TEST_DEV";
+        default = "";
+        example = "/dev/sda";
+        type = types.str;
+      };
 
-    scratch-dev = mkOption {
-      description = "Path to disk used as SCRATCH_DEV";
-      default = "";
-      example = "/dev/sdb";
-      type = types.str;
+      scratch = mkOption {
+        description = "Path to disk used as SCRATCH_DEV";
+        default = "";
+        example = "/dev/sdb";
+        type = types.str;
+      };
     };
 
     extraEnv = mkOption {
@@ -259,16 +261,16 @@ in {
 
       # TODO Do we need this at all? Shouldn't this be done by service
       fileSystems =
-        lib.mkIf (cfg.test-dev != "") {
+        lib.mkIf (cfg.dev.test != "") {
           "/mnt/test" = {
-            device = cfg.test-dev;
+            device = cfg.dev.test;
             fsType = "xfs";
             options = ["nofail"];
           };
         }
-        // lib.mkIf (cfg.scratch-dev != "") {
+        // lib.mkIf (cfg.dev.scratch != "") {
           "/mnt/scratch" = {
-            device = cfg.scratch-dev;
+            device = cfg.dev.scratch;
             fsType = "xfs";
             options = ["nofail"];
           };
@@ -336,12 +338,12 @@ in {
 
             test_dev="$(get_config 'xfstests.test_dev')"
             if [ "$test_dev" == "" ]; then
-              test_dev="${cfg.test-dev}"
+              test_dev="${cfg.dev.test}"
             fi;
 
             scratch_dev="$(get_config 'xfstests.scratch_dev')"
             if [ "$scratch_dev" == "" ]; then
-              scratch_dev="${cfg.scratch-dev}"
+              scratch_dev="${cfg.dev.scratch}"
             fi;
 
             # Prepare disks

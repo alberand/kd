@@ -140,8 +140,10 @@
               };
               services.xfstests = {
                 enable = true;
-                test-dev = pkgs.lib.mkDefault "/dev/vdb";
-                scratch-dev = pkgs.lib.mkDefault "/dev/vdc";
+                dev = {
+                  test = pkgs.lib.mkDefault "/dev/vdb";
+                  scratch = pkgs.lib.mkDefault "/dev/vdc";
+                };
                 arguments = "-s xfs_4k -s ext4_4k generic/110";
                 kernelHeaders = buildKernelHeaders {
                   inherit (config.kernel) src version;

@@ -201,11 +201,11 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
     };
 
     if let Some(test_dev) = &config.test_dev {
-        options.push(uconfig_set_value_str("test-dev", &test_dev));
+       options.push(uconfig_set_value_str("dev.test", &test_dev));
     };
 
     if let Some(scratch_dev) = &config.scratch_dev {
-        options.push(uconfig_set_value_str("scratch-dev", &scratch_dev));
+       options.push(uconfig_set_value_str("dev.scratch", &scratch_dev));
     };
 
     if let Some(filesystem) = &config.filesystem {
