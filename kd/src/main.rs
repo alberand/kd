@@ -208,6 +208,14 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
        options.push(uconfig_set_value_str("dev.scratch", &scratch_dev));
     };
 
+    if let Some(rtdev) = &config.rtdev {
+        options.push(uconfig_set_value_str("dev.rtdev", &rtdev));
+    };
+
+    if let Some(logdev) = &config.logdev {
+        options.push(uconfig_set_value_str("dev.logdev", &logdev));
+    };
+
     if let Some(filesystem) = &config.filesystem {
         options.push(uconfig_set_value_str("filesystem", &filesystem));
     };

@@ -37,6 +37,8 @@ pub struct XfstestsConfig {
     pub args: Option<String>,
     pub test_dev: Option<String>,
     pub scratch_dev: Option<String>,
+    pub rtdev: Option<String>,
+    pub logdev: Option<String>,
     pub extra_env: Option<String>,
     pub filesystem: Option<String>,
     pub hooks: Option<String>,

@@ -36,6 +36,20 @@ in {
         example = "/dev/sdb";
         type = types.str;
       };
+
+      rtdev = mkOption {
+        description = "Path to disk used as SCRATCH_RTDEV";
+        default = "";
+        example = "/dev/sdc";
+        type = types.str;
+      };
+
+      logdev = mkOption {
+        description = "Path to disk used as SCRATCH_LOGDEV";
+        default = "";
+        example = "/dev/sdd";
+        type = types.str;
+      };
     };
 
     extraEnv = mkOption {
@@ -274,6 +288,20 @@ in {
             fsType = "xfs";
             options = ["nofail"];
           };
+        }
+        // lib.mkIf (cfg.dev.rtdev != "") {
+          "/mnt/rtdev" = {
+            device = cfg.dev.rtdev;
+            fsType = "xfs";
+            options = ["nofail"];
+          };
+        }
+        // lib.mkIf (cfg.dev.logdev != "") {
+          "/mnt/rtdev" = {
+            device = cfg.dev.logdev;
+            fsType = "xfs";
+            options = ["nofail"];
+          };
         };
 
       systemd.services.xfstests = let
@@ -313,6 +341,40 @@ in {
             xfs = "-f";
             ext4 = "-F";
           };
+          use_external =
+            if cfg.dev.rtdev != "" || cfg.dev.logdev != ""
+            then "yes"
+            else "";
+          mkfs_options =
+            (
+              if cfg.dev.rtdev != ""
+              then "-rrtdev=${cfg.dev.rtdev}"
+              else ""
+            )
+            + (
+              if cfg.dev.logdev != ""
+              then "-llogdev=${cfg.dev.logdev}"
+              else ""
+            );
+          mount_options =
+            (
+              if cfg.dev.rtdev != ""
+              then "-ortdev=${cfg.dev.rtdev}"
+              else ""
+            )
+            + (
+              if cfg.dev.logdev != ""
+              then "-ologdev=${cfg.dev.logdev}"
+              else ""
+            );
+          xfs_external =
+            if cfg.filesystem == "xfs"
+            then ''
+              export USE_EXTERNAL="${use_external}"
+              export MKFS_OPTIONS="${mkfs_options}"
+              export MOUNT_OPTIONS="${mount_options}"
+            ''
+            else "";
         in
           ''
             setup_log=$(mktemp)
@@ -368,11 +430,13 @@ in {
 
             export TEST_DEV="$test_dev"
             export SCRATCH_DEV="$scratch_dev"
+            export SCRATCH_RTDEV="${cfg.dev.rtdev}"
+            export SCRATCH_LOGDEV="${cfg.dev.logdev}"
+            ${xfs_external}
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
             export WORKAREA=${xfsprogs.src}
             ${cfg.extraEnv}
-
 
             env_log=$(mktemp)
             env > $env_log

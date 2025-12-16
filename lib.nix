@@ -61,6 +61,8 @@ in rec {
             dev = {
               test = pkgs.lib.mkDefault "/dev/vdb";
               scratch = pkgs.lib.mkDefault "/dev/vdc";
+                rtdev = pkgs.lib.mkDefault "/dev/vdd";
+                logdev = pkgs.lib.mkDefault "/dev/vde";
             };
           };
 
@@ -115,6 +117,8 @@ in rec {
               dev = {
                 test = pkgs.lib.mkDefault "/dev/sda";
                 scratch = pkgs.lib.mkDefault "/dev/sdb";
+                rtdev = pkgs.lib.mkDefault "/dev/sdc";
+                logdev = pkgs.lib.mkDefault "/dev/sdd";
               };
             };
           })
@@ -154,6 +158,8 @@ in rec {
               dev = {
                 test = pkgs.lib.mkDefault "/dev/sda";
                 scratch = pkgs.lib.mkDefault "/dev/sdb";
+                rtdev = pkgs.lib.mkDefault "/dev/sdc";
+                logdev = pkgs.lib.mkDefault "/dev/sdd";
               };
             };
           })
