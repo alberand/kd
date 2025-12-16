@@ -171,12 +171,12 @@ in {
             pkgs.quota
             pkgs.util-linux
             pkgs.which
-            # pkgs.duperemove pulls glib
+            pkgs.duperemove # pulls glib
             pkgs.acct
             pkgs.xfsdump
             pkgs.indent
             pkgs.man
-            # pkgs.fio brings Python 3
+            pkgs.fio # brings Python 3
             pkgs.thin-provisioning-tools
             pkgs.file
             pkgs.openssl
@@ -345,34 +345,10 @@ in {
             if cfg.dev.rtdev != "" || cfg.dev.logdev != ""
             then "yes"
             else "";
-          mkfs_options =
-            (
-              if cfg.dev.rtdev != ""
-              then "-rrtdev=${cfg.dev.rtdev}"
-              else ""
-            )
-            + (
-              if cfg.dev.logdev != ""
-              then "-llogdev=${cfg.dev.logdev}"
-              else ""
-            );
-          mount_options =
-            (
-              if cfg.dev.rtdev != ""
-              then "-ortdev=${cfg.dev.rtdev}"
-              else ""
-            )
-            + (
-              if cfg.dev.logdev != ""
-              then "-ologdev=${cfg.dev.logdev}"
-              else ""
-            );
           xfs_external =
             if cfg.filesystem == "xfs"
             then ''
               export USE_EXTERNAL="${use_external}"
-              export MKFS_OPTIONS="${mkfs_options}"
-              export MOUNT_OPTIONS="${mount_options}"
             ''
             else "";
         in

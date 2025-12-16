@@ -90,6 +90,8 @@ final: prev: rec {
           sed -e 's|/usr/bin/time|${time}/bin/time|' -i $f
         done
 
+        sed -e 's|/usr/share/xfsprogs|${xfsprogs}/share|' -i tests/xfs/569
+
         patchShebangs .
       '';
       patches = [

@@ -123,6 +123,7 @@ with lib.kernel; {
     RTC_CLASS = yes;
     UNIX = yes;
     INOTIFY_USER = yes;
+    HIBERNATION = no;
 
     # Systemd required modules
     # boot.initrd.includeDefaultModules = false;
@@ -135,6 +136,11 @@ with lib.kernel; {
     FTRACE = yes;
     # Creates /proc/pid/stack which shows current stack for each process
     STACKTRACE = yes;
+
+    # THP
+    TRANSPARENT_HUGEPAGE = yes;
+    TRANSPARENT_HUGEPAGE_ALWAYS = yes;
+    THP_SWAP = yes;
 
     NFS_FS = no;
     ACPI = yes;
@@ -248,6 +254,7 @@ with lib.kernel; {
     USER_NS = yes;
     DAX = yes;
     IO_URING = yes;
+    DEBUG_FS = yes;
     
     SCSI_DEBUG = module;
   };
@@ -281,6 +288,6 @@ with lib.kernel; {
     XFS_ONLINE_REPAIR = yes;
     XFS_DEBUG = yes;
     XFS_DEBUG_EXPENSIVE = yes;
-    XFS_ASSERT_FATAL = yes;
+    XFS_ASSERT_FATAL = no;
   };
 }
