@@ -18,7 +18,10 @@ NODE="$PREFIX-$2"
 echo "Removing /tmp/$NODE from $TEST_HOST"
 ssh $TEST_HOST "sudo rm -f -- /tmp/$NODE"
 
-virsh --connect $SYSURI destroy $NODE
+echo "Destroy running node if exists"
+if virsh --connect $SYSURI list | grep -q "$NODE"; then
+	virsh --connect $SYSURI destroy $NODE
+fi
 
 echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE'"
 rsync -avz -P \
@@ -29,6 +32,7 @@ if [ $? -ne 0 ]; then
 fi;
 
 ssh $TEST_HOST "sudo chmod u+w /tmp/$NODE"
+
 echo "Bringing up the node"
 virt-install --connect $SYSURI \
 	--name "$NODE" \
