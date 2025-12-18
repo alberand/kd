@@ -149,6 +149,8 @@ with lib.kernel; {
     INPUT_JOYSTICK = no;
     INPUT_TABLET = no;
     INPUT_TOUCHSCREEN = no;
+
+    MEMCG = yes;
   };
 
   debug = {
