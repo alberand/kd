@@ -490,27 +490,10 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
     };
 
     // Check that these commands exists
-    let command = "direnv";
-    if let Some(binary) = find_it(command) {
-        if is_executable(&binary) {
-            let mut cmd = Command::new("direnv");
-            cmd.arg("allow").current_dir(&envdir);
+    println!("All done!");
+    println!("Active the environment with:");
+    println!("direnv allow");
 
-            let output = cmd.output().expect("Failed to execute command");
-
-            if !output.status.success() {
-                println!("Failed to reactivate direnv environment.");
-                println!("{}", String::from_utf8_lossy(&output.stderr));
-                std::process::exit(1);
-            }
-        }
-    } else {
-        println!("'direnv' not found. Can not activate shell environment");
-        println!("Install 'direnv' and run 'direnv allow' to activate");
-        return Ok(());
-    }
-
-    println!("Update your .kd.toml configuration");
     Ok(())
 }
 
