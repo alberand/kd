@@ -519,7 +519,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 2000 2000];
+          vm.disks = [12000 12000 1000 1000];
         }
         // uconfig;
     };
@@ -535,7 +535,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 2000 2000];
+          vm.disks = [12000 12000 1000 1000];
 
           # As our dummy derivation doesn't provide any .config we need to tell
           # NixOS not to check for any required configurations
@@ -555,7 +555,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 2000 2000];
+          vm.disks = [12000 12000 1000 1000];
 
           boot.kernelParams = pkgs.lib.mkForce [
             # consistent eth* naming
