@@ -11,19 +11,13 @@ NixOS/Nix and direnv are required.
 
 Initial step to get kd on your system:
 
-    $ echo "use flake github:alberand/kd" > .envrc && direnv allow
-    ... will take a long time
+    $ nix run github:alberand/kd#kd -- init
 
-The command above just created `.envrc` file which tells `direnv` to use shell
-environment from the "Nix Flake". The flake itself is located at github.
-
-Now create environment:
-
-    $ kd init
+This will take a while...
 
 The command above creates a "Nix Flake" in `.kd` directory. This flake defines
-shell to work with Linux kernel. Along the `.kd` dir, command above updated
-`.envrc` to point to the local `.kd` directory instead of github.com.
+shell to work with Linux kernel. Along the `.kd` dir, command above creates
+`.envrc` file pointing to the local `.kd` directory.
 
 Now you can modify `.kd.toml` file and run VM:
 
