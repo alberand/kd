@@ -1,0 +1,30 @@
+From c8beb4b342d9c396d532813d36bcba7d7c324c22 Mon Sep 17 00:00:00 2001
+From: Andrey Albershteyn <aalbersh@kernel.org>
+Date: Thu, 18 Dec 2025 14:35:36 +0100
+Subject: [PATCH] generic/746: follow symlinks when populating mount
+
+If xfstests system package is built out of symlinks cp will copy these
+symlinks. The find will fail to find any files a few lines below. But,
+even if find will follow links it will attempt to remove system package
+files.
+
+Make cp follow symlinks, so, test will get a full copy.
+
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ tests/generic/746 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/generic/746 b/tests/generic/746
+index 6f02b1cc35..75cf6cede0 100755
+--- a/tests/generic/746
++++ b/tests/generic/746
+@@ -166,7 +166,7 @@
+ # Goal is to fill it up, ignore any errors.
+ for i in `seq 1 10`; do
+ 	mkdir $loop_mnt/$i &> /dev/null
+-	cp -r $here/* $loop_mnt/$i &> /dev/null || break
++	cp -L -r $here/* $loop_mnt/$i &> /dev/null || break
+ done
+ 
+ # Get reference fiemap, this can contain i.e. uninitialized inode table
