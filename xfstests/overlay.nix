@@ -147,6 +147,7 @@ final: prev: rec {
           prev.file
           prev.openssl
           prev.checkbashisms # xfs mainteiner test
+          prev.findutils
         ]}:$PATH
         exec ./check "$@"
       '';

@@ -181,6 +181,7 @@ in {
             pkgs.file
             pkgs.openssl
             pkgs.checkbashisms # xfs mainteiner test
+            pkgs.findutils
           ]}:$PATH
           exec ./check "$@"
         '';
