@@ -45,6 +45,7 @@ virt-install --connect $SYSURI \
 	--disk size=1,target.bus=sata,format=raw \
 	--disk size=1,target.bus=sata,format=raw \
 	--disk size=1,target.bus=sata,format=raw \
+	--disk size=1,target.bus=sata,format=raw \
 	--network network=anet \
 	--import \
 	--serial pty \

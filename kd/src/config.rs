@@ -31,14 +31,21 @@ pub struct KernelConfig {
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct XfstestsDevices {
+    pub test: Option<String>,
+    pub test_rtdev: Option<String>,
+    pub test_logdev: Option<String>,
+    pub scratch: Option<String>,
+    pub scratch_rtdev: Option<String>,
+    pub scratch_logdev: Option<String>,
+};
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct XfstestsConfig {
     pub repo: Option<String>,
     pub rev: Option<String>,
+    pub devices: Option<XfstestsDevices>,
     pub args: Option<String>,
-    pub test_dev: Option<String>,
-    pub scratch_dev: Option<String>,
-    pub rtdev: Option<String>,
-    pub logdev: Option<String>,
     pub extra_env: Option<String>,
     pub filesystem: Option<String>,
     pub hooks: Option<String>,

@@ -200,20 +200,34 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
         options.push(uconfig_set_value_str("arguments", &args));
     };
 
-    if let Some(test_dev) = &config.test_dev {
-       options.push(uconfig_set_value_str("dev.test", &test_dev));
-    };
+    if let Some(devices) = &config.devices {
+        let mut dev_options: Vec<String> = vec![];
 
-    if let Some(scratch_dev) = &config.scratch_dev {
-       options.push(uconfig_set_value_str("dev.scratch", &scratch_dev));
-    };
+        if let Some(test_dev) = &devices.test {
+           dev_options.push(uconfig_set_value_str("test.main", &test_dev));
+        };
 
-    if let Some(rtdev) = &config.rtdev {
-        options.push(uconfig_set_value_str("dev.rtdev", &rtdev));
-    };
+        if let Some(rtdev) = &devices.test_rtdev {
+            dev_options.push(uconfig_set_value_str("test.rtdev", &rtdev));
+        };
 
-    if let Some(logdev) = &config.logdev {
-        options.push(uconfig_set_value_str("dev.logdev", &logdev));
+        if let Some(logdev) = &devices.test_logdev {
+            dev_options.push(uconfig_set_value_str("test.logdev", &logdev));
+        };
+
+        if let Some(scratch_dev) = &devices.scratch {
+           dev_options.push(uconfig_set_value_str("scratch.main", &scratch_dev));
+        };
+
+        if let Some(rtdev) = &devices.scratch_rtdev {
+            dev_options.push(uconfig_set_value_str("scratch.rtdev", &rtdev));
+        };
+
+        if let Some(logdev) = &devices.scratch_logdev {
+            dev_options.push(uconfig_set_value_str("scratch.logdev", &logdev));
+        };
+
+        options.push(format!("dev = {{ {} }};", &dev_options.join("\n")));
     };
 
     if let Some(filesystem) = &config.filesystem {

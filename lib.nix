@@ -59,10 +59,16 @@ in rec {
           services.xfstests = {
             enable = true;
             dev = {
-              test = pkgs.lib.mkDefault "/dev/vdb";
-              scratch = pkgs.lib.mkDefault "/dev/vdc";
+              test = {
+                main = pkgs.lib.mkDefault "/dev/vdb";
+                #rtdev = pkgs.lib.mkDefault "/dev/vdf";
+                #logdev = pkgs.lib.mkDefault "/dev/vdg";
+              };
+              scratch = {
+                main = pkgs.lib.mkDefault "/dev/vdc";
                 rtdev = pkgs.lib.mkDefault "/dev/vdd";
                 logdev = pkgs.lib.mkDefault "/dev/vde";
+              };
             };
           };
 
@@ -115,10 +121,16 @@ in rec {
             services.xfstests = {
               enable = true;
               dev = {
-                test = pkgs.lib.mkDefault "/dev/sda";
-                scratch = pkgs.lib.mkDefault "/dev/sdb";
-                rtdev = pkgs.lib.mkDefault "/dev/sdc";
-                logdev = pkgs.lib.mkDefault "/dev/sdd";
+                test = {
+                  main = pkgs.lib.mkDefault "/dev/sda";
+                  # rtdev = pkgs.lib.mkDefault "/dev/sde";
+                  # logdev = pkgs.lib.mkDefault "/dev/sdf";
+                };
+                scratch = {
+                  main = pkgs.lib.mkDefault "/dev/sdb";
+                  rtdev = pkgs.lib.mkDefault "/dev/sdc";
+                  logdev = pkgs.lib.mkDefault "/dev/sdd";
+                };
               };
             };
           })
@@ -156,10 +168,16 @@ in rec {
               enable = true;
               autoshutdown = false;
               dev = {
-                test = pkgs.lib.mkDefault "/dev/sda";
-                scratch = pkgs.lib.mkDefault "/dev/sdb";
-                rtdev = pkgs.lib.mkDefault "/dev/sdc";
-                logdev = pkgs.lib.mkDefault "/dev/sdd";
+                test = {
+                  main = pkgs.lib.mkDefault "/dev/sda";
+                  # rtdev = pkgs.lib.mkDefault "/dev/sde";
+                  # logdev = pkgs.lib.mkDefault "/dev/sdf";
+                };
+                scratch = {
+                  main = pkgs.lib.mkDefault "/dev/sdb";
+                  rtdev = pkgs.lib.mkDefault "/dev/sdc";
+                  logdev = pkgs.lib.mkDefault "/dev/sdd";
+                };
               };
             };
           })
@@ -213,7 +231,7 @@ in rec {
 
               (callPackage (import ./kd/derivation.nix) {
                 inherit (pkgs.lib) makeBinPath;
-             })
+              })
             ]
             ++ (
               if gcc
@@ -519,7 +537,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000];
+          vm.disks = [12000 12000 1000 1000 1000 1000];
         }
         // uconfig;
     };
@@ -535,7 +553,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000];
+          vm.disks = [12000 12000 1000 1000 1000 1000];
 
           # As our dummy derivation doesn't provide any .config we need to tell
           # NixOS not to check for any required configurations
@@ -555,7 +573,7 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000];
+          vm.disks = [12000 12000 1000 1000 1000 1000];
 
           boot.kernelParams = pkgs.lib.mkForce [
             # consistent eth* naming
@@ -578,7 +596,7 @@ in rec {
     #  inherit nixpkgs uconfig;
     #};
 
-    shell = mkLinuxShell { };
+    shell = mkLinuxShell {};
 
     shell-clang20 = mkLinuxShell {
       clangVersion = "20";

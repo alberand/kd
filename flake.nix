@@ -130,7 +130,7 @@
                 version = sources.rev;
               };
               vm.workdir = "/tmp/kd-test/";
-              vm.disks = [12000 12000 2000 2000];
+              vm.disks = [12000 12000 1000 1000 1000 1000];
 
               services.xfsprogs = {
                 enable = true;
@@ -141,10 +141,10 @@
               services.xfstests = {
                 enable = true;
                 dev = {
-                  test = pkgs.lib.mkDefault "/dev/vdb";
-                  scratch = pkgs.lib.mkDefault "/dev/vdc";
+                  test.main = pkgs.lib.mkDefault "/dev/vdb";
+                  scratch.main = pkgs.lib.mkDefault "/dev/vdc";
                 };
-                arguments = "-s xfs_4k -s ext4_4k generic/110";
+                arguments = "-s xfs_4k -s ext4_4k generic/110 xfs/304";
                 kernelHeaders = buildKernelHeaders {
                   inherit (config.kernel) src version;
                 };

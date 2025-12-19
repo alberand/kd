@@ -23,32 +23,50 @@ in {
     };
 
     dev = {
-      test = mkOption {
-        description = "Path to disk used as TEST_DEV";
-        default = "";
-        example = "/dev/sda";
-        type = types.str;
+      test = {
+        main = mkOption {
+          description = "Path to disk used as TEST_DEV";
+          default = "";
+          example = "/dev/sda";
+          type = types.str;
+        };
+
+        rtdev = mkOption {
+          description = "Path to disk used as TEST_RTDEV";
+          default = "";
+          example = "/dev/sdc";
+          type = types.str;
+        };
+
+        logdev = mkOption {
+          description = "Path to disk used as TEST_LOGDEV";
+          default = "";
+          example = "/dev/sdd";
+          type = types.str;
+        };
       };
 
-      scratch = mkOption {
-        description = "Path to disk used as SCRATCH_DEV";
-        default = "";
-        example = "/dev/sdb";
-        type = types.str;
-      };
+      scratch = {
+        main = mkOption {
+          description = "Path to disk used as SCRATCH_DEV";
+          default = "";
+          example = "/dev/sdb";
+          type = types.str;
+        };
 
-      rtdev = mkOption {
-        description = "Path to disk used as SCRATCH_RTDEV";
-        default = "";
-        example = "/dev/sdc";
-        type = types.str;
-      };
+        rtdev = mkOption {
+          description = "Path to disk used as SCRATCH_RTDEV";
+          default = "";
+          example = "/dev/sdc";
+          type = types.str;
+        };
 
-      logdev = mkOption {
-        description = "Path to disk used as SCRATCH_LOGDEV";
-        default = "";
-        example = "/dev/sdd";
-        type = types.str;
+        logdev = mkOption {
+          description = "Path to disk used as SCRATCH_LOGDEV";
+          default = "";
+          example = "/dev/sdd";
+          type = types.str;
+        };
       };
     };
 
@@ -276,37 +294,50 @@ in {
 
       # TODO Do we need this at all? Shouldn't this be done by service
       fileSystems =
-        lib.mkIf (cfg.dev.test != "") {
+        lib.mkIf (cfg.dev.test.main != "") {
           "/mnt/test" = {
-            device = cfg.dev.test;
+            device = cfg.dev.test.main;
             fsType = "xfs";
             options = ["nofail"];
           };
         }
-        // lib.mkIf (cfg.dev.scratch != "") {
+        // lib.mkIf (cfg.dev.test.rtdev != "") {
+          "/mnt/test_rtdev" = {
+            device = cfg.dev.test.rtdev;
+            fsType = "xfs";
+            options = ["nofail"];
+          };
+        }
+        // lib.mkIf (cfg.dev.test.logdev != "") {
+          "/mnt/test_logdev" = {
+            device = cfg.dev.test.logdev;
+            fsType = "xfs";
+            options = ["nofail"];
+          };
+        }
+        // lib.mkIf (cfg.dev.scratch.main != "") {
           "/mnt/scratch" = {
-            device = cfg.dev.scratch;
+            device = cfg.dev.scratch.main;
             fsType = "xfs";
             options = ["nofail"];
           };
         }
-        // lib.mkIf (cfg.dev.rtdev != "") {
-          "/mnt/rtdev" = {
-            device = cfg.dev.rtdev;
+        // lib.mkIf (cfg.dev.scratch.rtdev != "") {
+          "/mnt/scratch_rtdev" = {
+            device = cfg.dev.scratch.rtdev;
             fsType = "xfs";
             options = ["nofail"];
           };
         }
-        // lib.mkIf (cfg.dev.logdev != "") {
-          "/mnt/rtdev" = {
-            device = cfg.dev.logdev;
+        // lib.mkIf (cfg.dev.scratch.logdev != "") {
+          "/mnt/scratch_rtdev" = {
+            device = cfg.dev.scratch.logdev;
             fsType = "xfs";
             options = ["nofail"];
           };
         };
 
-      systemd.services.xfstests = let
-      in {
+      systemd.services.xfstests = {
         enable = true;
         serviceConfig = {
           Type = "oneshot";
@@ -343,14 +374,13 @@ in {
             ext4 = "-F";
           };
           use_external =
-            if cfg.dev.rtdev != "" || cfg.dev.logdev != ""
+            if
+              cfg.dev.test.rtdev
+              != ""
+              || cfg.dev.test.logdev != ""
+              || cfg.dev.scratch.rtdev != ""
+              || cfg.dev.scratch.logdev != ""
             then "yes"
-            else "";
-          xfs_external =
-            if cfg.filesystem == "xfs"
-            then ''
-              export USE_EXTERNAL="${use_external}"
-            ''
             else "";
         in
           ''
@@ -377,12 +407,12 @@ in {
 
             test_dev="$(get_config 'xfstests.test_dev')"
             if [ "$test_dev" == "" ]; then
-              test_dev="${cfg.dev.test}"
+              test_dev="${cfg.dev.test.main}"
             fi;
 
             scratch_dev="$(get_config 'xfstests.scratch_dev')"
             if [ "$scratch_dev" == "" ]; then
-              scratch_dev="${cfg.dev.scratch}"
+              scratch_dev="${cfg.dev.scratch.main}"
             fi;
 
             # Prepare disks
@@ -406,10 +436,12 @@ in {
             echo "Initial mkfs output for test/scratch can be found at $setup_log"
 
             export TEST_DEV="$test_dev"
+            export TEST_RTDEV="${cfg.dev.test.rtdev}"
+            export TEST_LOGDEV="${cfg.dev.test.logdev}"
             export SCRATCH_DEV="$scratch_dev"
-            export SCRATCH_RTDEV="${cfg.dev.rtdev}"
-            export SCRATCH_LOGDEV="${cfg.dev.logdev}"
-            ${xfs_external}
+            export SCRATCH_RTDEV="${cfg.dev.scratch.rtdev}"
+            export SCRATCH_LOGDEV="${cfg.dev.scratch.logdev}"
+            export USE_EXTERNAL="${use_external}"
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
             export WORKAREA=${xfsprogs.src}
