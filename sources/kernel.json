@@ -1,5 +1,5 @@
 {
-  "hash": "sha256-F1vg95nMGiXk9zbUzg+/hUq+RjXdFmtN530b7QuqkMc=",
-  "rev": "v6.18",
+  "hash": "sha256-zqQhOsaYKKMhTHuo7SRLlrpyzFhwN4xsjvStLiqpzMk=",
+  "rev": "v6.19-rc1",
   "url": "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 }
