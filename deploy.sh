@@ -40,8 +40,9 @@ virt-install --connect $SYSURI \
 	--memory=8000 \
 	--vcpu 4 \
 	--disk path="/tmp/$NODE",format=qcow2 \
-	--disk size=12,target.bus=sata,format=raw \
-	--disk size=12,target.bus=sata,format=raw \
+	--disk size=20,target.bus=sata,format=raw \
+	--disk size=20,target.bus=sata,format=raw \
+	--disk size=1,target.bus=sata,format=raw \
 	--disk size=1,target.bus=sata,format=raw \
 	--disk size=1,target.bus=sata,format=raw \
 	--network network=anet \
