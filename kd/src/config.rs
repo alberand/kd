@@ -38,7 +38,7 @@ pub struct XfstestsDevices {
     pub scratch: Option<String>,
     pub scratch_rtdev: Option<String>,
     pub scratch_logdev: Option<String>,
-};
+}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct XfstestsConfig {
@@ -124,13 +124,9 @@ impl SystemConfig {
                 new.args = Some(args);
             }
 
-            if let Some(test_dev) = xfstests.test_dev {
-                new.test_dev = Some(test_dev);
-            }
-
-            if let Some(scratch_dev) = xfstests.scratch_dev {
-                new.scratch_dev = Some(scratch_dev);
-            }
+            if let Some(devices) = xfstests.devices {
+                new.devices = Some(devices);
+            };
 
             if let Some(extra_env) = xfstests.extra_env {
                 new.extra_env = Some(extra_env);
