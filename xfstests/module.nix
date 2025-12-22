@@ -386,59 +386,30 @@ in {
           ''
             setup_log=$(mktemp)
 
-            function get_config {
-              ${pkgs.tomlq}/bin/tq --file /root/share/kd.toml $@ 2>$setup_log || true
-            }
-
-            if [ ! -f "/root/share/kd.toml" ] && [ "${cfg.arguments}" == "" ]; then
-              echo "/root/share/kd.toml: file doesn't exist"
-              exit 0
-            fi
-
-            if [ "$(get_config 'xfstests.args')" == "" ] && [ "${cfg.arguments}" == "" ]; then
-              echo "No tests to run"
-              exit 0
-            fi
-
-            arguments="$(get_config 'xfstests.args')"
-            if [ "$arguments" == "" ]; then
-              arguments="${cfg.arguments}"
-            fi;
-
-            test_dev="$(get_config 'xfstests.test_dev')"
-            if [ "$test_dev" == "" ]; then
-              test_dev="${cfg.dev.test.main}"
-            fi;
-
-            scratch_dev="$(get_config 'xfstests.scratch_dev')"
-            if [ "$scratch_dev" == "" ]; then
-              scratch_dev="${cfg.dev.scratch.main}"
-            fi;
-
             # Prepare disks
             if ${pkgs.util-linux}/bin/mountpoint /mnt/test &> $setup_log; then
-              ${pkgs.util-linux}/bin/umount $test_dev &> $setup_log
+              ${pkgs.util-linux}/bin/umount ${cfg.dev.test.main} &> $setup_log
             fi
             if ${pkgs.util-linux}/bin/mountpoint /mnt/scratch &> $setup_log; then
-              ${pkgs.util-linux}/bin/umount $scratch_dev &> $setup_log
+              ${pkgs.util-linux}/bin/umount ${cfg.dev.scratch.main} &> $setup_log
             fi
 
             ${pkgs.util-linux}/bin/mkfs \
               -t ${cfg.filesystem} \
               ${mkfs-options} \
-              -L test $test_dev \
+              -L test ${cfg.dev.test.main} \
               2>&1 >> $setup_log
             ${pkgs.util-linux}/bin/mkfs \
               -t ${cfg.filesystem} \
               ${mkfs-options} \
-              -L scratch $scratch_dev \
+              -L scratch ${cfg.dev.scratch.main} \
               2>&1 >> $setup_log
             echo "Initial mkfs output for test/scratch can be found at $setup_log"
 
-            export TEST_DEV="$test_dev"
+            export TEST_DEV="${cfg.dev.test.main}"
             export TEST_RTDEV="${cfg.dev.test.rtdev}"
             export TEST_LOGDEV="${cfg.dev.test.logdev}"
-            export SCRATCH_DEV="$scratch_dev"
+            export SCRATCH_DEV="${cfg.dev.scratch.main}"
             export SCRATCH_RTDEV="${cfg.dev.scratch.rtdev}"
             export SCRATCH_LOGDEV="${cfg.dev.scratch.logdev}"
             export USE_EXTERNAL="${use_external}"
@@ -454,9 +425,9 @@ in {
             echo "xfstests config is at ${config.environment.variables.HOST_OPTIONS}"
 
             echo "Running:"
-            echo -e "\txfstests-check $arguments"
+            echo -e "\txfstests-check ${cfg.arguments}"
             ${pkgs.bash}/bin/bash -lc \
-              "echo $arguments | xargs ${xfstests}/bin/xfstests-check"
+              "echo ${cfg.arguments} | xargs ${xfstests}/bin/xfstests-check"
 
           ''
           + (optionalString (cfg.upload-results) ''
