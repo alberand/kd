@@ -80,7 +80,11 @@ pub struct SystemConfig {
 impl SystemConfig {
     pub fn merge(&mut self, config: SystemConfig) -> &Self {
         if let Some(kernel) = config.kernel {
-            let mut new = KernelConfig::default();
+            let new = if let Some(kernel) = &mut self.kernel {
+                kernel
+            } else {
+                &mut KernelConfig::default()
+            };
 
             if let Some(prebuild) = kernel.prebuild {
                 new.prebuild = Some(prebuild);
@@ -105,12 +109,14 @@ impl SystemConfig {
             if let Some(config) = kernel.config {
                 new.config = Some(config);
             }
-
-            self.kernel = Some(new);
         }
 
         if let Some(xfstests) = config.xfstests {
-            let mut new = XfstestsConfig::default();
+            let new = if let Some(xfstests) = &mut self.xfstests {
+                xfstests
+            } else {
+                &mut XfstestsConfig::default()
+            };
 
             if let Some(repo) = xfstests.repo {
                 new.repo = Some(repo);
@@ -143,12 +149,14 @@ impl SystemConfig {
             if let Some(kernel_headers) = xfstests.kernel_headers {
                 new.kernel_headers = Some(kernel_headers);
             }
-
-            self.xfstests = Some(new);
         }
 
         if let Some(xfsprogs) = config.xfsprogs {
-            let mut new = XfsprogsConfig::default();
+            let new = if let Some(xfsprogs) = &mut self.xfsprogs {
+                xfsprogs
+            } else {
+                &mut XfsprogsConfig::default()
+            };
 
             if let Some(repo) = xfsprogs.repo {
                 new.repo = Some(repo);
@@ -161,8 +169,6 @@ impl SystemConfig {
             if let Some(kernel_headers) = xfsprogs.kernel_headers {
                 new.kernel_headers = Some(kernel_headers);
             }
-
-            self.xfsprogs = Some(new);
         }
 
         if let Some(script) = config.script {
