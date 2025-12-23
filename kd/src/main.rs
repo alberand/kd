@@ -8,7 +8,7 @@ use std::path::{self, PathBuf};
 use std::process::{Command, Stdio};
 
 mod utils;
-use utils::{find_it, is_executable, KdError, KdErrorKind};
+use utils::{KdError, KdErrorKind};
 mod config;
 use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
