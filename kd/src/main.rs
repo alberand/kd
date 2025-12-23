@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{self, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 mod utils;
 use utils::{find_it, is_executable, KdError, KdErrorKind};
@@ -92,6 +92,14 @@ enum Commands {
     Config {
         #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
+    },
+
+    // Developer tools
+    Debug {
+        #[arg(short, action = clap::ArgAction::SetTrue, help = "Output config")]
+        config: bool,
+        #[arg(long, help = "Matrix's 'run' config to use")]
+        matrix: Option<String>,
     },
 }
 
@@ -637,6 +645,26 @@ fn cmd_config(state: &mut State, output: Option<String>) {
     std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
 }
 
+fn cmd_debug(state: &mut State, output: &bool) {
+    match generate_uconfig(state) {
+        Ok(content) => {
+            if *output {
+                let mut cmd = Command::new("alejandra")
+                    .stdin(Stdio::piped())
+                    .arg("--quiet")
+                    .spawn()
+                    .unwrap();
+                write!(cmd.stdin.as_mut().unwrap(), "{}", content).unwrap();
+                cmd.wait().expect("'alejandra' failed to run");
+            }
+        }
+        Err(error) => {
+            println!("Failed to generate nix config: {error}");
+            std::process::exit(1);
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -715,6 +743,15 @@ fn main() {
         Some(Commands::Config { output }) => {
             cmd_config(&mut state, output.clone());
         }
+
+        Some(Commands::Debug { config, matrix }) => {
+            if let Some(matrix) = &matrix {
+                state.matrix = matrix.clone();
+            }
+
+            cmd_debug(&mut state, config);
+        }
+
         None => {}
     }
 }
