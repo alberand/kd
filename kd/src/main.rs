@@ -309,7 +309,7 @@ fn uconfig_kernel(config: &KernelConfig) -> String {
 }
 
 /// TODO all this parsing should be just done nrix
-fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
+fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
     let mut options = vec![];
 
     if let Some(packages) = &state.config.packages {
@@ -407,14 +407,10 @@ fn generate_uconfig(state: &mut State) -> Result<(), KdError> {
         };
     };
 
-    let uconfig = format!(include_str!("uconfig.tmpl"), s_options = options.join("\n"));
-
-    let mut file = std::fs::File::create(&state.user_config)
-        .expect("Failed to create user config uconfig.nix");
-    file.write_all(uconfig.as_bytes())
-        .expect("Failed to write out uconfig.nix data");
-
-    Ok(())
+    Ok(format!(
+        include_str!("uconfig.tmpl"),
+        s_options = options.join("\n")
+    ))
 }
 
 fn cmd_init(_: &State) -> Result<(), KdError> {
@@ -513,7 +509,12 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
 
 fn cmd_build(state: &mut State) {
     match generate_uconfig(state) {
-        Ok(_) => {}
+        Ok(content) => {
+            let mut file = std::fs::File::create(&state.user_config)
+                .expect("Failed to create user config uconfig.nix");
+            file.write_all(content.as_bytes())
+                .expect("Failed to write out uconfig.nix data");
+        }
         Err(error) => {
             println!("Failed to generate nix config: {error}");
             std::process::exit(1);
@@ -537,7 +538,12 @@ fn cmd_build(state: &mut State) {
 
 fn cmd_run(state: &mut State) {
     match generate_uconfig(state) {
-        Ok(_) => {}
+        Ok(content) => {
+            let mut file = std::fs::File::create(&state.user_config)
+                .expect("Failed to create user config uconfig.nix");
+            file.write_all(content.as_bytes())
+                .expect("Failed to write out uconfig.nix data");
+        }
         Err(error) => {
             println!("Failed to generate nix config: {error}");
             std::process::exit(1);
@@ -581,9 +587,14 @@ fn cmd_update(state: &State) {
         .expect("'nix flake update' wasn't running");
 }
 
-fn cmd_config(state: &State, output: Option<String>) {
-    match generate_uconfig(&mut state) {
-        Ok(_) => {}
+fn cmd_config(state: &mut State, output: Option<String>) {
+    match generate_uconfig(state) {
+        Ok(content) => {
+            let mut file = std::fs::File::create(&state.user_config)
+                .expect("Failed to create user config uconfig.nix");
+            file.write_all(content.as_bytes())
+                .expect("Failed to write out uconfig.nix data");
+        }
         Err(error) => {
             println!("Failed to generate nix config: {error}");
             std::process::exit(1);
