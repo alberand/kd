@@ -582,6 +582,14 @@ fn cmd_update(state: &State) {
 }
 
 fn cmd_config(state: &State, output: Option<String>) {
+    match generate_uconfig(&mut state) {
+        Ok(_) => {}
+        Err(error) => {
+            println!("Failed to generate nix config: {error}");
+            std::process::exit(1);
+        }
+    }
+
     let package = format!("path:{}#kconfig", state.envdir.display());
     let mut cmd = Command::new("nix");
     cmd.arg("build").arg(&package).current_dir(&state.envdir);
@@ -688,15 +696,7 @@ fn main() {
         }
 
         Some(Commands::Config { output }) => {
-            match generate_uconfig(&mut state) {
-                Ok(_) => {}
-                Err(error) => {
-                    println!("Failed to generate nix config: {error}");
-                    std::process::exit(1);
-                }
-            }
-
-            cmd_config(&state, output.clone());
+            cmd_config(&mut state, output.clone());
         }
         None => {}
     }
