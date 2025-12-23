@@ -204,7 +204,7 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
         let mut dev_options: Vec<String> = vec![];
 
         if let Some(test_dev) = &devices.test {
-           dev_options.push(uconfig_set_value_str("test.main", &test_dev));
+            dev_options.push(uconfig_set_value_str("test.main", &test_dev));
         };
 
         if let Some(rtdev) = &devices.test_rtdev {
@@ -216,7 +216,7 @@ fn uconfig_xfstests(config: &XfstestsConfig) -> String {
         };
 
         if let Some(scratch_dev) = &devices.scratch {
-           dev_options.push(uconfig_set_value_str("scratch.main", &scratch_dev));
+            dev_options.push(uconfig_set_value_str("scratch.main", &scratch_dev));
         };
 
         if let Some(rtdev) = &devices.scratch_rtdev {
@@ -325,7 +325,13 @@ fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
 
     if state.matrix != ""
         && (state.config.matrix.is_none()
-            || !state.config.matrix.as_ref().unwrap().run.contains_key(&state.matrix))
+            || !state
+                .config
+                .matrix
+                .as_ref()
+                .unwrap()
+                .run
+                .contains_key(&state.matrix))
     {
         return Err(KdError::new(
             KdErrorKind::RuntimeError,
