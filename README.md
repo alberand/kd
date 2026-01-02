@@ -147,7 +147,7 @@ repo = "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
 rev = "v6.14.0"
 ```
 
-## Matrix testing
+## Multiple testing configs
 
 Sometimes you need to test your change/fix/feature in many different kernel
 configurations. Such as,
@@ -157,86 +157,86 @@ configurations. Such as,
   compiled against old kernel headers,
 - etc.
 
-This matrix testing let's you setup many different configuration which you would
-like to try and then run them (manually so far, but I'm playing with kexec) with
-`kd run --matrix name`. Here is config for 8 different configs with common
-section for all of them.
+This multi-config testing let's you setup many different configuration which you
+would like to try and then run them (manually so far, but I'm playing with
+kexec) with `kd run --name name`. Here is config for 8 different configs with
+common section for all of them.
 
 ```toml
-[matrix.common.kernel]
+[common.kernel]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
 
-[matrix.common.kernel.config]
+[common.kernel.config]
 CONFIG_QUOTA = "yes"
 CONFIG_XFS_QUOTA = "yes"
 
-[matrix.common.xfstests]
+[common.xfstests]
 args = "-s xfs_4k_quota xfs/508"
 rev = "4936d48ac0d3632d07f6dec310be145d973212a6"
 repo = "file:///home/alberand/Projects/xfstests-dev"
 
-[matrix.common.xfsprogs]
+[common.xfsprogs]
 repo = "file:///home/alberand/Projects/xfsprogs-dev"
 
-[matrix.run.alpha.xfsprogs]
+[named.alpha.xfsprogs]
 # Good - yes; Good - yes
 # both fixes
 rev = "7692fde9e4697f7c623619652c699c4575b01932"
 
-[matrix.run.beta]
-[matrix.run.beta.xfsprogs]
+[named.beta]
+[named.beta.xfsprogs]
 # Good - yes; Good - yes
 # both fixes
 rev = "7692fde9e4697f7c623619652c699c4575b01932"
-[matrix.run.beta.xfsprogs.kernel_headers]
+[named.beta.xfsprogs.kernel_headers]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
 repo = "git@github.com:torvalds/linux.git"
 
-[matrix.run.gamma]
-[matrix.run.gamma.xfsprogs]
+[named.gamma]
+[named.gamma.xfsprogs]
 # Good - yes
 # only argument fix
 rev = "c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
 
-[matrix.run.delta]
-[matrix.run.delta.xfsprogs]
+[named.delta]
+[named.delta.xfsprogs]
 # Good - yes
 # only argument fix
 rev = "c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
-[matrix.run.delta.xfsprogs.kernel_headers]
+[named.delta.xfsprogs.kernel_headers]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
 repo = "git@github.com:torvalds/linux.git"
 
-[matrix.run.epsilon]
-[matrix.run.epsilon.xfsprogs]
+[named.epsilon]
+[named.epsilon.xfsprogs]
 # Fail - yes
 # only struct fix
 rev = "680d46221cc526a21f61704233b8a3fcdda1d35a"
 
-[matrix.run.zeta.xfsprogs]
+[named.zeta.xfsprogs]
 # Fail - yes
 # only struct fix
 rev = "680d46221cc526a21f61704233b8a3fcdda1d35a"
-[matrix.run.zeta.xfsprogs.kernel_headers]
+[named.zeta.xfsprogs.kernel_headers]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
 repo = "git@github.com:torvalds/linux.git"
 
-[matrix.run.eta]
-[matrix.run.eta.xfsprogs]
+[named.eta]
+[named.eta.xfsprogs]
 # Fail - yes
 # clean v6.17
 rev = "14d9a689d8b086a7b2c4b027c55861e5f2a82745"
 
-[matrix.run.theta]
-[matrix.run.theta.xfsprogs]
+[named.theta]
+[named.theta.xfsprogs]
 # Good - yes
 # clean v6.17
 rev = "14d9a689d8b086a7b2c4b027c55861e5f2a82745"
-[matrix.run.theta.xfsprogs.kernel_headers]
+[named.theta.xfsprogs.kernel_headers]
 rev = "038d61fd642278bab63ee8ef722c50d10ab01e8f"
 version = "v6.16"
 repo = "git@github.com:torvalds/linux.git"

@@ -70,16 +70,16 @@ enum Commands {
             value_enum
         )]
         target: Target,
-        #[arg(long, help = "Matrix's 'run' config to use")]
-        matrix: Option<String>,
+        #[arg(long, help = "Name of a test config to use")]
+        name: Option<String>,
     },
 
     // Run lightweight VM
     Run {
         #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
         nix_args: Option<String>,
-        #[arg(long, help = "Matrix's 'run' config to use")]
-        matrix: Option<String>,
+        #[arg(long, help = "Name of a test config to use")]
+        name: Option<String>,
     },
 
     // Update VM system and shell packages
@@ -98,8 +98,8 @@ enum Commands {
     Debug {
         #[arg(short, action = clap::ArgAction::SetTrue, help = "Output config")]
         config: bool,
-        #[arg(long, help = "Matrix's 'run' config to use")]
-        matrix: Option<String>,
+        #[arg(long, help = "Name of a config to use")]
+        name: Option<String>,
     },
 }
 
@@ -112,7 +112,7 @@ struct State {
     user_config: PathBuf,
     args: Vec<String>,
     envs: HashMap<String, String>,
-    matrix: String,
+    name: String,
 }
 
 impl Default for State {
@@ -126,7 +126,7 @@ impl Default for State {
             user_config: PathBuf::default(),
             args: Vec::<String>::default(),
             envs: HashMap::<String, String>::default(),
-            matrix: String::default(),
+            name: String::default(),
         }
     }
 }
@@ -154,7 +154,7 @@ impl State {
             user_config,
             args: vec![],
             envs: HashMap::new(),
-            matrix: String::default(),
+            name: String::default(),
         })
     }
 }
@@ -331,37 +331,22 @@ fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
         options.push(uconfig_set_value("environment.systemPackages", &list));
     }
 
-    if state.matrix != ""
-        && (state.config.matrix.is_none()
-            || !state
-                .config
-                .matrix
-                .as_ref()
-                .unwrap()
-                .run
-                .contains_key(&state.matrix))
-    {
-        return Err(KdError::new(
-            KdErrorKind::RuntimeError,
-            format!("Config doesn't define requested run: {}", &state.matrix),
-        ));
-    }
-
-    let merged: SystemConfig = if state.matrix != "" {
-        if let Some(matrix) = &state.config.matrix {
+    let merged: SystemConfig = if state.name != "" {
+        if let Some(named) = &state.config.named {
+            if !named.contains_key(&state.name) {
+                return Err(KdError::new(
+                    KdErrorKind::RuntimeError,
+                    format!("Config doesn't define requested run: {}", &state.name),
+                ));
+            }
             let mut result = if let Some(common) = &state.config.common {
                 common.clone()
             } else {
                 SystemConfig::default()
             };
 
-            let run_config: SystemConfig = matrix
-                .run
-                .get(&state.matrix)
-                .unwrap()
-                .clone()
-                .try_into()
-                .unwrap();
+            let run_config: SystemConfig =
+                named.get(&state.name).unwrap().clone().try_into().unwrap();
             result = result.merge(run_config).clone();
             result
         } else {
@@ -696,7 +681,7 @@ fn main() {
         Some(Commands::Build {
             nix_args,
             target,
-            matrix,
+            name,
         }) => {
             state.target = target.clone();
 
@@ -707,14 +692,14 @@ fn main() {
                 }
             }
 
-            if let Some(matrix) = &matrix {
-                state.matrix = matrix.clone();
+            if let Some(name) = &name {
+                state.name = name.clone();
             }
 
             cmd_build(&mut state);
         }
 
-        Some(Commands::Run { nix_args, matrix }) => {
+        Some(Commands::Run { nix_args, name }) => {
             if let Some(args) = nix_args {
                 let args = args.split(" ").map(|x| x.to_string());
                 for arg in args {
@@ -722,8 +707,8 @@ fn main() {
                 }
             }
 
-            if let Some(matrix) = &matrix {
-                state.matrix = matrix.clone();
+            if let Some(name) = &name {
+                state.name = name.clone();
             }
 
             cmd_run(&mut state);
@@ -744,9 +729,9 @@ fn main() {
             cmd_config(&mut state, output.clone());
         }
 
-        Some(Commands::Debug { config, matrix }) => {
-            if let Some(matrix) = &matrix {
-                state.matrix = matrix.clone();
+        Some(Commands::Debug { config, name }) => {
+            if let Some(name) = &name {
+                state.name = name.clone();
             }
 
             cmd_debug(&mut state, config);
