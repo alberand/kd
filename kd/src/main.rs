@@ -349,7 +349,7 @@ fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
 
     let merged: SystemConfig = if state.matrix != "" {
         if let Some(matrix) = &state.config.matrix {
-            let mut result = if let Some(common) = &matrix.common {
+            let mut result = if let Some(common) = &state.config.common {
                 common.clone()
             } else {
                 SystemConfig::default()

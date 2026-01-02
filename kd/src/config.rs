@@ -181,7 +181,6 @@ impl SystemConfig {
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct MatrixConfig {
-    pub common: Option<SystemConfig>,
     pub run: Table,
 }
 
@@ -193,6 +192,7 @@ pub struct Config {
     pub xfsprogs: Option<XfsprogsConfig>,
     pub script: Option<ScriptConfig>,
     pub qemu: Option<QemuConfig>,
+    pub common: Option<SystemConfig>,
     pub matrix: Option<MatrixConfig>,
 }
 
