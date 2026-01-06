@@ -1,15 +1,15 @@
 {
   description = "kd - Linux Kernel development toolset";
 
-  nixConfig = {
-    extra-substituters = [
-      "https://cache.alberand.com"
-    ];
+  #nixConfig = {
+  #  extra-substituters = [
+  #    "https://cache.alberand.com"
+  #  ];
 
-    extra-trusted-public-keys = [
-      "cache.alberand.com:T4If+3X03bZC62Jh+Uzuz+ElERtgQFlbarUQE1PzC94="
-    ];
-  };
+  #  extra-trusted-public-keys = [
+  #    "cache.alberand.com:T4If+3X03bZC62Jh+Uzuz+ElERtgQFlbarUQE1PzC94="
+  #  ];
+  #};
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
