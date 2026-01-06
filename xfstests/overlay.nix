@@ -21,8 +21,8 @@ final: prev: rec {
     src = prev.fetchFromGitHub {
       owner = "alberand";
       repo = "xfstests-hooks";
-      rev = "82f344c67d981c6f9fe4521536ecfcdc00b84b0d";
-      hash = "sha256-sIpM73g/KMsflQQ4Hkkc8YLzgjTwJfsp22oATNj3DSs=";
+      rev = "efce2671f15498d30ab7a1bb2ff76f67e454970b";
+      hash = "sha256-YQG4EoIdIeXiZENOfq6sTqN2e5SKRz9hHwslEgoC61Y=";
     };
 
     phases = ["unpackPhase" "installPhase"];
