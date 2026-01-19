@@ -208,6 +208,7 @@ in rec {
       shell = pkgs.mkShell ({
           nativeBuildInputs = with pkgs;
             [
+              gitFull
               getopt
               flex
               bison
@@ -225,8 +226,8 @@ in rec {
               autoconf
               pahole
               trace-cmd
-              python312Packages.ply # b4 prep --check and ./script/checkpatch
-              python312Packages.gitpython # b4 prep --check and ./script/checkpatch
+              #python312Packages.ply # b4 prep --check and ./script/checkpatch
+              #python312Packages.gitpython # b4 prep --check and ./script/checkpatch
               (vmtest-deploy {})
 
               (callPackage (import ./kd/derivation.nix) {
@@ -314,7 +315,6 @@ in rec {
           CCACHE_DIR = "$HOME/.cache/ccache/";
           CCACHE_SLOPPINESS = "random_seed";
           CCACHE_UMASK = 007;
-          ROOTDIR = "$(${pkgs.git}/bin/git rev-parse --show-toplevel)";
 
           shellHook = ''
             export MAKEFLAGS="-j$(nproc)"
