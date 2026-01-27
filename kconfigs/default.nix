@@ -175,7 +175,7 @@ with lib.kernel; {
     KEXEC = yes;
     SLUB_DEBUG = yes;
     DEBUG_MEMORY_INIT = yes;
-    KASAN = no;
+    KASAN = yes;
     # Sending special commands with SysRq key (ALT+PrintScreen)
     MAGIC_SYSRQ = yes;
     # Lock usage statistics
