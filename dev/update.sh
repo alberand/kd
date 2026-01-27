@@ -63,7 +63,7 @@ chmod 666 ./kconfigs/*
 
 echo "💡Updating Flake inputs"
 nix flake update
-nix flake update --flake ./templates/vm
+nix flake update --flake path:templates/vm
 
 echo "💡Test flake"
 nix flake check -Lv
