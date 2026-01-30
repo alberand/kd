@@ -277,4 +277,46 @@ with lib.kernel; {
     XFS_DEBUG_EXPENSIVE = yes;
     XFS_ASSERT_FATAL = no;
   };
+
+  ext4 = {
+    EXT4_FS = yes;
+    EXT4_USE_FOR_EXT2 = yes;
+    EXT4_FS_POSIX_ACL = yes;
+    EXT4_FS_SECURITY = yes;
+    EXT4_DEBUG = yes;
+  };
+
+  btrfs = {
+    BTRFS_FS = yes;
+    BTRFS_FS_POSIX_ACL = yes;
+    BTRFS_FS_RUN_SANITY_TESTS = yes;
+    BTRFS_DEBUG = yes;
+    BTRFS_ASSERT = yes;
+    BTRFS_EXPERIMENTAL = yes;
+  };
+
+  f2fs = {
+    F2FS_FS = yes;
+    F2FS_STAT_FS = yes;
+    F2FS_FS_XATTR = yes;
+    F2FS_FS_POSIX_ACL = yes;
+    F2FS_FS_SECURITY = yes;
+    F2FS_CHECK_FS = yes;
+    F2FS_FAULT_INJECTION = yes;
+    F2FS_FS_COMPRESSION = yes;
+    F2FS_FS_LZO = yes;
+    F2FS_FS_LZORLE = yes;
+    F2FS_FS_LZ4 = yes;
+    F2FS_FS_LZ4HC = yes;
+    F2FS_FS_ZSTD = yes;
+    F2FS_IOSTAT = yes;
+    F2FS_UNFAIR_RWSEM = yes;
+  };
+
+  fuse = {
+    FUSE_FS = yes;
+    CUSE = yes;
+    FUSE_PASSTHROUGH = yes;
+    FUSE_IO_URING = yes;
+  };
 }
