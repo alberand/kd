@@ -90,6 +90,8 @@ enum Commands {
     Config {
         #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
+        #[arg(long, help = "Name of a test config to use")]
+        name: Option<String>,
     },
 
     // Developer tools
@@ -723,7 +725,11 @@ fn main() {
             cmd_update(&state);
         }
 
-        Some(Commands::Config { output }) => {
+        Some(Commands::Config { output, name }) => {
+            if let Some(name) = &name {
+                state.name = name.clone();
+            }
+
             cmd_config(&mut state, output.clone());
         }
 
