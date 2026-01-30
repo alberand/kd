@@ -1,5 +1,5 @@
 # This is guest module. In other words, it's options which could be set in the
-# VM or ISO. These options are just convenient wrappers. However, they also
+# VM or qcow. These options are just convenient wrappers. However, they also
 # set default values to these options.
 {
   pkgs,

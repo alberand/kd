@@ -190,8 +190,7 @@ with lib.kernel; {
     UBSAN = no;
   };
 
-  iso = {
-    # ISO
+  image = {
     SQUASHFS = yes;
     SQUASHFS_XZ = yes;
     SQUASHFS_ZSTD = yes;

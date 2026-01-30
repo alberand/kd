@@ -30,7 +30,7 @@ runs:
 
     # Very handy for a longer test runs. I deploy these qcow images with `virsh`
     # to my remote test machine running libvirtd
-    $ kd build [qcow|iso]
+    $ kd build qcow
 
 If you know Nix you can edit VM configuration direction in
 `.kd/kfeature/uconfig.nix`.

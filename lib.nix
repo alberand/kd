@@ -97,48 +97,6 @@ in rec {
       format = "vm";
     };
 
-  mkIso = {
-    pkgs,
-    uconfig,
-  }:
-    builtins.getAttr "iso" {
-      iso = nixos-generators.nixosGenerate {
-        inherit pkgs;
-        system = "x86_64-linux";
-        modules = [
-          ./xfstests/module.nix
-          ./xfsprogs/module.nix
-          ./system.nix
-          ./input.nix
-          ({...}: uconfig)
-          ({pkgs, ...}: {
-            kernel.flavors = [pkgs.kconfigs.iso];
-
-            services.xfsprogs.enable = true;
-            # Don't shutdown system as libvirtd will remove the VM
-            services.xfstests.autoshutdown = false;
-
-            services.xfstests = {
-              enable = true;
-              dev = {
-                test = {
-                  main = pkgs.lib.mkDefault "/dev/sda";
-                  # rtdev = pkgs.lib.mkDefault "/dev/sde";
-                  # logdev = pkgs.lib.mkDefault "/dev/sdf";
-                };
-                scratch = {
-                  main = pkgs.lib.mkDefault "/dev/sdb";
-                  # rtdev = pkgs.lib.mkDefault "/dev/sdc";
-                  # logdev = pkgs.lib.mkDefault "/dev/sdd";
-                };
-              };
-            };
-          })
-        ];
-        format = "iso";
-      };
-    };
-
   mkQcow = {
     pkgs,
     uconfig,
@@ -158,7 +116,7 @@ in rec {
             pkgs,
             ...
           }: {
-            kernel.flavors = [pkgs.kconfigs.iso];
+            kernel.flavors = [pkgs.kconfigs.image];
 
             services.xfsprogs = {
               enable = true;
@@ -483,7 +441,7 @@ in rec {
     };
 
     kconfig-debug = kconfigBuild {config = "debug";};
-    kconfig-iso = kconfigBuild {config = "iso";};
+    kconfig-image = kconfigBuild {config = "image";};
 
     headers = buildKernelHeaders {
       inherit src version;
@@ -491,23 +449,6 @@ in rec {
 
     kernel = buildKernel {
       inherit src kconfig version;
-    };
-
-    iso = mkIso {
-      inherit pkgs;
-      uconfig =
-        {
-          networking.hostName = "kd";
-          kernel = {
-            inherit src version;
-            kconfig = kconfig-iso.structuredConfig;
-          };
-
-          services.xfstests = {
-            arguments = "-R xunit -s xfs_4k generic/110";
-          };
-        }
-        // uconfig;
     };
 
     qcow = mkQcow {

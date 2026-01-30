@@ -6,11 +6,11 @@ if [ -z "$TEST_HOST" ]; then
 fi
 
 if [ "$#" -ne 2 ]; then
-    echo "Required path to image.iso and name"
+    echo "Required path to image.qcow and name"
     exit 1
 fi
 
-TEST_ISO="$1"
+IMAGE="$1"
 PREFIX="aalbersh"
 SYSURI="qemu+ssh://$TEST_HOST/system"
 NODE="$PREFIX-$2"
@@ -23,9 +23,9 @@ if virsh --connect $SYSURI list | grep -q "$NODE"; then
 	virsh --connect $SYSURI destroy $NODE
 fi
 
-echo "Uploading '$TEST_ISO' to '$TEST_HOST:/tmp/$NODE'"
+echo "Uploading '$IMAGE' to '$TEST_HOST:/tmp/$NODE'"
 rsync -avz -P \
-       $TEST_ISO \
+       $IMAGE \
        $TEST_HOST:/tmp/$NODE
 if [ $? -ne 0 ]; then
 	exit 1;

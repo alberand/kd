@@ -56,8 +56,8 @@ cp result ./kconfigs/config-vm-$VERSION_KERNEL
 nix build .#kconfig-debug
 cp result ./kconfigs/config-debug-$VERSION_KERNEL
 
-nix build .#kconfig-iso
-cp result ./kconfigs/config-iso-$VERSION_KERNEL
+nix build .#kconfig-image
+cp result ./kconfigs/config-image-$VERSION_KERNEL
 
 chmod 666 ./kconfigs/*
 

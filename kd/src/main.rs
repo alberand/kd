@@ -36,7 +36,6 @@ struct Cli {
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
 enum Target {
-    Iso,
     Qcow,
 }
 
@@ -49,7 +48,6 @@ impl Default for Target {
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Target::Iso => write!(f, "iso"),
             Target::Qcow => write!(f, "qcow"),
         }
     }
@@ -60,7 +58,7 @@ enum Commands {
     /// Initialize development environment
     Init {},
 
-    // Build QCOW or ISO image
+    // Build QCOW image
     Build {
         #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
         nix_args: Option<String>,
