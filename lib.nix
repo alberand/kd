@@ -186,6 +186,7 @@ in rec {
               trace-cmd
               #python312Packages.ply # b4 prep --check and ./script/checkpatch
               #python312Packages.gitpython # b4 prep --check and ./script/checkpatch
+              b4
               (vmtest-deploy {})
 
               (callPackage (import ./kd/derivation.nix) {
