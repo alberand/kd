@@ -7,7 +7,7 @@
     ];
 
     extra-trusted-public-keys = [
-      "cache.alberand.com:T4If+3X03bZC62Jh+Uzuz+ElERtgQFlbarUQE1PzC94="
+      "cache.alberand.com:wZXao5e2MQRInFBR0GkNbwSSmIhC3maO1W7D8QPUL0o="
     ];
   };
 
