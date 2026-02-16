@@ -340,7 +340,6 @@ in {
       systemd.services.xfstests = {
         enable = true;
         serviceConfig = {
-          Type = "oneshot";
           StandardOutput = "journal+console";
           StandardError = "journal+console";
           # argh... Nix ignore SIGPIPE somewhere and it causes all child processes
