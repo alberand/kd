@@ -1,0 +1,34 @@
+From ed2aa8c5caeb50e28cea81e46ee732d8f7544327 Mon Sep 17 00:00:00 2001
+From: Andrey Albershteyn <aalbersh@kernel.org>
+Date: Mon, 2 Mar 2026 12:23:43 +0100
+Subject: [PATCH] hooks: make hooks directory changable with HOOK_DIR
+
+Allows easily swap hooks without changing global ones.
+
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ common/preamble | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/common/preamble b/common/preamble
+index 9217bfd4b008..0767aa04ca15 100644
+--- a/common/preamble
++++ b/common/preamble
+@@ -31,10 +31,10 @@
+ #
+ # Hooks can use _notrun and _fail to prevent a test from running or triggering a
+ # hard failure.
+-#
+-_HOOKS_START="$here/hooks/start"
+-_HOOKS_END="$here/hooks/end"
+-_HOOKS_SRC="$here/tests/hooks"
++
++export HOOK_DIR=${HOOK_DIR:="$here/hooks"}
++_HOOKS_START="$HOOK_DIR/start"
++_HOOKS_END="$HOOK_DIR/end"
+ 
+ _run_hook()
+ {
+-- 
+2.51.2
+

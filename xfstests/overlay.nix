@@ -99,6 +99,7 @@ final: prev: rec {
         ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
         ./0003-generic-746-follow-symlinks-when-populating-mount.patch
         ./0004-fstests-generic-test-hook-infrastructure.patch
+        ./0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
       ];
 
       nativeBuildInputs =
