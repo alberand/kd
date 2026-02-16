@@ -288,28 +288,6 @@ fn uconfig_kernel(config: &KernelConfig) -> String {
         options.push(uconfig_set_value("flavors", &value));
     };
 
-    if let Some(config) = &config.config {
-        let mut config_options: Vec<KernelConfigOption> = vec![];
-        for (key, value) in config.iter() {
-            config_options.push(KernelConfigOption {
-                name: key
-                    .strip_prefix("CONFIG_")
-                    .expect("Option doesn't start with CONFIG_")
-                    .to_string(),
-                value: value.to_string().replace("\"", ""),
-            });
-        }
-        let kernel_config_options = format!(
-            "with pkgs.lib.kernel; {{ {} }}",
-            config_options
-                .into_iter()
-                .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
-                .collect::<Vec<String>>()
-                .join("\n")
-        );
-        options.push(uconfig_set_value("kconfig", &kernel_config_options))
-    };
-
     format!("kernel = {{ {} }};", options.join("\n"))
 }
 
@@ -387,6 +365,28 @@ fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
         } else {
             options.push(uconfig_kernel(&subconfig));
         }
+
+        if let Some(config) = &subconfig.config {
+            let mut config_options: Vec<KernelConfigOption> = vec![];
+            for (key, value) in config.iter() {
+                config_options.push(KernelConfigOption {
+                    name: key
+                        .strip_prefix("CONFIG_")
+                        .expect("Option doesn't start with CONFIG_")
+                        .to_string(),
+                    value: value.to_string().replace("\"", ""),
+                });
+            }
+            let kernel_config_options = format!(
+                "with pkgs.lib.kernel; {{ {} }}",
+                config_options
+                    .into_iter()
+                    .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            );
+            options.push(uconfig_set_value("kernel.kconfig", &kernel_config_options))
+        };
     };
 
     if let Some(subconfig) = &state.config.qemu {
