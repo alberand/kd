@@ -415,6 +415,9 @@ in {
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
             export WORKAREA=${xfsprogs.src}
+            if [ -d /root/share/hooks ]; then
+              export HOOK_DIR="/root/share/hooks"
+            fi
             ${cfg.extraEnv}
 
             env_log=$(mktemp)
