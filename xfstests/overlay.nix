@@ -98,6 +98,7 @@ final: prev: rec {
         ./0001-common-link-.out-file-to-the-output-directory.patch
         ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
         ./0003-generic-746-follow-symlinks-when-populating-mount.patch
+        ./0004-fstests-generic-test-hook-infrastructure.patch
       ];
 
       nativeBuildInputs =
