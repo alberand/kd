@@ -60,8 +60,6 @@ enum Commands {
 
     // Build QCOW image
     Build {
-        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
-        nix_args: Option<String>,
         /// lists test values
         #[arg(
             default_value_t = Target::Qcow,
@@ -74,17 +72,12 @@ enum Commands {
 
     // Run lightweight VM
     Run {
-        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
-        nix_args: Option<String>,
         #[arg(long, help = "Name of a test config to use")]
         name: Option<String>,
     },
 
     // Update VM system and shell packages
-    Update {
-        #[arg(long, allow_hyphen_values = true, help = "Nix arguments")]
-        nix_args: Option<String>,
-    },
+    Update { },
 
     // Generate minimal Kernel config for VM
     Config {
@@ -679,18 +672,10 @@ fn main() {
         }
 
         Some(Commands::Build {
-            nix_args,
             target,
             name,
         }) => {
             state.target = target.clone();
-
-            if let Some(args) = nix_args {
-                let args = args.split(" ").map(|x| x.to_string());
-                for arg in args {
-                    state.args.push(arg)
-                }
-            }
 
             if let Some(name) = &name {
                 state.name = name.clone();
@@ -699,14 +684,7 @@ fn main() {
             cmd_build(&mut state);
         }
 
-        Some(Commands::Run { nix_args, name }) => {
-            if let Some(args) = nix_args {
-                let args = args.split(" ").map(|x| x.to_string());
-                for arg in args {
-                    state.args.push(arg)
-                }
-            }
-
+        Some(Commands::Run { name }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }
@@ -714,14 +692,7 @@ fn main() {
             cmd_run(&mut state);
         }
 
-        Some(Commands::Update { nix_args }) => {
-            if let Some(args) = nix_args {
-                let args = args.split(" ").map(|x| x.to_string());
-                for arg in args {
-                    state.args.push(arg)
-                }
-            }
-
+        Some(Commands::Update { }) => {
             cmd_update(&state);
         }
 
