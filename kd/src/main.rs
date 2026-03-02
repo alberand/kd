@@ -77,7 +77,7 @@ enum Commands {
     },
 
     // Update VM system and shell packages
-    Update { },
+    Update {},
 
     // Generate minimal Kernel config for VM
     Config {
@@ -664,7 +664,15 @@ fn main() {
     }
 
     if state.debug {
-        state.args.push("--show-trace");
+        state.args.push("--show-trace".to_string());
+    }
+
+    if let Some(config) = &state.config.dev {
+        if let Some(args) = &config.args {
+            for arg in args {
+                state.args.push(arg.to_string())
+            }
+        }
     }
 
     match &cli.command {
@@ -675,10 +683,7 @@ fn main() {
             }
         }
 
-        Some(Commands::Build {
-            target,
-            name,
-        }) => {
+        Some(Commands::Build { target, name }) => {
             state.target = target.clone();
 
             if let Some(name) = &name {
@@ -696,7 +701,7 @@ fn main() {
             cmd_run(&mut state);
         }
 
-        Some(Commands::Update { }) => {
+        Some(Commands::Update {}) => {
             cmd_update(&state);
         }
 

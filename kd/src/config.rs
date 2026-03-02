@@ -180,6 +180,12 @@ impl SystemConfig {
 }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct DevConfig {
+    pub args: Option<Vec<String>>,
+}
+
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct Config {
     pub packages: Option<Vec<String>>,
     pub kernel: Option<KernelConfig>,
@@ -189,6 +195,7 @@ pub struct Config {
     pub qemu: Option<QemuConfig>,
     pub common: Option<SystemConfig>,
     pub named: Option<Table>,
+    pub dev: Option<DevConfig>,
 }
 
 impl Config {
