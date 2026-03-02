@@ -125,14 +125,18 @@ impl Default for State {
 }
 
 impl State {
-    fn new() -> Result<Self, KdError> {
+    fn new(config_path: Option<PathBuf>) -> Result<Self, KdError> {
         let curdir = std::env::current_dir().map_err(|e| {
             KdError::new(
                 KdErrorKind::IOError(e),
                 "No able to get current working directory".to_string(),
             )
         })?;
-        let config_path = curdir.clone().join(".kd.toml");
+        let config_path = if let Some(config_path) = config_path {
+            config_path
+        } else {
+            curdir.clone().join(".kd.toml")
+        };
 
         let config = Config::load(&config_path)?;
         let envdir = curdir.clone().join(".kd");
@@ -647,7 +651,7 @@ fn main() {
     let cli = Cli::parse();
 
     // All the command require .kd.toml. Only init can go without the config as it creates it
-    let mut state = State::new().unwrap_or_else(|error| {
+    let mut state = State::new(cli.config).unwrap_or_else(|error| {
         if let Some(Commands::Init {}) = &cli.command {
             // we good to go as we doing init
             State::default()
