@@ -663,6 +663,10 @@ fn main() {
         std::process::exit(1);
     }
 
+    if state.debug {
+        state.args.push("--show-trace");
+    }
+
     match &cli.command {
         Some(Commands::Init {}) => {
             if let Err(error) = cmd_init(&state) {
