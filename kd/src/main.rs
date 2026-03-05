@@ -89,7 +89,7 @@ enum Commands {
 
     // Developer tools
     Debug {
-        #[arg(short, action = clap::ArgAction::SetTrue, help = "Output config")]
+        #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Output config")]
         config: bool,
         #[arg(long, help = "Name of a config to use")]
         name: Option<String>,
