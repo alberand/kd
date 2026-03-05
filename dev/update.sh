@@ -65,5 +65,8 @@ echo "💡Updating Flake inputs"
 nix flake update
 nix flake update --flake path:templates/vm
 
+echo "💡Checking template shell"
+nix develop path:templates/vm# --command bash -c "true"
+
 echo "💡Test flake"
 nix flake check -Lv
