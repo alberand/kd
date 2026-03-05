@@ -4,5 +4,5 @@ with import <nixpkgs>
     (import (fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"))
   ];
 }; callPackage ./derivation.nix {
-  inherit (lib) makeBinPath;
+  inherit (lib) makeBinPath fileset;
 }

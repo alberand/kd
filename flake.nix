@@ -92,7 +92,7 @@
       default
       // {
         kd = pkgs.callPackage (import ./kd/derivation.nix) {
-          inherit (pkgs.lib) makeBinPath;
+          inherit (pkgs.lib) makeBinPath fileset;
         };
       };
 
