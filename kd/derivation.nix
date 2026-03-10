@@ -9,6 +9,7 @@
   gitMinimal,
   openssh,
   fileset,
+  installShellFiles
 }: let
   sourceFiles = fileset.difference ./. (
     fileset.unions [
@@ -31,10 +32,19 @@ in
     nativeBuildInputs = [
       pkg-config
       makeWrapper
+      installShellFiles
     ];
     buildInputs = [
       openssl
     ];
+
+    # installManPage man/man1/kd.1
+    # installManPage man/man5/kd.5
+    postInstall = ''
+      installShellCompletion --name kd --bash $src/completions/kd.bash
+      installShellCompletion --name kd --fish $src/completions/kd.fish
+      installShellCompletion --name kd --zsh $src/completions/_kd
+    '';
 
     postFixup = ''
       wrapProgram $out/bin/kd \
