@@ -41,9 +41,9 @@ in
     # installManPage man/man1/kd.1
     # installManPage man/man5/kd.5
     postInstall = ''
-      installShellCompletion --name kd --bash $src/completions/kd.bash
-      installShellCompletion --name kd --fish $src/completions/kd.fish
-      installShellCompletion --name kd --zsh $src/completions/_kd
+      installShellCompletion --bash $src/completions/kd.bash
+      installShellCompletion --fish $src/completions/kd.fish
+      installShellCompletion --zsh $src/completions/_kd
     '';
 
     postFixup = ''
