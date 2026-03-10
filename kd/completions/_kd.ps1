@@ -30,11 +30,11 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
             [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initialize development environment')
-            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'build')
-            [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'run')
-            [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'update')
-            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'config')
-            [CompletionResult]::new('debug', 'debug', [CompletionResultType]::ParameterValue, 'debug')
+            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build QCOW image')
+            [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'Run QEMU test system')
+            [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update ''kd'' environment')
+            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Generate minimal kernel config for VM')
+            [CompletionResult]::new('debug', 'debug', [CompletionResultType]::ParameterValue, 'Developer tools')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -78,11 +78,11 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
         }
         'kd;help' {
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initialize development environment')
-            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'build')
-            [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'run')
-            [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'update')
-            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'config')
-            [CompletionResult]::new('debug', 'debug', [CompletionResultType]::ParameterValue, 'debug')
+            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build QCOW image')
+            [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'Run QEMU test system')
+            [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update ''kd'' environment')
+            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Generate minimal kernel config for VM')
+            [CompletionResult]::new('debug', 'debug', [CompletionResultType]::ParameterValue, 'Developer tools')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }

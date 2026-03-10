@@ -29,11 +29,11 @@ complete -c kd -n "__fish_kd_needs_command" -s d -l debug -d 'Turn debugging inf
 complete -c kd -n "__fish_kd_needs_command" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_needs_command" -s V -l version -d 'Print version'
 complete -c kd -n "__fish_kd_needs_command" -f -a "init" -d 'Initialize development environment'
-complete -c kd -n "__fish_kd_needs_command" -f -a "build"
-complete -c kd -n "__fish_kd_needs_command" -f -a "run"
-complete -c kd -n "__fish_kd_needs_command" -f -a "update"
-complete -c kd -n "__fish_kd_needs_command" -f -a "config"
-complete -c kd -n "__fish_kd_needs_command" -f -a "debug"
+complete -c kd -n "__fish_kd_needs_command" -f -a "build" -d 'Build QCOW image'
+complete -c kd -n "__fish_kd_needs_command" -f -a "run" -d 'Run QEMU test system'
+complete -c kd -n "__fish_kd_needs_command" -f -a "update" -d 'Update \'kd\' environment'
+complete -c kd -n "__fish_kd_needs_command" -f -a "config" -d 'Generate minimal kernel config for VM'
+complete -c kd -n "__fish_kd_needs_command" -f -a "debug" -d 'Developer tools'
 complete -c kd -n "__fish_kd_needs_command" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c kd -n "__fish_kd_using_subcommand init" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand build" -l name -d 'Name of a test config to use' -r
@@ -48,9 +48,9 @@ complete -c kd -n "__fish_kd_using_subcommand debug" -l name -d 'Name of a confi
 complete -c kd -n "__fish_kd_using_subcommand debug" -s c -l config -d 'Output config'
 complete -c kd -n "__fish_kd_using_subcommand debug" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "init" -d 'Initialize development environment'
-complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "build"
-complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "run"
-complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "update"
-complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "config"
-complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "debug"
+complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "build" -d 'Build QCOW image'
+complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "run" -d 'Run QEMU test system'
+complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "update" -d 'Update \'kd\' environment'
+complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "config" -d 'Generate minimal kernel config for VM'
+complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "debug" -d 'Developer tools'
 complete -c kd -n "__fish_kd_using_subcommand help; and not __fish_seen_subcommand_from init build run update config debug help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'

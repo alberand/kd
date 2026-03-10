@@ -25,7 +25,7 @@ pub enum Commands {
     /// Initialize development environment
     Init {},
 
-    // Build QCOW image
+    /// Build QCOW image
     Build {
         /// lists test values
         #[arg(
@@ -37,16 +37,16 @@ pub enum Commands {
         name: Option<String>,
     },
 
-    // Run lightweight VM
+    /// Run QEMU test system
     Run {
         #[arg(long, help = "Name of a test config to use")]
         name: Option<String>,
     },
 
-    // Update VM system and shell packages
+    /// Update 'kd' environment
     Update {},
 
-    // Generate minimal Kernel config for VM
+    /// Generate minimal kernel config for VM
     Config {
         #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
@@ -54,7 +54,7 @@ pub enum Commands {
         name: Option<String>,
     },
 
-    // Developer tools
+    /// Developer tools
     Debug {
         #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Output config")]
         config: bool,

@@ -130,11 +130,11 @@ esac
 _kd_commands() {
     local commands; commands=(
 'init:Initialize development environment' \
-'build:' \
-'run:' \
-'update:' \
-'config:' \
-'debug:' \
+'build:Build QCOW image' \
+'run:Run QEMU test system' \
+'update:Update '\''kd'\'' environment' \
+'config:Generate minimal kernel config for VM' \
+'debug:Developer tools' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'kd commands' commands "$@"
@@ -158,11 +158,11 @@ _kd__debug_commands() {
 _kd__help_commands() {
     local commands; commands=(
 'init:Initialize development environment' \
-'build:' \
-'run:' \
-'update:' \
-'config:' \
-'debug:' \
+'build:Build QCOW image' \
+'run:Run QEMU test system' \
+'update:Update '\''kd'\'' environment' \
+'config:Generate minimal kernel config for VM' \
+'debug:Developer tools' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'kd help commands' commands "$@"
