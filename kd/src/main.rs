@@ -1,6 +1,5 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::Parser;
 use std::collections::HashMap;
-use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -13,88 +12,13 @@ mod config;
 use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
 };
+mod common;
+mod cli;
+use cli::{Commands, Cli};
+use common::Target;
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
-
-#[derive(Parser)]
-#[command(version)]
-#[command(name = "kd")]
-#[command(about = "linux kernel development tool", long_about = None)]
-struct Cli {
-    /// Sets a custom config file
-    #[arg(short, long, value_name = "FILE")]
-    config: Option<PathBuf>,
-
-    /// Turn debugging information on
-    #[arg(short, long)]
-    debug: bool,
-
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
-enum Target {
-    Qcow,
-}
-
-impl Default for Target {
-    fn default() -> Self {
-        Target::Qcow
-    }
-}
-
-impl fmt::Display for Target {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Target::Qcow => write!(f, "qcow"),
-        }
-    }
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Initialize development environment
-    Init {},
-
-    // Build QCOW image
-    Build {
-        /// lists test values
-        #[arg(
-            default_value_t = Target::Qcow,
-            value_enum
-        )]
-        target: Target,
-        #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
-    },
-
-    // Run lightweight VM
-    Run {
-        #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
-    },
-
-    // Update VM system and shell packages
-    Update {},
-
-    // Generate minimal Kernel config for VM
-    Config {
-        #[arg(short, long, default_value = ".config", help = "Output filename")]
-        output: Option<String>,
-        #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
-    },
-
-    // Developer tools
-    Debug {
-        #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Output config")]
-        config: bool,
-        #[arg(long, help = "Name of a config to use")]
-        name: Option<String>,
-    },
-}
 
 struct State {
     debug: bool,
