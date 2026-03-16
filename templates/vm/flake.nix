@@ -33,7 +33,7 @@
         uconfig = uset.uconfig {inherit pkgs kd;};
       };
   in {
-    inherit packages;
+    packages.${system} = packages;
     devShells.${system} = {
       default = packages.shell;
     };

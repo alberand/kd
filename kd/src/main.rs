@@ -25,6 +25,7 @@ struct State {
     target: Target,
     curdir: PathBuf,
     envdir: PathBuf,
+    flake_dir: PathBuf,
     config: Config,
     user_config: PathBuf,
     args: Vec<String>,
@@ -39,6 +40,7 @@ impl Default for State {
             target: Target::default(),
             curdir: PathBuf::default(),
             envdir: PathBuf::default(),
+            flake_dir: PathBuf::default(),
             config: Config::default(),
             user_config: PathBuf::default(),
             args: Vec::<String>::default(),
@@ -64,13 +66,15 @@ impl State {
 
         let config = Config::load(&config_path)?;
         let envdir = curdir.clone().join(".kd");
-        let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
+        let flake_dir = envdir.clone().join("flake");
+        let user_config = flake_dir.clone().join("uconfig.nix");
 
         Ok(Self {
             debug: false,
             target: Target::default(),
             curdir,
             envdir,
+            flake_dir,
             config,
             user_config,
             args: vec![],
@@ -358,11 +362,11 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
         }
     };
 
-    let envdir = curdir.clone().join(".kd");
-    if let Err(error) = std::fs::create_dir_all(&envdir) {
+    let flake_dir = curdir.clone().join(".kd/flake");
+    if let Err(error) = std::fs::create_dir_all(&flake_dir) {
         return Err(KdError::new(
             KdErrorKind::RuntimeError,
-            format!("Unable to create {}: {}", envdir.display(), error),
+            format!("Unable to create {}: {}", flake_dir.display(), error),
         ));
     }
 
@@ -372,7 +376,7 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
         .arg("init")
         .arg("--template")
         .arg("github:alberand/kd#default")
-        .current_dir(&envdir);
+        .current_dir(&flake_dir);
 
     let output = cmd.output().expect("Failed to execute command");
 
@@ -382,7 +386,7 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
         std::process::exit(1);
     }
 
-    let user_config = PathBuf::from(envdir.clone()).join("uconfig.nix");
+    let user_config = PathBuf::from(flake_dir.clone()).join("uconfig.nix");
     if let Err(error) = File::create(&user_config) {
         return Err(KdError::new(
             KdErrorKind::RuntimeError,
@@ -404,7 +408,7 @@ fn cmd_init(_: &State) -> Result<(), KdError> {
 
     match &mut File::create(&direnv) {
         Ok(target) => {
-            writeln!(target, "use flake path:.kd").map_err(|e| {
+            writeln!(target, "use flake path:.kd/flake").map_err(|e| {
                 KdError::new(
                     KdErrorKind::IOError(e),
                     "Failed to overwrite .envrc: {e}".to_owned(),
@@ -441,7 +445,7 @@ fn cmd_build(state: &mut State) {
         }
     }
 
-    let package = format!("path:{}#{}", state.envdir.display(), &state.target);
+    let package = format!("path:{}#{}", state.flake_dir.display(), &state.target);
 
     let mut cmd = Command::new("nix");
     cmd.arg("build").args(&state.args).arg(&package);
@@ -472,7 +476,7 @@ fn cmd_run(state: &mut State) {
 
     state
         .args
-        .push(format!("path:{}#vm", state.envdir.display()));
+        .push(format!("path:{}#vm", state.flake_dir.display()));
     let mut cmd = Command::new("nix");
     cmd.arg("run")
         .args(state.args.clone())
@@ -489,13 +493,13 @@ fn cmd_run(state: &mut State) {
 }
 
 fn cmd_update(state: &State) {
-    let package = format!("path:{}", state.envdir.display());
+    let package = format!("path:{}", state.flake_dir.display());
     let mut cmd = Command::new("nix");
     cmd.arg("flake")
         .arg("update")
         .arg("--flake")
         .arg(&package)
-        .current_dir(&state.envdir);
+        .current_dir(&state.flake_dir);
 
     if state.debug {
         println!("command: {:?}", &cmd);
@@ -521,7 +525,7 @@ fn cmd_config(state: &mut State, output: Option<String>) {
         }
     }
 
-    let package = format!("path:{}#kconfig", state.envdir.display());
+    let package = format!("path:{}#kconfig", state.flake_dir.display());
     let mut cmd = Command::new("nix");
     cmd.arg("build").arg(&package).current_dir(&state.envdir);
 
@@ -546,7 +550,7 @@ fn cmd_config(state: &mut State, output: Option<String>) {
         std::fs::copy(&output, backup).unwrap();
     }
 
-    let source = state.curdir.clone().join(".kd").join("result");
+    let source = state.envdir.clone().join("result");
     std::fs::copy(source, &output).unwrap();
     std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644)).unwrap();
 }
