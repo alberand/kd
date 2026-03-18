@@ -187,6 +187,7 @@ in rec {
               #python312Packages.ply # b4 prep --check and ./script/checkpatch
               #python312Packages.gitpython # b4 prep --check and ./script/checkpatch
               b4
+              patchutils_0_4_2
               (vmtest-deploy {})
 
               (callPackage (import ./kd/derivation.nix) {
