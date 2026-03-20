@@ -18,15 +18,13 @@
       "net.ifnames=0"
       "biosdevnames=0"
       "console=ttyS0,115200n8"
-      "console=tty0"
+      "console=ttyS0"
     ];
     consoleLogLevel = lib.mkDefault 7;
     # This is happens before systemd
     # postBootCommands = "echo 'Not much to do before systemd :)' > /dev/kmsg";
     crashDump.enable = true;
-    initrd = {
-      enable = true;
-    };
+    initrd.systemd.emergencyAccess = true;
   };
 
   # Do something after systemd started
@@ -35,10 +33,11 @@
     wantedBy = ["getty.target"]; # to start at boot
     serviceConfig.Restart = "always"; # restart when session is closed
   };
-  # Auto-login with empty password
-  users.extraUsers.root.initialHashedPassword = "$y$j9T$TKzQNuxk898Qk7J6JC5NU1$xDW5NFyr0H/wW/k/MaTpbCRIMEsv.SbvBbj6Wu/1060"; # notsecret
-  services.getty.autologinUser = lib.mkDefault "root";
 
+  services.getty.autologinUser = "root";
+  users.users.root.initialPassword = "";
+
+  systemd.network.enable = lib.mkForce false;
   networking.networkmanager.enable = false;
   networking.firewall.enable = false;
   networking.hostName = lib.mkDefault "kd";
@@ -69,11 +68,6 @@
   services.pulseaudio.enable = false;
   services.openssh.enable = false;
 
-  system.tools = {
-    nixos-generate-config.enable = false;
-    nixos-rebuild.enable = false;
-  };
-
   # Add packages to VM
   environment.systemPackages = with pkgs; [
     util-linux
@@ -89,5 +83,5 @@
 
   environment.variables.EDITOR = "nvim";
 
-  system.stateVersion = "25.05";
+  system.stateVersion = "25.11";
 }

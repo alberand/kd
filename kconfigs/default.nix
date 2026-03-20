@@ -151,6 +151,9 @@ with lib.kernel; {
     INPUT_TOUCHSCREEN = no;
 
     MEMCG = yes;
+
+    # For erofs /nix/store used by systemd-repart
+    EROFS_FS = yes;
   };
 
   debug = {

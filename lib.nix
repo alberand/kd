@@ -40,59 +40,61 @@ in rec {
         ./vm.nix
         ./input.nix
         ({...}: uconfig)
-        ({config, ...}: {
-          #assertions = [
-          #  {
-          #    assertion = config.kernel.prebuild != null;
-          #    message = "kernel.prebuild should be set to path with built kernel";
-          #  }
-          #];
+        (
+          {config, ...}: {
+            #assertions = [
+            #  {
+            #    assertion = config.kernel.prebuild != null;
+            #    message = "kernel.prebuild should be set to path with built kernel";
+            #  }
+            #];
 
-          services.xfsprogs = {
-            enable = true;
-          };
-
-          services.script = {
-            enable = true;
-          };
-
-          services.xfstests = {
-            enable = true;
-            dev = {
-              test = {
-                main = pkgs.lib.mkDefault "/dev/vdb";
-                #rtdev = pkgs.lib.mkDefault "/dev/vdf";
-                #logdev = pkgs.lib.mkDefault "/dev/vdg";
-              };
-              scratch = {
-                main = pkgs.lib.mkDefault "/dev/vdc";
-                # rtdev = pkgs.lib.mkDefault "/dev/vdd";
-                # logdev = pkgs.lib.mkDefault "/dev/vde";
-              };
-            };
-          };
-
-          virtualisation = {
-            diskImage = "${config.vm.workdir}/${config.system.name}.qcow2";
-            qemu = {
-              # Network requires tap0 netowrk on the host
-              options =
-                [
-                  "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
-                  "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
-                  "-device virtio-rng-pci"
-                ]
-                ++ config.vm.qemu-options;
+            services.xfsprogs = {
+              enable = true;
             };
 
-            sharedDirectories = {
-              share = {
-                source = "${config.vm.workdir}/share";
-                target = "/root/share";
+            services.script = {
+              enable = true;
+            };
+
+            services.xfstests = {
+              enable = true;
+              dev = {
+                test = {
+                  main = pkgs.lib.mkDefault "/dev/vdb";
+                  #rtdev = pkgs.lib.mkDefault "/dev/vdf";
+                  #logdev = pkgs.lib.mkDefault "/dev/vdg";
+                };
+                scratch = {
+                  main = pkgs.lib.mkDefault "/dev/vdc";
+                  # rtdev = pkgs.lib.mkDefault "/dev/vdd";
+                  # logdev = pkgs.lib.mkDefault "/dev/vde";
+                };
               };
             };
-          };
-        })
+
+            virtualisation = {
+              diskImage = "${config.vm.workdir}/${config.system.name}.qcow2";
+              qemu = {
+                # Network requires tap0 netowrk on the host
+                options =
+                  [
+                    "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
+                    "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
+                    "-device virtio-rng-pci"
+                  ]
+                  ++ config.vm.qemu-options;
+              };
+
+              sharedDirectories = {
+                share = {
+                  source = "${config.vm.workdir}/share";
+                  target = "/root/share";
+                };
+              };
+            };
+          }
+        )
       ];
       format = "vm";
     };
@@ -111,34 +113,36 @@ in rec {
           ./system.nix
           ./input.nix
           ({...}: uconfig)
-          ({
-            config,
-            pkgs,
-            ...
-          }: {
-            kernel.flavors = [pkgs.kconfigs.image];
+          (
+            {
+              config,
+              pkgs,
+              ...
+            }: {
+              kernel.flavors = [pkgs.kconfigs.image];
 
-            services.xfsprogs = {
-              enable = true;
-            };
+              services.xfsprogs = {
+                enable = true;
+              };
 
-            services.xfstests = {
-              enable = true;
-              autoshutdown = false;
-              dev = {
-                test = {
-                  main = pkgs.lib.mkDefault "/dev/sda";
-                  # rtdev = pkgs.lib.mkDefault "/dev/sde";
-                  # logdev = pkgs.lib.mkDefault "/dev/sdf";
-                };
-                scratch = {
-                  main = pkgs.lib.mkDefault "/dev/sdb";
-                  # rtdev = pkgs.lib.mkDefault "/dev/sdc";
-                  # logdev = pkgs.lib.mkDefault "/dev/sdd";
+              services.xfstests = {
+                enable = true;
+                autoshutdown = false;
+                dev = {
+                  test = {
+                    main = pkgs.lib.mkDefault "/dev/sda";
+                    # rtdev = pkgs.lib.mkDefault "/dev/sde";
+                    # logdev = pkgs.lib.mkDefault "/dev/sdf";
+                  };
+                  scratch = {
+                    main = pkgs.lib.mkDefault "/dev/sdb";
+                    # rtdev = pkgs.lib.mkDefault "/dev/sdc";
+                    # logdev = pkgs.lib.mkDefault "/dev/sdd";
+                  };
                 };
               };
-            };
-          })
+            }
+          )
         ];
         format = "qcow";
       };
@@ -164,7 +168,8 @@ in rec {
     sources ? {},
   }:
     builtins.getAttr "shell" {
-      shell = pkgs.mkShell ({
+      shell = pkgs.mkShell (
+        {
           nativeBuildInputs = with pkgs;
             [
               gitFull
@@ -250,14 +255,16 @@ in rec {
               perl538Packages.DBI
               perl538Packages.DBDSQLite
               perl538Packages.TryTiny
-              (smatch.overrideAttrs (final: prev: {
-                version = "git";
-                src = fetchgit {
-                  url = "git://repo.or.cz/smatch.git";
-                  rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
-                  hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
-                };
-              }))
+              (smatch.overrideAttrs (
+                final: prev: {
+                  version = "git";
+                  src = fetchgit {
+                    url = "git://repo.or.cz/smatch.git";
+                    rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
+                    hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
+                  };
+                }
+              ))
             ];
 
           buildInputs = with pkgs; [
@@ -277,7 +284,7 @@ in rec {
           CCACHE_SLOPPINESS = "random_seed";
           CCACHE_UMASK = 007;
 
-          shellHook = let 
+          shellHook = let
             xfsprogs-version = (pkgs.lib.importJSON ./sources/xfsprogs.json).rev;
             xfstests-version = (pkgs.lib.importJSON ./sources/xfstests.json).rev;
           in ''
@@ -299,7 +306,8 @@ in rec {
         }
         // (pkgs.lib.optionalAttrs (!gcc) {
           LLVM = 1;
-        }));
+        })
+      );
     };
 
   mkXfsprogsShell = {}:
@@ -488,7 +496,14 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000 1000 1000];
+          vm.disks = [
+            12000
+            12000
+            1000
+            1000
+            1000
+            1000
+          ];
         }
         // uconfig;
     };
@@ -504,7 +519,14 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000 1000 1000];
+          vm.disks = [
+            12000
+            12000
+            1000
+            1000
+            1000
+            1000
+          ];
 
           # As our dummy derivation doesn't provide any .config we need to tell
           # NixOS not to check for any required configurations
@@ -524,7 +546,14 @@ in rec {
             kconfig = kkconfig;
           };
           vm.workdir = "$ENVDIR";
-          vm.disks = [12000 12000 1000 1000 1000 1000];
+          vm.disks = [
+            12000
+            12000
+            1000
+            1000
+            1000
+            1000
+          ];
 
           boot.kernelParams = pkgs.lib.mkForce [
             # consistent eth* naming
@@ -547,7 +576,7 @@ in rec {
     #  inherit nixpkgs uconfig;
     #};
 
-    shell = mkLinuxShell { inherit sources; };
+    shell = mkLinuxShell {inherit sources;};
 
     shell-clang20 = mkLinuxShell {
       inherit sources;
@@ -580,6 +609,79 @@ in rec {
       inherit sources;
       gcc = true;
       gccVersion = "13";
+    };
+
+    image-system = nixpkgs.lib.nixosSystem {
+      inherit pkgs;
+      system = "x86_64-linux";
+      modules = [
+        ./image.nix
+        {nixpkgs.hostPlatform = "x86_64-linux";}
+        ./xfstests/module.nix
+        ./xfsprogs/module.nix
+        ./system.nix
+        ./input.nix
+        ({...}: uconfig)
+        (
+          {config, ...}: {
+            boot.kernelModules = nixpkgs.lib.mkForce [];
+            boot.initrd = {
+              # Override required kernel modules by
+              # nixos/modules/profiles/qemu-guest.nix As we use kernel build
+              # outside of Nix, it will have different uname and will not be
+              # able to find these modules. This probably can be fixed
+              availableKernelModules = nixpkgs.lib.mkForce [];
+              kernelModules = nixpkgs.lib.mkForce [];
+            };
+
+            services.xfsprogs = {
+              enable = true;
+            };
+
+            systemd.repart.partitions = {
+              test = {
+                Format = "ext4";
+                Label = "test";
+                SizeMinBytes = "1G";
+                SizeMaxBytes = "10G";
+                Type = "linux-generic";
+                Weight = 500;
+              };
+              scratch = {
+                Format = "ext4";
+                Label = "scratch";
+                SizeMinBytes = "1G";
+                SizeMaxBytes = "10G";
+                Type = "linux-generic";
+                Weight = 500;
+              };
+            };
+
+            services.xfstests = {
+              enable = true;
+              arguments = pkgs.lib.mkDefault "-R xunit -s xfs_4k generic/110";
+              dev = {
+                test = {
+                  main = pkgs.lib.mkDefault "/dev/sda5";
+                  #rtdev = pkgs.lib.mkDefault "/dev/vdf";
+                  #logdev = pkgs.lib.mkDefault "/dev/vdg";
+                };
+                scratch = {
+                  main = pkgs.lib.mkDefault "/dev/sda4";
+                  # rtdev = pkgs.lib.mkDefault "/dev/vdd";
+                  # logdev = pkgs.lib.mkDefault "/dev/vde";
+                };
+              };
+            };
+          }
+        )
+      ];
+    };
+
+    image = image-system.config.system.build.image;
+
+    run-image = pkgs.callPackage ./run-image.nix {
+      inherit (image-system.config.system.build) image;
     };
   };
 }
