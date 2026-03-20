@@ -161,6 +161,7 @@ in rec {
     gcc ? false,
     gccVersion ? "",
     packages ? [],
+    sources ? {},
   }:
     builtins.getAttr "shell" {
       shell = pkgs.mkShell ({
@@ -276,7 +277,10 @@ in rec {
           CCACHE_SLOPPINESS = "random_seed";
           CCACHE_UMASK = 007;
 
-          shellHook = ''
+          shellHook = let 
+            xfsprogs-version = (pkgs.lib.importJSON ./sources/xfsprogs.json).rev;
+            xfstests-version = (pkgs.lib.importJSON ./sources/xfstests.json).rev;
+          in ''
             export MAKEFLAGS="-j$(nproc)"
 
             export AWK=$(type -P awk)
@@ -287,6 +291,10 @@ in rec {
             export SORT=$(type -P sort)
 
             echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
+            echo "Envrionment has:"
+            echo -e "\tkernel: ${sources.options.kernel.version.default}"
+            echo -e "\txfsprogs: ${xfsprogs-version}"
+            echo -e "\txfstests: ${xfstests-version}"
           '';
         }
         // (pkgs.lib.optionalAttrs (!gcc) {
@@ -539,31 +547,37 @@ in rec {
     #  inherit nixpkgs uconfig;
     #};
 
-    shell = mkLinuxShell {};
+    shell = mkLinuxShell { inherit sources; };
 
     shell-clang20 = mkLinuxShell {
+      inherit sources;
       clangVersion = "20";
     };
 
     shell-clang18 = mkLinuxShell {
+      inherit sources;
       clangVersion = "18";
     };
 
     shell-gcc = mkLinuxShell {
+      inherit sources;
       gcc = true;
     };
 
     shell-gcc15 = mkLinuxShell {
+      inherit sources;
       gcc = true;
       gccVersion = "15";
     };
 
     shell-gcc14 = mkLinuxShell {
+      inherit sources;
       gcc = true;
       gccVersion = "14";
     };
 
     shell-gcc13 = mkLinuxShell {
+      inherit sources;
       gcc = true;
       gccVersion = "13";
     };
