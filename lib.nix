@@ -99,55 +99,6 @@ in rec {
       format = "vm";
     };
 
-  mkQcow = {
-    pkgs,
-    uconfig,
-  }:
-    builtins.getAttr "qcow" {
-      qcow = nixos-generators.nixosGenerate {
-        inherit pkgs;
-        system = "x86_64-linux";
-        modules = [
-          ./xfstests/module.nix
-          ./xfsprogs/module.nix
-          ./system.nix
-          ./input.nix
-          ({...}: uconfig)
-          (
-            {
-              config,
-              pkgs,
-              ...
-            }: {
-              kernel.flavors = [pkgs.kconfigs.image];
-
-              services.xfsprogs = {
-                enable = true;
-              };
-
-              services.xfstests = {
-                enable = true;
-                autoshutdown = false;
-                dev = {
-                  test = {
-                    main = pkgs.lib.mkDefault "/dev/sda";
-                    # rtdev = pkgs.lib.mkDefault "/dev/sde";
-                    # logdev = pkgs.lib.mkDefault "/dev/sdf";
-                  };
-                  scratch = {
-                    main = pkgs.lib.mkDefault "/dev/sdb";
-                    # rtdev = pkgs.lib.mkDefault "/dev/sdc";
-                    # logdev = pkgs.lib.mkDefault "/dev/sdd";
-                  };
-                };
-              };
-            }
-          )
-        ];
-        format = "qcow";
-      };
-    };
-
   mkVmTest = {
     pkgs,
     uconfig,
@@ -467,23 +418,6 @@ in rec {
 
     kernel = buildKernel {
       inherit src kconfig version;
-    };
-
-    qcow = mkQcow {
-      inherit pkgs;
-      uconfig =
-        {
-          networking.hostName = "kd";
-          services.xfstests = {
-            arguments = "-R xunit -s xfs_4k generic/110";
-          };
-          boot.initrd.kernelModules = pkgs.lib.mkForce [
-            "virtio_balloon"
-            "virtio_console"
-            "virtio_rng"
-          ];
-        }
-        // uconfig;
     };
 
     vm = mkVmTest {
