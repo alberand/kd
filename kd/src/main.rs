@@ -13,7 +13,7 @@ use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
 };
 mod cli;
-use cli::{Commands, Cli};
+use cli::{Cli, Commands};
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
@@ -287,28 +287,27 @@ fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
             );
         } else {
             options.push(uconfig_kernel(&subconfig));
-        }
-
-        if let Some(config) = &subconfig.config {
-            let mut config_options: Vec<KernelConfigOption> = vec![];
-            for (key, value) in config.iter() {
-                config_options.push(KernelConfigOption {
-                    name: key
-                        .strip_prefix("CONFIG_")
-                        .expect("Option doesn't start with CONFIG_")
-                        .to_string(),
-                    value: value.to_string().replace("\"", ""),
-                });
+            if let Some(config) = &subconfig.config {
+                let mut config_options: Vec<KernelConfigOption> = vec![];
+                for (key, value) in config.iter() {
+                    config_options.push(KernelConfigOption {
+                        name: key
+                            .strip_prefix("CONFIG_")
+                            .expect("Option doesn't start with CONFIG_")
+                            .to_string(),
+                        value: value.to_string().replace("\"", ""),
+                    });
+                }
+                let kernel_config_options = format!(
+                    "with pkgs.lib.kernel; {{ {} }}",
+                    config_options
+                        .into_iter()
+                        .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                );
+                options.push(uconfig_set_value("kernel.kconfig", &kernel_config_options))
             }
-            let kernel_config_options = format!(
-                "with pkgs.lib.kernel; {{ {} }}",
-                config_options
-                    .into_iter()
-                    .map(|x| format!("{name} = {value};", name = x.name, value = x.value))
-                    .collect::<Vec<String>>()
-                    .join("\n")
-            );
-            options.push(uconfig_set_value("kernel.kconfig", &kernel_config_options))
         };
     };
 
