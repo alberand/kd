@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use crate::common::Target;
 
 #[derive(Parser)]
 #[command(version)]
@@ -25,14 +24,8 @@ pub enum Commands {
     /// Initialize development environment
     Init {},
 
-    /// Build QCOW image
+    /// Build image
     Build {
-        /// lists test values
-        #[arg(
-            default_value_t = Target::Qcow,
-            value_enum
-        )]
-        target: Target,
         #[arg(long, help = "Name of a test config to use")]
         name: Option<String>,
     },

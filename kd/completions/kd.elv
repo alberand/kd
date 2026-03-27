@@ -27,7 +27,7 @@ set edit:completion:arg-completer[kd] = {|@words|
             cand -V 'Print version'
             cand --version 'Print version'
             cand init 'Initialize development environment'
-            cand build 'Build QCOW image'
+            cand build 'Build image'
             cand run 'Run QEMU test system'
             cand update 'Update ''kd'' environment'
             cand config 'Generate minimal kernel config for VM'
@@ -68,7 +68,7 @@ set edit:completion:arg-completer[kd] = {|@words|
         }
         &'kd;help'= {
             cand init 'Initialize development environment'
-            cand build 'Build QCOW image'
+            cand build 'Build image'
             cand run 'Run QEMU test system'
             cand update 'Update ''kd'' environment'
             cand config 'Generate minimal kernel config for VM'

@@ -30,7 +30,7 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
             [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initialize development environment')
-            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build QCOW image')
+            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build image')
             [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'Run QEMU test system')
             [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update ''kd'' environment')
             [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Generate minimal kernel config for VM')
@@ -78,7 +78,7 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
         }
         'kd;help' {
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initialize development environment')
-            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build QCOW image')
+            [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Build image')
             [CompletionResult]::new('run', 'run', [CompletionResultType]::ParameterValue, 'Run QEMU test system')
             [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update ''kd'' environment')
             [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Generate minimal kernel config for VM')

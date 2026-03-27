@@ -12,17 +12,14 @@ mod config;
 use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
 };
-mod common;
 mod cli;
 use cli::{Commands, Cli};
-use common::Target;
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
 
 struct State {
     debug: bool,
-    target: Target,
     curdir: PathBuf,
     envdir: PathBuf,
     flake_dir: PathBuf,
@@ -37,7 +34,6 @@ impl Default for State {
     fn default() -> Self {
         Self {
             debug: false,
-            target: Target::default(),
             curdir: PathBuf::default(),
             envdir: PathBuf::default(),
             flake_dir: PathBuf::default(),
@@ -71,7 +67,6 @@ impl State {
 
         Ok(Self {
             debug: false,
-            target: Target::default(),
             curdir,
             envdir,
             flake_dir,
@@ -445,7 +440,7 @@ fn cmd_build(state: &mut State) {
         }
     }
 
-    let package = format!("path:{}#{}", state.flake_dir.display(), &state.target);
+    let package = format!("path:{}#image", state.flake_dir.display());
 
     let mut cmd = Command::new("nix");
     cmd.arg("build").args(&state.args).arg(&package);
@@ -615,9 +610,7 @@ fn main() {
             }
         }
 
-        Some(Commands::Build { target, name }) => {
-            state.target = target.clone();
-
+        Some(Commands::Build { name }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }

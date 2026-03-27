@@ -3,8 +3,6 @@ use clap_complete::{generate_to, Shell};
 use std::env;
 use std::io::Error;
 
-#[path = "src/common.rs"] pub mod common;
-
 include!("src/cli.rs");
 
 fn main() -> Result<(), Error> {

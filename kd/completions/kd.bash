@@ -87,7 +87,7 @@ _kd() {
             return 0
             ;;
         kd__build)
-            opts="-h --name --help qcow"
+            opts="-h --name --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

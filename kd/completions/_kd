@@ -43,7 +43,6 @@ _arguments "${_arguments_options[@]}" : \
 '--name=[Name of a test config to use]:NAME:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
-'::target -- lists test values:(qcow)' \
 && ret=0
 ;;
 (run)
@@ -130,7 +129,7 @@ esac
 _kd_commands() {
     local commands; commands=(
 'init:Initialize development environment' \
-'build:Build QCOW image' \
+'build:Build image' \
 'run:Run QEMU test system' \
 'update:Update '\''kd'\'' environment' \
 'config:Generate minimal kernel config for VM' \
@@ -158,7 +157,7 @@ _kd__debug_commands() {
 _kd__help_commands() {
     local commands; commands=(
 'init:Initialize development environment' \
-'build:Build QCOW image' \
+'build:Build image' \
 'run:Run QEMU test system' \
 'update:Update '\''kd'\'' environment' \
 'config:Generate minimal kernel config for VM' \
