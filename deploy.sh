@@ -34,7 +34,7 @@ fi;
 ssh $TEST_HOST << ENDSSH
 DISK_IMAGE="/tmp/$NODE"
 chmod +w "\$DISK_IMAGE"
-qemu-img resize -f raw "\$DISK_IMAGE" "+30G"
+qemu-img resize -f raw "\$DISK_IMAGE" "+50G"
 ENDSSH
 
 echo "Bringing up the node"
