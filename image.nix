@@ -65,7 +65,7 @@
         repartConfig = {
           Format = "vfat";
           Label = "boot";
-          SizeMinBytes = "200M";
+          SizeMinBytes = "60M";
           Type = "esp";
         };
       };
