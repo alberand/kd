@@ -545,77 +545,76 @@ in rec {
       gccVersion = "13";
     };
 
-    image-system = nixpkgs.lib.nixosSystem {
-      inherit pkgs;
-      system = "x86_64-linux";
-      modules = [
-        ./image.nix
-        {nixpkgs.hostPlatform = "x86_64-linux";}
-        ./xfstests/module.nix
-        ./xfsprogs/module.nix
-        ./system.nix
-        ./input.nix
-        ({...}: uconfig)
-        (
-          {config, ...}: {
-            boot.kernelModules = nixpkgs.lib.mkForce [];
-            boot.initrd = {
-              # Override required kernel modules by
-              # nixos/modules/profiles/qemu-guest.nix As we use kernel build
-              # outside of Nix, it will have different uname and will not be
-              # able to find these modules. This probably can be fixed
-              availableKernelModules = nixpkgs.lib.mkForce [];
-              kernelModules = nixpkgs.lib.mkForce [];
-            };
-
-            services.xfsprogs = {
-              enable = true;
-            };
-
-            systemd.repart.partitions = {
-              test = {
-                Format = "ext4";
-                Label = "test";
-                SizeMinBytes = "1G";
-                SizeMaxBytes = "10G";
-                Type = "linux-generic";
-                Weight = 500;
+    image =
+      (nixpkgs.lib.nixosSystem {
+        inherit pkgs;
+        system = "x86_64-linux";
+        modules = [
+          ./image.nix
+          {nixpkgs.hostPlatform = "x86_64-linux";}
+          ./xfstests/module.nix
+          ./xfsprogs/module.nix
+          ./system.nix
+          ./input.nix
+          ({...}: uconfig)
+          (
+            {config, ...}: {
+              boot.kernelModules = nixpkgs.lib.mkForce [];
+              boot.initrd = {
+                # Override required kernel modules by
+                # nixos/modules/profiles/qemu-guest.nix As we use kernel build
+                # outside of Nix, it will have different uname and will not be
+                # able to find these modules. This probably can be fixed
+                availableKernelModules = nixpkgs.lib.mkForce [];
+                kernelModules = nixpkgs.lib.mkForce [];
               };
-              scratch = {
-                Format = "ext4";
-                Label = "scratch";
-                SizeMinBytes = "1G";
-                SizeMaxBytes = "10G";
-                Type = "linux-generic";
-                Weight = 500;
-              };
-            };
 
-            services.xfstests = {
-              enable = true;
-              arguments = pkgs.lib.mkDefault "-R xunit -s xfs_4k generic/110";
-              dev = {
+              services.xfsprogs = {
+                enable = true;
+              };
+
+              systemd.repart.partitions = {
                 test = {
-                  main = pkgs.lib.mkDefault "/dev/sda5";
-                  #rtdev = pkgs.lib.mkDefault "/dev/vdf";
-                  #logdev = pkgs.lib.mkDefault "/dev/vdg";
+                  Format = "ext4";
+                  Label = "test";
+                  SizeMinBytes = "1G";
+                  SizeMaxBytes = "10G";
+                  Type = "linux-generic";
+                  Weight = 500;
                 };
                 scratch = {
-                  main = pkgs.lib.mkDefault "/dev/sda4";
-                  # rtdev = pkgs.lib.mkDefault "/dev/vdd";
-                  # logdev = pkgs.lib.mkDefault "/dev/vde";
+                  Format = "ext4";
+                  Label = "scratch";
+                  SizeMinBytes = "1G";
+                  SizeMaxBytes = "10G";
+                  Type = "linux-generic";
+                  Weight = 500;
                 };
               };
-            };
-          }
-        )
-      ];
-    };
 
-    image = image-system.config.system.build.image;
+              services.xfstests = {
+                enable = true;
+                arguments = pkgs.lib.mkDefault "-R xunit -s xfs_4k generic/110";
+                dev = {
+                  test = {
+                    main = pkgs.lib.mkDefault "/dev/sda5";
+                    #rtdev = pkgs.lib.mkDefault "/dev/vdf";
+                    #logdev = pkgs.lib.mkDefault "/dev/vdg";
+                  };
+                  scratch = {
+                    main = pkgs.lib.mkDefault "/dev/sda4";
+                    # rtdev = pkgs.lib.mkDefault "/dev/vdd";
+                    # logdev = pkgs.lib.mkDefault "/dev/vde";
+                  };
+                };
+              };
+            }
+          )
+        ];
+      }).config.system.build.image;
 
     run-image = pkgs.callPackage ./run-image.nix {
-      inherit (image-system.config.system.build) image;
+      inherit image;
     };
   };
 }
