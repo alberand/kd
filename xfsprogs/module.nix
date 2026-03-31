@@ -63,10 +63,6 @@ in {
         )
       );
     in {
-      environment.variables = {
-        XFSPROGS_SRC = "${xfsprogs.src}";
-      };
-
       environment.systemPackages = [
         xfsprogs
       ];
