@@ -30,6 +30,12 @@ in {
           inherit src;
         };
     };
+
+    enablePython = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Add python (image gains ~100MB)";
+    };
   };
 
   config = mkIf cfg.enable (
@@ -40,6 +46,12 @@ in {
             {
               inherit (cfg) src;
               version = "git-${cfg.src.rev}";
+
+              buildInputs =
+                prev.buildInputs
+                ++ (lib.optionals (cfg.enablePython) [
+                  (python3.withPackages (ps: [ps.dbus-python]))
+                ]);
 
               nativeBuildInputs = [cfg.kernelHeaders] ++ prev.nativeBuildInputs;
               dontStrip = config.dev.dontStrip;

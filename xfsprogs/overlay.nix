@@ -1,36 +1,47 @@
 final: prev: let
   sources = prev.lib.importJSON ../sources/xfsprogs.json;
 in {
-  xfsprogs = prev.xfsprogs.overrideAttrs (old:
-    {
-      src = prev.fetchgit sources;
-      version = "git-${sources.rev}";
+  xfsprogs = prev.xfsprogs.overrideAttrs (
+    old:
+      {
+        src = prev.fetchgit sources;
+        version = "git-${sources.rev}";
 
-      # We need to add autoconfHook because if you look into nixpkgs#xfsprogs
-      # the source code fetched is not a git tree - it's tarball. The tarball is
-      # actually created with 'make dist' command. This tarball already has some
-      # additional stuff produced by autoconf. Here we want to take raw git tree
-      # so we need to run 'make dist', but this is not the best way (why?), just
-      # add autoreconfHook which will do autoconf automatically.
-      nativeBuildInputs =
-        prev.xfsprogs.nativeBuildInputs
-        ++ [
-          prev.autoreconfHook
-          prev.attr
-        ];
+        # Drop Python as this is necessary for protofiles and xfs_scrub only but
+        # adds ~100MB to the image
+        buildInputs =
+          prev.lib.lists.remove (prev.python3.withPackages (ps: [
+            ps.dbus-python
+          ]))
+          old.buildInputs;
+        # We need to add autoconfHook because if you look into nixpkgs#xfsprogs
+        # the source code fetched is not a git tree - it's tarball. The tarball is
+        # actually created with 'make dist' command. This tarball already has some
+        # additional stuff produced by autoconf. Here we want to take raw git tree
+        # so we need to run 'make dist', but this is not the best way (why?), just
+        # add autoreconfHook which will do autoconf automatically.
+        nativeBuildInputs =
+          prev.xfsprogs.nativeBuildInputs
+          ++ [
+            prev.autoreconfHook
+            prev.attr
+          ];
 
-      patches = [];
+        patches = [];
 
-      preConfigure = prev.xfsprogs.preConfigure + ''
-        patchShebangs libfrog/gettext.py.in mkfs/xfs_protofile.py.in
-      '';
+        preConfigure =
+          prev.xfsprogs.preConfigure
+          + ''
+            patchShebangs libfrog/gettext.py.in mkfs/xfs_protofile.py.in
+          '';
 
-      postConfigure = ''
-        cp include/install-sh install-sh
-        patchShebangs ./install-sh
-      '';
-    }
-    // prev.lib.optionalAttrs false {
-      stdenv = prev.ccacheStdenv;
-    });
+        postConfigure = ''
+          cp include/install-sh install-sh
+          patchShebangs ./install-sh
+        '';
+      }
+      // prev.lib.optionalAttrs false {
+        stdenv = prev.ccacheStdenv;
+      }
+  );
 }
