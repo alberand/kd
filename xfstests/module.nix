@@ -138,6 +138,12 @@ in {
           inherit src;
         };
     };
+
+    fat = mkOption {
+      type = types.bool;
+      description = "Add heavy dependencies";
+      default = false;
+    };
   };
 
   config = let
@@ -173,7 +179,7 @@ in {
           for f in $(cd @out@/lib/xfstests; echo *); do
             ln -s @out@/lib/xfstests/$f $f
           done
-          export PATH=${pkgs.lib.makeBinPath [
+          export PATH=${pkgs.lib.makeBinPath ([
             xfsprogs
             pkgs.acl
             pkgs.attr
@@ -189,18 +195,16 @@ in {
             pkgs.quota
             pkgs.util-linux
             pkgs.which
-            pkgs.duperemove # pulls glib
             pkgs.acct
             pkgs.xfsdump
             pkgs.indent
             pkgs.man
-            pkgs.fio # brings Python 3
             pkgs.thin-provisioning-tools
             pkgs.file
             pkgs.openssl
             pkgs.checkbashisms # xfs mainteiner test
             pkgs.findutils
-          ]}:$PATH
+          ] ++ (if cfg.fat then [fio duperemove] else []))}:$PATH
           exec ./check "$@"
         '';
       }

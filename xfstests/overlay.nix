@@ -140,12 +140,10 @@ final: prev: rec {
           prev.quota
           prev.util-linux
           prev.which
-          prev.duperemove
           prev.acct
           prev.xfsdump
           prev.indent
           prev.man
-          prev.fio
           prev.thin-provisioning-tools
           prev.file
           prev.openssl

@@ -46,6 +46,12 @@ in {
         type = types.nullOr types.path;
         default = null;
       };
+
+      fat = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Pull all the necessary dependencies";
+      };
     };
   };
 
@@ -64,6 +70,10 @@ in {
       }
     );
   in {
+
+    services.xfsprogs.enablePython = if (cfg.fat) then true else false;
+    services.xfstests.fat = if (cfg.fat) then true else false;
+
     # If no prebuild, just build a normal kernel
     boot.kernelPackages =
       if cfg.prebuild == null
