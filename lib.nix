@@ -545,7 +545,7 @@ in rec {
       gccVersion = "13";
     };
 
-    image =
+    xxx =
       (nixpkgs.lib.nixosSystem {
         inherit pkgs;
         system = "x86_64-linux";
@@ -611,7 +611,12 @@ in rec {
             }
           )
         ];
-      }).config.system.build.image;
+      }).config.system.build;
+
+    image = xxx.image;
+
+    # TODO debug
+    toplevel = xxx.toplevel;
 
     run-image = pkgs.callPackage ./run-image.nix {
       inherit image;
