@@ -557,7 +557,7 @@ fn cmd_debug(state: &mut State, output: &bool) {
                     .stdin(Stdio::piped())
                     .arg("--quiet")
                     .spawn()
-                    .unwrap();
+                    .expect("alejandra (nix code formatter) failed to run");
                 write!(cmd.stdin.as_mut().unwrap(), "{}", content).unwrap();
                 cmd.wait().expect("'alejandra' failed to run");
             }

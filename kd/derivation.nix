@@ -7,6 +7,7 @@
   makeWrapper,
   nix,
   gitMinimal,
+  alejandra,
   openssh,
   fileset,
   installShellFiles
@@ -54,6 +55,7 @@ in
           openssh
           nurl
           nix
+          alejandra
         ]
       }
     '';
