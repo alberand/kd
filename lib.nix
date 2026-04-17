@@ -150,6 +150,7 @@ in rec {
               (callPackage (import ./kd/derivation.nix) {
                 inherit (pkgs.lib) makeBinPath fileset;
               })
+              smatch
             ]
             ++ (
               if gcc
@@ -206,16 +207,6 @@ in rec {
               perl538Packages.DBI
               perl538Packages.DBDSQLite
               perl538Packages.TryTiny
-              (smatch.overrideAttrs (
-                final: prev: {
-                  version = "git";
-                  src = fetchgit {
-                    url = "git://repo.or.cz/smatch.git";
-                    rev = "b8540ba87345cda269ef4490dd533aa6e8fb9229";
-                    hash = "sha256-LQhNwhSbEP3BjBrT3OFjOjAoJQ1MU0HhyuBQPffOO48=";
-                  };
-                }
-              ))
             ];
 
           buildInputs = with pkgs; [
