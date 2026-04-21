@@ -1,0 +1,54 @@
+packages = [ "gdb", "blktrace", "tmux" ]
+
+[kernel]
+flavors = ["xfstests", "xfs", "debug"]
+repo = "git@github.com:alberand/linux.git"
+rev = "ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
+version = "v7.0-rc1"
+
+[kernel.config]
+CONFIG_FS_VERITY = "yes"
+CONFIG_FS_VERITY_BUILTIN_SIGNATURES = "yes"
+
+[xfstests]
+repo = "git@github.com:alberand/linux.git"
+rev = "ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
+args = 1
+
+[xfstests.kernel_headers]
+repo = "git@github.com:alberand/linux.git"
+version = "v7.0-rc2"
+
+[xfstests.devices]
+test = "/dev/sda"
+test_rtdev = "/dev/sda"
+test_logdev = "/dev/sda"
+scratch = "/dev/sda"
+scratch_rtdev = "/dev/sda"
+scratch_logdev = "/dev/sda"
+
+[xfsprogs]
+repo = "git@github.com:alberand/linux.git"
+rev = "ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
+
+[common.kernel]
+prebuild = "arch/x86/boot/bzImage"
+repo = "git@github.com:alberand/linux.git"
+rev = "3d2d783f553d73824a6f5eaf26065de97dea0871"
+flavors = ["xfstests", "xfs", "debug"]
+version = "v7.0-rc1"
+
+[common.kernel.config]
+CONFIG_FS_VERITY = "yes"
+CONFIG_FS_VERITY_BUILTIN_SIGNATURES = "yes"
+
+[common.xfstests]
+repo = "file:///home/alberand/Projects/xfstests-dev"
+rev = "c0bea11ded74fe4d763018b5b233be14c298c048"
+
+[common.xfsprogs]
+repo = "file:///home/alberand/Projects/xfsprogs-dev"
+rev = "6a3a4ed7d5a06576f5934c0b907303137320e011"
+
+[named.quick.xfstests]
+args = "-d -s xfs_1k -s xfs_4k -s xfs_8k -g verity"
