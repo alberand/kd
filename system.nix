@@ -10,8 +10,12 @@
   config,
   pkgs,
   lib,
+  modulesPath,
   ...
 }: {
+  imports = [
+    (modulesPath + "/profiles/minimal.nix")
+  ];
   boot = {
     kernelParams = [
       # consistent eth* naming
@@ -58,12 +62,6 @@
   fonts.fontconfig.enable = false;
   fonts.packages = lib.mkForce [ pkgs.dejavu_fonts ];
 
-  # Not needed in VM
-  documentation.doc.enable = false;
-  documentation.man.enable = false;
-  documentation.nixos.enable = false;
-  documentation.info.enable = false;
-  programs.command-not-found.enable = false;
   programs.bcc.enable = false;
   services.pulseaudio.enable = false;
   services.openssh.enable = false;
