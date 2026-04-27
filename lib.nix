@@ -29,31 +29,16 @@ in rec {
     nixos-generators.nixosGenerate {
       inherit pkgs;
       system = "x86_64-linux";
-      specialArgs = {
-        diskSize = "20000";
-      };
       modules = [
         ./xfstests/module.nix
         ./xfsprogs/module.nix
-        ./script/module.nix
         ./system.nix
         ./vm.nix
         ./input.nix
         ({...}: uconfig)
         (
           {config, ...}: {
-            #assertions = [
-            #  {
-            #    assertion = config.kernel.prebuild != null;
-            #    message = "kernel.prebuild should be set to path with built kernel";
-            #  }
-            #];
-
             services.xfsprogs = {
-              enable = true;
-            };
-
-            services.script = {
               enable = true;
             };
 
@@ -136,57 +121,7 @@ in rec {
               then (mkGccPkgs {inherit gccVersion;})
               else (mkLlvmPkgs {inherit clangVersion;})
             )
-            ++ packages
-            ++ lib.optional false [
-              file
-              e2fsprogs
-              attr
-              acl
-              libaio
-              keyutils
-              fsverity-utils
-              ima-evm-utils
-              util-linux
-              stress-ng
-              fio
-              linuxquota
-              nvme-cli
-              virt-manager # for deploy
-              xmlstarlet
-              rpm
-              sphinx # for btrfs-progs
-              zstd # for btrfs-progs
-              udev # for btrfs-progs
-              lzo # for btrfs-progs
-              ctags
-              jq
-              liburing # for btrfs-progs
-              python312
-              python312Packages.flake8
-              python312Packages.pylint
-              cargo
-              rustc
-              # kselftest deps
-              libcap
-              libcap_ng
-              fuse3
-              fuse
-              alsa-lib
-              libmnl
-              numactl
-              guilt
-              nix-prefetch-git
-              tomlq
-              # probably better to move it to separate module
-              sqlite
-              openssl
-              libllvm
-              libxml2.dev
-              perl
-              perl538Packages.DBI
-              perl538Packages.DBDSQLite
-              perl538Packages.TryTiny
-            ];
+            ++ packages;
 
           buildInputs = with pkgs; [
             elfutils
