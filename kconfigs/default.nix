@@ -154,6 +154,8 @@ with lib.kernel; {
 
     # For erofs /nix/store used by systemd-repart
     EROFS_FS = yes;
+
+    QUOTA = yes;
   };
 
   debug = {
