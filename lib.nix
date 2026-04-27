@@ -72,27 +72,6 @@ in rec {
                 };
               };
             };
-
-            virtualisation = {
-              diskImage = "${config.vm.workdir}/${config.system.name}.qcow2";
-              qemu = {
-                # Network requires tap0 netowrk on the host
-                options =
-                  [
-                    "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
-                    "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
-                    "-device virtio-rng-pci"
-                  ]
-                  ++ config.vm.qemu-options;
-              };
-
-              sharedDirectories = {
-                share = {
-                  source = "${config.vm.workdir}/share";
-                  target = "/root/share";
-                };
-              };
-            };
           }
         )
       ];
