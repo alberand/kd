@@ -1,6 +1,5 @@
 {
   nixpkgs,
-  nixos-generators,
   pkgs,
   uconfig,
   ...
@@ -24,12 +23,11 @@
             {
               imports = [
                 value
-                (nixos-generators + /format-module.nix)
               ];
             }
         )
         customFormats;
-      formatModule = builtins.getAttr format (nixos-generators.nixosModules // extraFormats);
+      formatModule = builtins.getAttr format extraFormats;
       image = nixosSystem {
         inherit pkgs specialArgs;
         system =

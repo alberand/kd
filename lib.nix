@@ -1,6 +1,5 @@
 {
   pkgs,
-  nixos-generators,
   nixpkgs,
 }: let
   mkLlvmPkgs = {clangVersion}: let
@@ -26,7 +25,7 @@ in rec {
     pkgs,
     uconfig,
   }:
-    nixos-generators.nixosGenerate {
+    (nixpkgs.lib.nixosSystem {
       inherit pkgs;
       system = "x86_64-linux";
       modules = [
@@ -60,8 +59,7 @@ in rec {
           }
         )
       ];
-      format = "vm";
-    };
+    }).config.system.build.vm;
 
   mkVmTest = {
     pkgs,

@@ -1,10 +1,15 @@
 {
   config,
   lib,
+  modulesPath,
   ...
 }: let
   cfg = config.vm;
 in {
+  imports = [
+    (modulesPath + "/virtualisation/qemu-vm.nix")
+  ];
+
   options.vm = {
     workdir = lib.mkOption {
       description = "Work dir for creating disk image and share mount";

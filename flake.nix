@@ -14,8 +14,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-clang.url = "github:nixos/nixpkgs/6915a163f351c32bd4557518d047725665e83d37";
-    nixos-generators.url = "github:nix-community/nixos-generators";
-    nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
@@ -23,7 +21,6 @@
     self,
     nixpkgs,
     nixpkgs-clang,
-    nixos-generators,
     rust-overlay,
   }: let
     system = "x86_64-linux";
@@ -45,7 +42,7 @@
       ];
     };
     lib = import ./lib.nix {
-      inherit pkgs nixos-generators nixpkgs;
+      inherit pkgs nixpkgs;
     };
     default = lib.mkEnv {
       inherit nixpkgs;
