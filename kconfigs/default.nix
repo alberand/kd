@@ -97,8 +97,6 @@ with lib.kernel; {
     ATA = yes;
 
     # Filesystems
-    EXT4_FS = yes;
-    XFS_FS = yes;
     TMPFS = yes;
     OVERLAY_FS = yes;
 
@@ -156,6 +154,69 @@ with lib.kernel; {
     EROFS_FS = yes;
 
     QUOTA = yes;
+
+    # Required by xfstests
+    DM_FLAKEY = yes;
+    DM_SNAPSHOT = yes;
+    DM_DELAY = yes;
+    DM_THIN_PROVISIONING = yes;
+    DM_LOG_WRITES = yes;
+    USER_NS = yes;
+    DAX = yes;
+    IO_URING = yes;
+    DEBUG_FS = yes;
+    SCSI_DEBUG = module;
+
+    XFS_FS = yes;
+    XFS_SUPPORT_V4 = yes;
+    XFS_SUPPORT_ASCII_CI = yes;
+    XFS_QUOTA = yes;
+    XFS_POSIX_ACL = yes;
+    XFS_RT = yes;
+    XFS_DRAIN_INTENTS = yes;
+    XFS_LIVE_HOOKS = yes;
+    XFS_MEMORY_BUFS = yes;
+    XFS_BTREE_IN_MEM = yes;
+    XFS_ONLINE_SCRUB = yes;
+    XFS_ONLINE_SCRUB_STATS = yes;
+    XFS_ONLINE_REPAIR = yes;
+    XFS_DEBUG = yes;
+    XFS_DEBUG_EXPENSIVE = yes;
+    XFS_ASSERT_FATAL = no;
+
+    EXT4_FS = yes;
+    EXT4_USE_FOR_EXT2 = yes;
+    EXT4_FS_POSIX_ACL = yes;
+    EXT4_FS_SECURITY = yes;
+    EXT4_DEBUG = yes;
+
+    BTRFS_FS = yes;
+    BTRFS_FS_POSIX_ACL = yes;
+    BTRFS_FS_RUN_SANITY_TESTS = yes;
+    BTRFS_DEBUG = yes;
+    BTRFS_ASSERT = yes;
+    BTRFS_EXPERIMENTAL = yes;
+
+    F2FS_FS = yes;
+    F2FS_STAT_FS = yes;
+    F2FS_FS_XATTR = yes;
+    F2FS_FS_POSIX_ACL = yes;
+    F2FS_FS_SECURITY = yes;
+    F2FS_CHECK_FS = yes;
+    F2FS_FAULT_INJECTION = yes;
+    F2FS_FS_COMPRESSION = yes;
+    F2FS_FS_LZO = yes;
+    F2FS_FS_LZORLE = yes;
+    F2FS_FS_LZ4 = yes;
+    F2FS_FS_LZ4HC = yes;
+    F2FS_FS_ZSTD = yes;
+    F2FS_IOSTAT = yes;
+    F2FS_UNFAIR_RWSEM = yes;
+
+    FUSE_FS = yes;
+    CUSE = yes;
+    FUSE_PASSTHROUGH = yes;
+    FUSE_IO_URING = yes;
   };
 
   debug = {
@@ -249,79 +310,5 @@ with lib.kernel; {
     MEMORY_HOTREMOVE = yes;
     ZONE_DEVICE = yes;
     SERIO_PCIPS2 = yes;
-  };
-
-  xfstests = {
-    DM_FLAKEY = yes;
-    DM_SNAPSHOT = yes;
-    DM_DELAY = yes;
-    DM_THIN_PROVISIONING = yes;
-    DM_LOG_WRITES = yes;
-    USER_NS = yes;
-    DAX = yes;
-    IO_URING = yes;
-    DEBUG_FS = yes;
-    SCSI_DEBUG = module;
-  };
-
-  xfs = {
-    XFS_FS = yes;
-    XFS_SUPPORT_V4 = yes;
-    XFS_SUPPORT_ASCII_CI = yes;
-    XFS_QUOTA = yes;
-    XFS_POSIX_ACL = yes;
-    XFS_RT = yes;
-    XFS_DRAIN_INTENTS = yes;
-    XFS_LIVE_HOOKS = yes;
-    XFS_MEMORY_BUFS = yes;
-    XFS_BTREE_IN_MEM = yes;
-    XFS_ONLINE_SCRUB = yes;
-    XFS_ONLINE_SCRUB_STATS = yes;
-    XFS_ONLINE_REPAIR = yes;
-    XFS_DEBUG = yes;
-    XFS_DEBUG_EXPENSIVE = yes;
-    XFS_ASSERT_FATAL = no;
-  };
-
-  ext4 = {
-    EXT4_FS = yes;
-    EXT4_USE_FOR_EXT2 = yes;
-    EXT4_FS_POSIX_ACL = yes;
-    EXT4_FS_SECURITY = yes;
-    EXT4_DEBUG = yes;
-  };
-
-  btrfs = {
-    BTRFS_FS = yes;
-    BTRFS_FS_POSIX_ACL = yes;
-    BTRFS_FS_RUN_SANITY_TESTS = yes;
-    BTRFS_DEBUG = yes;
-    BTRFS_ASSERT = yes;
-    BTRFS_EXPERIMENTAL = yes;
-  };
-
-  f2fs = {
-    F2FS_FS = yes;
-    F2FS_STAT_FS = yes;
-    F2FS_FS_XATTR = yes;
-    F2FS_FS_POSIX_ACL = yes;
-    F2FS_FS_SECURITY = yes;
-    F2FS_CHECK_FS = yes;
-    F2FS_FAULT_INJECTION = yes;
-    F2FS_FS_COMPRESSION = yes;
-    F2FS_FS_LZO = yes;
-    F2FS_FS_LZORLE = yes;
-    F2FS_FS_LZ4 = yes;
-    F2FS_FS_LZ4HC = yes;
-    F2FS_FS_ZSTD = yes;
-    F2FS_IOSTAT = yes;
-    F2FS_UNFAIR_RWSEM = yes;
-  };
-
-  fuse = {
-    FUSE_FS = yes;
-    CUSE = yes;
-    FUSE_PASSTHROUGH = yes;
-    FUSE_IO_URING = yes;
   };
 }
