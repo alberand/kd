@@ -1,12 +1,32 @@
 use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
 use std::path::{self, PathBuf};
+use std::process::Command;
 
 pub mod config;
-pub mod utils;
 use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
 };
+
+fn nurl(repo: &str, rev: &str) -> Result<String> {
+    println!("Fetching source for {} at {}", repo, rev);
+    let output = Command::new("nurl")
+        .arg("--fetcher")
+        .arg("builtins.fetchGit")
+        .arg("--arg")
+        .arg("allRefs")
+        .arg("true")
+        .arg(repo)
+        .arg(rev)
+        .output()
+        .context("Failed to fetch source with nurl")?;
+
+    if !output.status.success() {
+        bail!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    String::from_utf8(output.stdout).context("Failed to parse nurl output")
+}
 
 // Agh, so ugly
 // TODO fix nrix to parse nix from rust
@@ -79,7 +99,7 @@ pub fn uconfig_xfsprogs(config: &XfsprogsConfig) -> String {
     let mut options: Vec<String> = vec![];
     if let Some(rev) = &config.rev {
         if let Some(repo) = &config.repo {
-            let src = utils::nurl(&repo, &rev).expect("Failed to parse xfsprogs source repo");
+            let src = nurl(&repo, &rev).expect("Failed to fetch source");
             options.push(uconfig_set_value("src", &src));
         }
     };
@@ -88,7 +108,7 @@ pub fn uconfig_xfsprogs(config: &XfsprogsConfig) -> String {
         if let (Some(version), Some(rev), Some(repo)) =
             (&headers.version, &headers.rev, &headers.repo)
         {
-            let src = utils::nurl(&repo, &rev)
+            let src = nurl(&repo, &rev)
                 .expect("Failed to fetch kernel source for xfsprogs headers");
             let value =
                 format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
@@ -109,7 +129,7 @@ pub fn uconfig_xfstests(config: &XfstestsConfig) -> String {
             &XfstestsConfig::default().repo.unwrap()
         };
 
-        let src = utils::nurl(&repo, &rev).expect("Failed to fetch xfstests");
+        let src = nurl(&repo, &rev).expect("Failed to fetch xfstests");
         options.push(uconfig_set_value("src", &src));
     };
 
@@ -168,7 +188,7 @@ pub fn uconfig_xfstests(config: &XfstestsConfig) -> String {
         if let (Some(version), Some(rev), Some(repo)) =
             (&headers.version, &headers.rev, &headers.repo)
         {
-            let src = utils::nurl(&repo, &rev)
+            let src = nurl(&repo, &rev)
                 .expect("Failed to fetch kernel source for xfstests headers");
             let value =
                 format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
@@ -189,7 +209,7 @@ pub fn uconfig_kernel(config: &KernelConfig) -> String {
             } else {
                 "git@github.com:torvalds/linux.git"
             };
-            let src = utils::nurl(&repo, &rev).expect("Failed to parse kernel source repo");
+            let src = nurl(&repo, &rev).expect("Failed to parse kernel source repo");
             options.push(uconfig_set_value_str("version", version));
             options.push(uconfig_set_value("src", &src));
         }
