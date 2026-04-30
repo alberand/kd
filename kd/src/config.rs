@@ -78,94 +78,94 @@ pub struct SystemConfig {
 impl SystemConfig {
     pub fn merge(&mut self, config: SystemConfig) -> &Self {
         if let Some(kernel) = config.kernel {
-            let new = if let Some(kernel) = &mut self.kernel {
-                kernel
-            } else {
-                &mut KernelConfig::default()
-            };
-
-            if let Some(prebuild) = kernel.prebuild {
-                new.prebuild = Some(prebuild);
+            if self.kernel.is_none() {
+                self.kernel = Some(KernelConfig::default());
             }
 
-            if let Some(version) = kernel.version {
-                new.version = Some(version);
-            }
+            if let Some(me) = &mut self.kernel {
+                if let Some(prebuild) = kernel.prebuild {
+                    me.prebuild = Some(prebuild);
+                }
 
-            if let Some(rev) = kernel.rev {
-                new.rev = Some(rev);
-            }
+                if let Some(version) = kernel.version {
+                    me.version = Some(version);
+                }
 
-            if let Some(repo) = kernel.repo {
-                new.repo = Some(repo);
-            }
+                if let Some(rev) = kernel.rev {
+                    me.rev = Some(rev);
+                }
 
-            if let Some(flavors) = kernel.flavors {
-                new.flavors = Some(flavors);
-            }
+                if let Some(repo) = kernel.repo {
+                    me.repo = Some(repo);
+                }
 
-            if let Some(config) = kernel.config {
-                new.config = Some(config);
+                if let Some(flavors) = kernel.flavors {
+                    me.flavors = Some(flavors);
+                }
+
+                if let Some(config) = kernel.config {
+                    me.config = Some(config);
+                }
             }
         }
 
         if let Some(xfstests) = config.xfstests {
-            let new = if let Some(xfstests) = &mut self.xfstests {
-                xfstests
-            } else {
-                &mut XfstestsConfig::default()
-            };
-
-            if let Some(repo) = xfstests.repo {
-                new.repo = Some(repo);
+            if self.xfstests.is_none() {
+                self.xfstests = Some(XfstestsConfig::default());
             }
 
-            if let Some(rev) = xfstests.rev {
-                new.rev = Some(rev);
-            }
+            if let Some(me) = &mut self.xfstests {
+                if let Some(repo) = xfstests.repo {
+                    me.repo = Some(repo);
+                }
 
-            if let Some(args) = xfstests.args {
-                new.args = Some(args);
-            }
+                if let Some(rev) = xfstests.rev {
+                    me.rev = Some(rev);
+                }
 
-            if let Some(devices) = xfstests.devices {
-                new.devices = Some(devices);
-            };
+                if let Some(args) = xfstests.args {
+                    me.args = Some(args);
+                }
 
-            if let Some(extra_env) = xfstests.extra_env {
-                new.extra_env = Some(extra_env);
-            }
+                if let Some(devices) = xfstests.devices {
+                    me.devices = Some(devices);
+                };
 
-            if let Some(filesystem) = xfstests.filesystem {
-                new.filesystem = Some(filesystem);
-            }
+                if let Some(extra_env) = xfstests.extra_env {
+                    me.extra_env = Some(extra_env);
+                }
 
-            if let Some(hooks) = xfstests.hooks {
-                new.hooks = Some(hooks);
-            }
+                if let Some(filesystem) = xfstests.filesystem {
+                    me.filesystem = Some(filesystem);
+                }
 
-            if let Some(kernel_headers) = xfstests.kernel_headers {
-                new.kernel_headers = Some(kernel_headers);
+                if let Some(hooks) = xfstests.hooks {
+                    me.hooks = Some(hooks);
+                }
+
+                if let Some(kernel_headers) = xfstests.kernel_headers {
+                    me.kernel_headers = Some(kernel_headers);
+                }
             }
         }
 
         if let Some(xfsprogs) = config.xfsprogs {
-            let new = if let Some(xfsprogs) = &mut self.xfsprogs {
-                xfsprogs
-            } else {
-                &mut XfsprogsConfig::default()
-            };
-
-            if let Some(repo) = xfsprogs.repo {
-                new.repo = Some(repo);
+            if self.xfsprogs.is_none() {
+                self.xfsprogs = Some(XfsprogsConfig::default());
             }
 
-            if let Some(rev) = xfsprogs.rev {
-                new.rev = Some(rev);
-            }
+            if let Some(me) = &mut self.xfsprogs {
+                if let Some(repo) = xfsprogs.repo {
+                    me.repo = Some(repo);
+                }
 
-            if let Some(kernel_headers) = xfsprogs.kernel_headers {
-                new.kernel_headers = Some(kernel_headers);
+                if let Some(rev) = xfsprogs.rev {
+                    me.rev = Some(rev);
+                }
+
+                if let Some(kernel_headers) = xfsprogs.kernel_headers {
+                    me.kernel_headers = Some(kernel_headers);
+                }
             }
         }
 

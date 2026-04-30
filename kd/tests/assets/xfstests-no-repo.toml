@@ -1,0 +1,6 @@
+[common.xfsprogs]
+repo = "file:///home/aalbersh/Release/xfsprogs-dev"
+rev = "922f14a9b77638b4a3fc604169df6799d16f8fd7"
+
+[named.auto.xfstests]
+args = "-r -s xfs_4k -g auto"

@@ -1,10 +1,9 @@
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
 use std::path::{self, PathBuf};
 
-pub mod utils;
-use utils::{KdError, KdErrorKind};
 pub mod config;
+pub mod utils;
 use config::{
     Config, KernelConfig, KernelConfigOption, SystemConfig, XfsprogsConfig, XfstestsConfig,
 };
@@ -205,7 +204,7 @@ pub fn uconfig_kernel(config: &KernelConfig) -> String {
 }
 
 /// TODO all this parsing should be just done nrix
-pub fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
+pub fn generate_uconfig(state: &mut State) -> Result<String> {
     let mut options = vec![];
 
     if let Some(packages) = &state.config.packages {
@@ -222,10 +221,7 @@ pub fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
     let merged: SystemConfig = if state.name != "" {
         if let Some(named) = &state.config.named {
             if !named.contains_key(&state.name) {
-                return Err(KdError::new(
-                    KdErrorKind::RuntimeError,
-                    format!("Config doesn't define requested run: {}", &state.name),
-                ));
+                bail!("Config doesn't define requested run: {}", &state.name);
             }
             let mut result = if let Some(common) = &state.config.common {
                 common.clone()
@@ -264,12 +260,8 @@ pub fn generate_uconfig(state: &mut State) -> Result<String, KdError> {
 
     if let Some(subconfig) = &merged.kernel {
         if let Some(kernel) = &subconfig.prebuild {
-            let path = path::absolute(&state.curdir.join(kernel)).map_err(|e| {
-                KdError::new(
-                    KdErrorKind::ConfigError,
-                    format!("Failed to parse kernel path: {}", e.to_string()),
-                )
-            })?;
+            let path = path::absolute(&state.curdir.join(kernel))
+                .context("Failed to parse kernel path")?;
 
             state.envs.insert(
                 format!("NIXPKGS_QEMU_KERNEL_kd"),
