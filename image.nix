@@ -13,7 +13,7 @@
   fileSystems = {
     "/" = {
       fsType = "tmpfs";
-      options = ["size=100m"];
+      options = ["size=2G"];
     };
     "/boot" = {
       device = "/dev/disk/by-partlabel/boot";
