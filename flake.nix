@@ -124,8 +124,16 @@
                 src = pkgs.fetchgit sources;
                 version = sources.rev;
               };
-              vm.workdir = "/tmp/kd-test/";
-              vm.disks = [12000 12000 1000 1000 1000 1000];
+              virtualisation.diskImage = "/tmp/kd-test/${config.system.name}.qcow2";
+              virtualisation.sharedDirectories.share.source = "/tmp/kd-test/share";
+              virtualisation.emptyDiskImages = [
+                12000
+                12000
+                1000
+                1000
+                1000
+                1000
+              ];
 
               services.xfsprogs = {
                 enable = true;

@@ -332,8 +332,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "$ENVDIR";
-          vm.disks = [
+          virtualisation.emptyDiskImages = [
             12000
             12000
             1000
@@ -355,8 +354,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "$ENVDIR";
-          vm.disks = [
+          virtualisation.emptyDiskImages = [
             12000
             12000
             1000
@@ -382,8 +380,7 @@ in rec {
             inherit src version;
             kconfig = kkconfig;
           };
-          vm.workdir = "$ENVDIR";
-          vm.disks = [
+          virtualisation.emptyDiskImages = [
             12000
             12000
             1000

@@ -10,29 +10,6 @@ in {
     (modulesPath + "/virtualisation/qemu-vm.nix")
   ];
 
-  options.vm = {
-    workdir = lib.mkOption {
-      description = "Work dir for creating disk image and share mount";
-      example = "/tmp/kd";
-      default = ".kd/default";
-      type = lib.types.str;
-    };
-
-    qemu-options = lib.mkOption {
-      description = "QEMU command line options";
-      default = [];
-      example = "-serial stdio";
-      type = lib.types.listOf lib.types.str;
-    };
-
-    disks = lib.mkOption {
-      description = "Create empty disks of specified size";
-      default = [];
-      example = "[5000 5000]";
-      type = lib.types.listOf lib.types.int;
-    };
-  };
-
   config = {
     boot.kernelModules = lib.mkForce [];
     boot.initrd = {
@@ -51,23 +28,20 @@ in {
       useDefaultFilesystems = true;
       # Run qemu in the terminal not in Qemu GUI
       graphics = false;
-
-      emptyDiskImages = cfg.disks;
-      diskImage = "${config.vm.workdir}/${config.system.name}.qcow2";
+      diskImage = "$ENVDIR/${config.system.name}.qcow2";
       qemu = {
         # Network requires tap0 netowrk on the host
-        options =
-          [
-            "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
-            "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
-            "-device virtio-rng-pci"
-          ]
-          ++ config.vm.qemu-options;
+        options = [];
+          #[
+          #  "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
+          #  "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
+          #  "-device virtio-rng-pci"
+          #];
       };
 
-      sharedDirectories = {
+     sharedDirectories = {
         share = {
-          source = "${config.vm.workdir}/share";
+          source = "$ENVDIR/share";
           target = "/root/share";
         };
       };
