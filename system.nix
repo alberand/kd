@@ -17,6 +17,7 @@
     (modulesPath + "/profiles/minimal.nix")
   ];
   boot = {
+    kernelModules = lib.mkForce [];
     kernelParams = [
       # consistent eth* naming
       "net.ifnames=0"
@@ -28,7 +29,14 @@
     # This is happens before systemd
     # postBootCommands = "echo 'Not much to do before systemd :)' > /dev/kmsg";
     crashDump.enable = true;
-    initrd.systemd.emergencyAccess = true;
+    initrd = {
+      systemd.emergencyAccess = true;
+      # Override required kernel modules by nixos/modules/profiles/qemu-guest.nix
+      # As we use kernel build outside of Nix, it will have different uname and
+      # will not be able to find these modules. This probably can be fixed
+      availableKernelModules = lib.mkForce [];
+      kernelModules = lib.mkForce [];
+    };
   };
 
   # Do something after systemd started

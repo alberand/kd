@@ -11,14 +11,6 @@ in {
   ];
 
   config = {
-    boot.kernelModules = lib.mkForce [];
-    boot.initrd = {
-      # Override required kernel modules by nixos/modules/profiles/qemu-guest.nix
-      # As we use kernel build outside of Nix, it will have different uname and
-      # will not be able to find these modules. This probably can be fixed
-      availableKernelModules = lib.mkForce [];
-      kernelModules = lib.mkForce [];
-    };
     virtualisation = {
       diskSize = 20000; # MB
       # Store the image in sharedir instead of pwd
