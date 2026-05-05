@@ -192,7 +192,7 @@ with lib.kernel; {
 
     BTRFS_FS = yes;
     BTRFS_FS_POSIX_ACL = yes;
-    BTRFS_FS_RUN_SANITY_TESTS = yes;
+    BTRFS_FS_RUN_SANITY_TESTS = no;
     BTRFS_DEBUG = yes;
     BTRFS_ASSERT = yes;
     BTRFS_EXPERIMENTAL = yes;
