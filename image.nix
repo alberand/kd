@@ -109,7 +109,4 @@
   };
 
   boot.loader.grub.enable = false;
-
-  services.getty.autologinUser = "root";
-  users.users.root.initialPassword = "";
 }
