@@ -31,7 +31,8 @@
         [
           (import ./uconfig.nix)
         ]
-        ++ (pkgs.lib.optional (builtins.pathExists ./optional.nix) ./optional.nix);
+        ++ (pkgs.lib.optional (builtins.pathExists ./modules.nix) ./modules.nix);
+      user-overlays = pkgs.lib.optional (builtins.pathExists ./overlays.nix) ./overlays.nix;
     };
   in {
     packages.${system} = packages;
