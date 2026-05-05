@@ -3,6 +3,7 @@ with import <nixpkgs>
   overlays = [
     (import (fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"))
   ];
-}; callPackage ./derivation.nix {
-  inherit (lib) makeBinPath fileset;
-}
+};
+  callPackage ./derivation.nix {
+    inherit (lib) makeBinPath fileset;
+  }

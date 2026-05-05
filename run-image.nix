@@ -4,7 +4,6 @@
   image,
   OVMF,
 }:
-
 writeShellScriptBin "repart-image-qemu" ''
   set -euo pipefail
 

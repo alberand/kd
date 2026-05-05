@@ -10,7 +10,7 @@
   alejandra,
   openssh,
   fileset,
-  installShellFiles
+  installShellFiles,
 }: let
   sourceFiles = fileset.difference ./. (
     fileset.unions [

@@ -120,12 +120,12 @@ stdenv.mkDerivation rec {
       (lib.evalModules {
         modules = [
           (path + "/nixos/modules/system/boot/kernel_config.nix")
-          ({
+          {
             settings =
               kconfig
               // (lib.optionalAttrs default kconfigs.default);
             _file = "structuredExtraConfig";
-          })
+          }
         ];
       })
         .config;

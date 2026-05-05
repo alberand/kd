@@ -5,10 +5,8 @@
   runCommand,
   bash,
   coreutils-full,
-  tomlq
-}:
-
-let
+  tomlq,
+}: let
   src = ./runner.sh;
   binName = "runner";
   deps = [
@@ -17,9 +15,9 @@ let
     coreutils-full
   ];
 in
-runCommand "${binName}"
+  runCommand "${binName}"
   {
-    nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [makeWrapper];
     meta = {
       mainProgram = "${binName}";
     };

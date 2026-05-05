@@ -231,13 +231,15 @@ in rec {
   }: let
     pkgs = import nixpkgs {
       system = "x86_64-linux";
-      overlays = [
-        (import ./xfsprogs/overlay.nix)
-        (import ./xfstests/overlay.nix)
-        (final: prev: {
-          kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
-        })
-      ] ++ user-overlays;
+      overlays =
+        [
+          (import ./xfsprogs/overlay.nix)
+          (import ./xfstests/overlay.nix)
+          (final: prev: {
+            kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
+          })
+        ]
+        ++ user-overlays;
     };
     stdenv =
       if useGcc
@@ -253,19 +255,20 @@ in rec {
       inherit pkgs;
       config = {};
     };
-    userSystem = (nixpkgs.lib.nixosSystem {
-      inherit pkgs;
-      system = "x86_64-linux";
-      modules =
-        [
-          ./xfstests/module.nix
-          ./xfsprogs/module.nix
-          ./system.nix
-          ./vm.nix
-          ./input.nix
-        ]
-        ++ user-modules;
-    }).config;
+    userSystem =
+      (nixpkgs.lib.nixosSystem {
+        inherit pkgs;
+        system = "x86_64-linux";
+        modules =
+          [
+            ./xfstests/module.nix
+            ./xfsprogs/module.nix
+            ./system.nix
+            ./vm.nix
+            ./input.nix
+          ]
+          ++ user-modules;
+      }).config;
     useConfig = builtins.hasAttr "kernel" userSystem;
     version =
       if useConfig && builtins.hasAttr "version" userSystem.kernel
@@ -306,66 +309,72 @@ in rec {
     vm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = user-modules ++ [
-          (
-            {...}: {
-              kernel = pkgs.lib.mkDefault {
-                inherit src version;
-                kconfig = kkconfig;
-              };
-            }
-          )
-        ];
+        user-modules =
+          user-modules
+          ++ [
+            (
+              {...}: {
+                kernel = pkgs.lib.mkDefault {
+                  inherit src version;
+                  kconfig = kkconfig;
+                };
+              }
+            )
+          ];
       };
     };
 
     prebuild = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = user-modules ++ [
-          (
-            {...}: {
-              kernel = pkgs.lib.mkDefault {
-                inherit src version;
-                kconfig = kkconfig;
-              };
+        user-modules =
+          user-modules
+          ++ [
+            (
+              {...}: {
+                kernel = pkgs.lib.mkDefault {
+                  inherit src version;
+                  kconfig = kkconfig;
+                };
 
-              # As our dummy derivation doesn't provide any .config we need to tell
-              # NixOS not to check for any required configurations
-              system.requiredKernelConfig = pkgs.lib.mkForce [];
-            }
-          )
-        ];
+                # As our dummy derivation doesn't provide any .config we need to tell
+                # NixOS not to check for any required configurations
+                system.requiredKernelConfig = pkgs.lib.mkForce [];
+              }
+            )
+          ];
       };
     };
 
     kgdbvm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = user-modules ++ [
-          (
-            {...}: {
-              kernel = pkgs.lib.mkDefault {
-                inherit src version;
-                kconfig = kkconfig;
-              };
+        user-modules =
+          user-modules
+          ++ [
+            (
+              {...}: {
+                kernel = pkgs.lib.mkDefault {
+                  inherit src version;
+                  kconfig = kkconfig;
+                };
 
-              boot.kernelParams = pkgs.lib.mkForce [
-                # consistent eth* naming
-                "net.ifnames=0"
-                "biosdevnames=0"
-                "console=tty0"
-                "kgdboc=ttyS0,115200"
-                "nokaslr"
-                "kgdbwait"
-              ];
+                boot.kernelParams = pkgs.lib.mkForce [
+                  # consistent eth* naming
+                  "net.ifnames=0"
+                  "biosdevnames=0"
+                  "console=tty0"
+                  "kgdboc=ttyS0,115200"
+                  "nokaslr"
+                  "kgdbwait"
+                ];
 
-              # As our dummy derivation doesn't provide any .config we need to tell
-              # NixOS not to check for any required configurations
-              system.requiredKernelConfig = pkgs.lib.mkForce [];
-            }
-          )
-        ];
+                # As our dummy derivation doesn't provide any .config we need to tell
+                # NixOS not to check for any required configurations
+                system.requiredKernelConfig = pkgs.lib.mkForce [];
+              }
+            )
+          ];
       };
     };
 

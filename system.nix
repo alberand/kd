@@ -69,7 +69,7 @@
 
   fonts.enableDefaultPackages = false;
   fonts.fontconfig.enable = false;
-  fonts.packages = lib.mkForce [ pkgs.dejavu_fonts ];
+  fonts.packages = lib.mkForce [pkgs.dejavu_fonts];
 
   programs.bcc.enable = false;
   services.pulseaudio.enable = false;

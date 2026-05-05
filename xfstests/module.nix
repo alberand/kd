@@ -180,31 +180,36 @@ in {
             ln -s @out@/lib/xfstests/$f $f
           done
           export PATH=${pkgs.lib.makeBinPath ([
-            xfsprogs
-            pkgs.acl
-            pkgs.attr
-            pkgs.bc
-            pkgs.e2fsprogs
-            pkgs.gawk
-            pkgs.keyutils
-            pkgs.libcap
-            pkgs.lvm2
-            pkgs.perl
-            pkgs.procps
-            pkgs.killall
-            pkgs.quota
-            pkgs.util-linux
-            pkgs.which
-            pkgs.acct
-            pkgs.xfsdump
-            pkgs.indent
-            pkgs.man
-            pkgs.thin-provisioning-tools
-            pkgs.file
-            pkgs.openssl
-            pkgs.checkbashisms # xfs mainteiner test
-            pkgs.findutils
-          ] ++ (if cfg.fat then [fio duperemove] else []))}:$PATH
+              xfsprogs
+              pkgs.acl
+              pkgs.attr
+              pkgs.bc
+              pkgs.e2fsprogs
+              pkgs.gawk
+              pkgs.keyutils
+              pkgs.libcap
+              pkgs.lvm2
+              pkgs.perl
+              pkgs.procps
+              pkgs.killall
+              pkgs.quota
+              pkgs.util-linux
+              pkgs.which
+              pkgs.acct
+              pkgs.xfsdump
+              pkgs.indent
+              pkgs.man
+              pkgs.thin-provisioning-tools
+              pkgs.file
+              pkgs.openssl
+              pkgs.checkbashisms # xfs mainteiner test
+              pkgs.findutils
+            ]
+            ++ (
+              if cfg.fat
+              then [fio duperemove]
+              else []
+            ))}:$PATH
           exec ./check "$@"
         '';
       }

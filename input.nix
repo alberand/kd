@@ -70,9 +70,14 @@ in {
       }
     );
   in {
-
-    services.xfsprogs.enablePython = if (cfg.fat) then true else false;
-    services.xfstests.fat = if (cfg.fat) then true else false;
+    services.xfsprogs.enablePython =
+      if (cfg.fat)
+      then true
+      else false;
+    services.xfstests.fat =
+      if (cfg.fat)
+      then true
+      else false;
 
     # If no prebuild, just build a normal kernel
     boot.kernelPackages =
