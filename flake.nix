@@ -119,21 +119,23 @@
             ];
 
             config = {
+              boot = {
+                kernelModules = pkgs.lib.mkForce [];
+                initrd = {
+                  systemd.emergencyAccess = true;
+                  # Override required kernel modules by nixos/modules/profiles/qemu-guest.nix
+                  # As we use kernel build outside of Nix, it will have different uname and
+                  # will not be able to find these modules. This probably can be fixed
+                  availableKernelModules = pkgs.lib.mkForce [];
+                  kernelModules = pkgs.lib.mkForce [];
+                };
+              };
               networking.hostName = "kd-test";
               kernel = {
                 src = pkgs.fetchgit sources;
                 version = sources.rev;
               };
-              virtualisation.diskImage = "/tmp/kd-test/${config.system.name}.qcow2";
-              virtualisation.sharedDirectories.share.source = "/tmp/kd-test/share";
-              virtualisation.emptyDiskImages = [
-                12000
-                12000
-                1000
-                1000
-                1000
-                1000
-              ];
+              virtualisation.diskImage = "/tmp/${config.system.name}.qcow2";
 
               services.xfsprogs = {
                 enable = true;
@@ -143,16 +145,11 @@
               };
               services.xfstests = {
                 enable = true;
-                dev = {
-                  test.main = pkgs.lib.mkDefault "/dev/vdb";
-                  scratch.main = pkgs.lib.mkDefault "/dev/vdc";
-                };
-                arguments = "-s xfs_4k -s ext4_4k generic/110 xfs/304";
+                arguments = "-s xfs_4k generic/110 xfs/304";
                 kernelHeaders = buildKernelHeaders {
                   inherit (config.kernel) src version;
                 };
               };
-              environment.systemPackages = [pkgs.curl];
             };
           };
         };

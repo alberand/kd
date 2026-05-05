@@ -21,57 +21,34 @@
     )
   ];
 in rec {
-  mkVM = {
+  mkVmImage = {
     pkgs,
-    uconfig,
+    user-modules,
   }:
     (nixpkgs.lib.nixosSystem {
       inherit pkgs;
       system = "x86_64-linux";
-      modules = [
-        ./xfstests/module.nix
-        ./xfsprogs/module.nix
-        ./system.nix
-        ./vm.nix
-        ./input.nix
-        ({...}: uconfig)
-        (
-          {config, ...}: {
-            services.xfsprogs = {
-              enable = true;
-            };
-
-            services.xfstests = {
-              enable = true;
-              dev = {
-                test = {
-                  main = pkgs.lib.mkDefault "/dev/vdb";
-                  #rtdev = pkgs.lib.mkDefault "/dev/vdf";
-                  #logdev = pkgs.lib.mkDefault "/dev/vdg";
-                };
-                scratch = {
-                  main = pkgs.lib.mkDefault "/dev/vdc";
-                  # rtdev = pkgs.lib.mkDefault "/dev/vdd";
-                  # logdev = pkgs.lib.mkDefault "/dev/vde";
-                };
+      modules =
+        [
+          ./xfstests/module.nix
+          ./xfsprogs/module.nix
+          ./system.nix
+          ./vm.nix
+          ./input.nix
+          (
+            {config, ...}: {
+              services.xfsprogs = {
+                enable = true;
               };
-            };
-          }
-        )
-      ];
+
+              services.xfstests = {
+                enable = true;
+              };
+            }
+          )
+        ]
+        ++ user-modules;
     }).config.system.build.vm;
-
-  mkVmTest = {
-    pkgs,
-    uconfig,
-  }:
-    builtins.getAttr "runner" rec {
-      nixos = mkVM {
-        inherit pkgs uconfig;
-      };
-
-      runner = pkgs.callPackage ./runner.nix {inherit nixos;};
-    };
 
   mkLinuxShell = {
     clangVersion ? "",
@@ -261,6 +238,7 @@ in rec {
     nixpkgs,
     useGcc ? false,
     uconfig ? {},
+    user-modules ? [],
   }: let
     pkgs = import nixpkgs {
       system = "x86_64-linux";
@@ -323,87 +301,73 @@ in rec {
       inherit src kconfig version;
     };
 
-    vm = mkVmTest {
-      inherit pkgs;
-      uconfig =
-        {
-          networking.hostName = "kd";
-          kernel = {
-            inherit src version;
-            kconfig = kkconfig;
-          };
-          virtualisation.emptyDiskImages = [
-            12000
-            12000
-            1000
-            1000
-            1000
-            1000
-          ];
-        }
-        // uconfig;
+    vm = pkgs.callPackage ./runner.nix {
+      nixos = mkVmImage {
+        inherit pkgs;
+        user-modules = [
+          ({...}: uconfig)
+          (
+            {...}: {
+              kernel = {
+                inherit src version;
+                kconfig = kkconfig;
+              };
+            }
+          )
+        ];
+      };
     };
 
-    prebuild = mkVmTest {
-      inherit pkgs;
-      uconfig =
-        {
-          # Same as in .vm
-          networking.hostName = "kd";
-          kernel = {
-            inherit src version;
-            kconfig = kkconfig;
-          };
-          virtualisation.emptyDiskImages = [
-            12000
-            12000
-            1000
-            1000
-            1000
-            1000
-          ];
+    prebuild = pkgs.callPackage ./runner.nix {
+      nixos = mkVmImage {
+        inherit pkgs;
+        user-modules = [
+          ({...}: uconfig)
+          (
+            {...}: {
+              kernel = {
+                inherit src version;
+                kconfig = kkconfig;
+              };
 
-          # As our dummy derivation doesn't provide any .config we need to tell
-          # NixOS not to check for any required configurations
-          system.requiredKernelConfig = pkgs.lib.mkForce [];
-        }
-        // uconfig;
+              # As our dummy derivation doesn't provide any .config we need to tell
+              # NixOS not to check for any required configurations
+              system.requiredKernelConfig = pkgs.lib.mkForce [];
+            }
+          )
+        ];
+      };
     };
 
-    kgdbvm = mkVmTest {
-      inherit pkgs;
-      uconfig =
-        {
-          # Same as in .vm
-          networking.hostName = "kd";
-          kernel = {
-            inherit src version;
-            kconfig = kkconfig;
-          };
-          virtualisation.emptyDiskImages = [
-            12000
-            12000
-            1000
-            1000
-            1000
-            1000
-          ];
+    kgdbvm = pkgs.callPackage ./runner.nix {
+      nixos = mkVmImage {
+        inherit pkgs;
+        user-modules = [
+          ({...}: uconfig)
+          (
+            {...}: {
+              kernel = {
+                inherit src version;
+                kconfig = kkconfig;
+              };
 
-          boot.kernelParams = pkgs.lib.mkForce [
-            # consistent eth* naming
-            "net.ifnames=0"
-            "biosdevnames=0"
-            "console=tty0"
-            "kgdboc=ttyS0,115200"
-            "nokaslr"
-            "kgdbwait"
-          ];
+              boot.kernelParams = pkgs.lib.mkForce [
+                # consistent eth* naming
+                "net.ifnames=0"
+                "biosdevnames=0"
+                "console=tty0"
+                "kgdboc=ttyS0,115200"
+                "nokaslr"
+                "kgdbwait"
+              ];
 
-          # As our dummy derivation doesn't provide any .config we need to tell
-          # NixOS not to check for any required configurations
-          system.requiredKernelConfig = pkgs.lib.mkForce [];
-        }
-        // uconfig;
+              # As our dummy derivation doesn't provide any .config we need to tell
+              # NixOS not to check for any required configurations
+              system.requiredKernelConfig = pkgs.lib.mkForce [];
+            }
+          )
+        ];
+      };
     };
 
     #initrd = pkgs.callPackage (import ./initrd/default.nix) {
@@ -449,68 +413,55 @@ in rec {
       (nixpkgs.lib.nixosSystem {
         inherit pkgs;
         system = "x86_64-linux";
-        modules = [
-          ./image.nix
-          {nixpkgs.hostPlatform = "x86_64-linux";}
-          ./xfstests/module.nix
-          ./xfsprogs/module.nix
-          ./system.nix
-          ./input.nix
-          ({...}: uconfig)
-          (
-            {config, ...}: {
-              boot.kernelModules = nixpkgs.lib.mkForce [];
-              boot.initrd = {
-                # Override required kernel modules by
-                # nixos/modules/profiles/qemu-guest.nix As we use kernel build
-                # outside of Nix, it will have different uname and will not be
-                # able to find these modules. This probably can be fixed
-                availableKernelModules = nixpkgs.lib.mkForce [];
-                kernelModules = nixpkgs.lib.mkForce [];
-              };
-
-              services.xfsprogs = {
-                enable = true;
-              };
-
-              systemd.repart.partitions = {
-                test = {
-                  Format = "ext4";
-                  Label = "test";
-                  SizeMinBytes = "1G";
-                  SizeMaxBytes = "10G";
-                  Type = "linux-generic";
-                  Weight = 500;
+        modules =
+          [
+            {nixpkgs.hostPlatform = "x86_64-linux";}
+            ./xfstests/module.nix
+            ./xfsprogs/module.nix
+            ./input.nix
+            ./system.nix
+            ./image.nix
+            ({...}: uconfig)
+            (
+              {config, ...}: {
+                services.xfsprogs = {
+                  enable = true;
                 };
-                scratch = {
-                  Format = "ext4";
-                  Label = "scratch";
-                  SizeMinBytes = "1G";
-                  SizeMaxBytes = "10G";
-                  Type = "linux-generic";
-                  Weight = 500;
-                };
-              };
 
-              services.xfstests = {
-                enable = true;
-                arguments = pkgs.lib.mkDefault "-R xunit -s xfs_4k generic/110";
-                dev = {
+                systemd.repart.partitions = {
                   test = {
-                    main = pkgs.lib.mkDefault "/dev/sda5";
-                    #rtdev = pkgs.lib.mkDefault "/dev/vdf";
-                    #logdev = pkgs.lib.mkDefault "/dev/vdg";
+                    Format = "ext4";
+                    Label = "test";
+                    SizeMinBytes = "1G";
+                    SizeMaxBytes = "10G";
+                    Type = "linux-generic";
+                    Weight = 500;
                   };
                   scratch = {
-                    main = pkgs.lib.mkDefault "/dev/sda4";
-                    # rtdev = pkgs.lib.mkDefault "/dev/vdd";
-                    # logdev = pkgs.lib.mkDefault "/dev/vde";
+                    Format = "ext4";
+                    Label = "scratch";
+                    SizeMinBytes = "1G";
+                    SizeMaxBytes = "10G";
+                    Type = "linux-generic";
+                    Weight = 500;
                   };
                 };
-              };
-            }
-          )
-        ];
+
+                services.xfstests = {
+                  enable = true;
+                  dev = {
+                    test = {
+                      main = pkgs.lib.mkDefault "/dev/sda5";
+                    };
+                    scratch = {
+                      main = pkgs.lib.mkDefault "/dev/sda4";
+                    };
+                  };
+                };
+              }
+            )
+          ]
+          ++ user-modules;
       }).config.system.build.image;
 
     run-image = pkgs.callPackage ./run-image.nix {

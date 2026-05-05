@@ -58,9 +58,11 @@
     partitions = {
       esp = {
         contents = {
-          "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source = "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
+          "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source =
+            "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
 
-          "/EFI/Linux/${config.system.boot.loader.ukiFile}".source = "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
+          "/EFI/Linux/${config.system.boot.loader.ukiFile}".source =
+            "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
         };
         repartConfig = {
           Format = "vfat";
@@ -84,7 +86,7 @@
   };
 
   boot.initrd.systemd.repart.enable = true;
-  boot.initrd.systemd.repart.device = "/dev/sda";
+  boot.initrd.systemd.repart.device = pkgs.lib.mkDefault "/dev/sda";
   systemd.repart.partitions = {
     # Systemd-repart is trying to reuse /nix/store partition for any other
     # suitable partition. This tells systemd-repart that this partition should
@@ -107,6 +109,4 @@
       Weight = 1000;
     };
   };
-
-  boot.loader.grub.enable = false;
 }

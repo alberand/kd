@@ -17,7 +17,7 @@ in {
     arguments = mkOption {
       description = "command line arguments for xfstests";
       # Has to be empty by default to not run anything in VM
-      default = "";
+      default = "-R xunit -s xfs_4k generic/110";
       example = "-g auto";
       type = types.str;
     };
@@ -26,22 +26,22 @@ in {
       test = {
         main = mkOption {
           description = "Path to disk used as TEST_DEV";
-          default = "";
-          example = "/dev/sda";
+          default = "/dev/vdb";
+          example = "/dev/vdb";
           type = types.str;
         };
 
         rtdev = mkOption {
           description = "Path to disk used as TEST_RTDEV";
           default = "";
-          example = "/dev/sdc";
+          example = "/dev/vdf";
           type = types.str;
         };
 
         logdev = mkOption {
           description = "Path to disk used as TEST_LOGDEV";
           default = "";
-          example = "/dev/sdd";
+          example = "/dev/vdg";
           type = types.str;
         };
       };
@@ -49,22 +49,22 @@ in {
       scratch = {
         main = mkOption {
           description = "Path to disk used as SCRATCH_DEV";
-          default = "";
-          example = "/dev/sdb";
+          default = "/dev/vdc";
+          example = "/dev/vdc";
           type = types.str;
         };
 
         rtdev = mkOption {
           description = "Path to disk used as SCRATCH_RTDEV";
           default = "";
-          example = "/dev/sdc";
+          example = "/dev/vdd";
           type = types.str;
         };
 
         logdev = mkOption {
           description = "Path to disk used as SCRATCH_LOGDEV";
           default = "";
-          example = "/dev/sdd";
+          example = "/dev/vde";
           type = types.str;
         };
       };

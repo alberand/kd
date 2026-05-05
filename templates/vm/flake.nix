@@ -15,27 +15,34 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     kd.url = "github:alberand/kd";
   };
-  outputs = {
-    self,
-    nixpkgs,
-    kd,
-  }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {
-      inherit system;
-      overlays = [kd.overlays.default];
-    };
-    packages = let
-      uset = import ./uconfig.nix;
-    in
-      kd.lib.mkEnv {
-        inherit nixpkgs;
-        uconfig = uset.uconfig {inherit pkgs kd;};
+  outputs =
+    {
+      self,
+      nixpkgs,
+      kd,
+    }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ kd.overlays.default ];
       };
-  in {
-    packages.${system} = packages;
-    devShells.${system} = {
-      default = packages.shell;
+      packages =
+        let
+          uset = import ./uconfig.nix;
+        in
+        kd.lib.mkEnv {
+          inherit nixpkgs;
+          uconfig = uset.uconfig { inherit pkgs kd; };
+          user-modules = [
+            (pkgs.lib.optional (builtins.fileExists ./optional.nix) ./optional.nix)
+          ];
+        };
+    in
+    {
+      packages.${system} = packages;
+      devShells.${system} = {
+        default = packages.shell;
+      };
     };
-  };
 }

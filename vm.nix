@@ -12,26 +12,24 @@ in {
 
   config = {
     virtualisation = {
-      diskSize = 20000; # MB
+      diskSize = lib.mkDefault 30000; # MB
       # Store the image in sharedir instead of pwd
-      memorySize = 4096; # MB
-      cores = 4;
-      writableStoreUseTmpfs = false;
-      useDefaultFilesystems = true;
+      memorySize = lib.mkDefault 4096; # MB
+      cores = lib.mkDefault 4;
+      writableStoreUseTmpfs = lib.mkDefault false;
+      useDefaultFilesystems = lib.mkDefault true;
       # Run qemu in the terminal not in Qemu GUI
-      graphics = false;
-      diskImage = "$ENVDIR/${config.system.name}.qcow2";
-      qemu = {
-        # Network requires tap0 netowrk on the host
-        options = [];
-          #[
-          #  "-device e1000,netdev=network0,mac=00:00:00:00:00:00"
-          #  "-netdev tap,id=network0,ifname=tap0,script=no,downscript=no"
-          #  "-device virtio-rng-pci"
-          #];
-      };
-
-     sharedDirectories = {
+      graphics = lib.mkDefault false;
+      emptyDiskImages = lib.mkDefault [
+        12000
+        12000
+        1000
+        1000
+        1000
+        1000
+      ];
+      diskImage = lib.mkDefault "$ENVDIR/${config.system.name}.qcow2";
+      sharedDirectories = lib.mkDefault {
         share = {
           source = "$ENVDIR/share";
           target = "/root/share";

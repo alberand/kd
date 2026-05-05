@@ -17,6 +17,7 @@
     (modulesPath + "/profiles/minimal.nix")
   ];
   boot = {
+    loader.grub.enable = false;
     kernelModules = lib.mkForce [];
     kernelParams = [
       # consistent eth* naming
