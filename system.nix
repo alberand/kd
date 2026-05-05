@@ -90,6 +90,9 @@
 
   environment.variables.EDITOR = "nvim";
 
+  services.xfstests.enable = true;
+  services.xfsprogs.enable = true;
+
   nix = {
     extraOptions = ''
       experimental-features = nix-command flakes

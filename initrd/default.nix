@@ -1,7 +1,6 @@
 {
   nixpkgs,
   pkgs,
-  uconfig,
   ...
 }: let
   dummy-system = let
@@ -60,7 +59,6 @@
         ./system.nix
         ./vm.nix
         ./input.nix
-        ({...}: uconfig)
       ];
       format = "vm";
     };

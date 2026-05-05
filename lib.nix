@@ -35,17 +35,6 @@ in rec {
           ./system.nix
           ./vm.nix
           ./input.nix
-          (
-            {config, ...}: {
-              services.xfsprogs = {
-                enable = true;
-              };
-
-              services.xfstests = {
-                enable = true;
-              };
-            }
-          )
         ]
         ++ user-modules;
     }).config.system.build.vm;
@@ -237,7 +226,6 @@ in rec {
   mkEnv = {
     nixpkgs,
     useGcc ? false,
-    uconfig ? {},
     user-modules ? [],
   }: let
     pkgs = import nixpkgs {
@@ -264,18 +252,31 @@ in rec {
       inherit pkgs;
       config = {};
     };
-    useConfig = builtins.hasAttr "kernel" uconfig;
+    userSystem = (nixpkgs.lib.nixosSystem {
+      inherit pkgs;
+      system = "x86_64-linux";
+      modules =
+        [
+          ./xfstests/module.nix
+          ./xfsprogs/module.nix
+          ./system.nix
+          ./vm.nix
+          ./input.nix
+        ]
+        ++ user-modules;
+    }).config;
+    useConfig = builtins.hasAttr "kernel" userSystem;
     version =
-      if useConfig && builtins.hasAttr "version" uconfig.kernel
-      then uconfig.kernel.version
+      if useConfig && builtins.hasAttr "version" userSystem.kernel
+      then userSystem.kernel.version
       else sources.options.kernel.version.default;
     src =
-      if useConfig && builtins.hasAttr "src" uconfig.kernel
-      then uconfig.kernel.src
+      if useConfig && builtins.hasAttr "src" userSystem.kernel
+      then userSystem.kernel.src
       else sources.options.kernel.src.default;
     kkconfig =
-      if useConfig && builtins.hasAttr "kconfig" uconfig.kernel
-      then uconfig.kernel.kconfig
+      if useConfig && builtins.hasAttr "kconfig" userSystem.kernel
+      then userSystem.kernel.kconfig
       else sources.options.kernel.kconfig.default;
     kconfigBuild = {config}:
       buildKernelConfig {
@@ -304,11 +305,10 @@ in rec {
     vm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = [
-          ({...}: uconfig)
+        user-modules = user-modules ++ [
           (
             {...}: {
-              kernel = {
+              kernel = pkgs.lib.mkDefault {
                 inherit src version;
                 kconfig = kkconfig;
               };
@@ -321,11 +321,10 @@ in rec {
     prebuild = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = [
-          ({...}: uconfig)
+        user-modules = user-modules ++ [
           (
             {...}: {
-              kernel = {
+              kernel = pkgs.lib.mkDefault {
                 inherit src version;
                 kconfig = kkconfig;
               };
@@ -342,11 +341,10 @@ in rec {
     kgdbvm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
         inherit pkgs;
-        user-modules = [
-          ({...}: uconfig)
+        user-modules = user-modules ++ [
           (
             {...}: {
-              kernel = {
+              kernel = pkgs.lib.mkDefault {
                 inherit src version;
                 kconfig = kkconfig;
               };
@@ -371,7 +369,7 @@ in rec {
     };
 
     #initrd = pkgs.callPackage (import ./initrd/default.nix) {
-    #  inherit nixpkgs uconfig;
+    #  inherit nixpkgs;
     #};
 
     shell = mkLinuxShell {inherit sources;};
@@ -421,13 +419,8 @@ in rec {
             ./input.nix
             ./system.nix
             ./image.nix
-            ({...}: uconfig)
             (
               {config, ...}: {
-                services.xfsprogs = {
-                  enable = true;
-                };
-
                 systemd.repart.partitions = {
                   test = {
                     Format = "ext4";
@@ -448,7 +441,6 @@ in rec {
                 };
 
                 services.xfstests = {
-                  enable = true;
                   dev = {
                     test = {
                       main = pkgs.lib.mkDefault "/dev/sda5";
