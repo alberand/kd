@@ -227,6 +227,7 @@ in rec {
     nixpkgs,
     useGcc ? false,
     user-modules ? [],
+    user-overlays ? [],
   }: let
     pkgs = import nixpkgs {
       system = "x86_64-linux";
@@ -236,7 +237,7 @@ in rec {
         (final: prev: {
           kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
         })
-      ];
+      ] ++ user-overlays;
     };
     stdenv =
       if useGcc
