@@ -32,10 +32,17 @@ runs:
     # to my remote test machine running libvirtd
     $ kd build
 
-If you know Nix you can edit VM configuration direction in
-`.kd/kfeature/uconfig.nix`.
+If you know Nix you can custom configuration into `.kd/flake/modules.nix`. You
+can overwrite system packages by adding overlay to `.kd/flake/overlays.nix`.
 
-**Note** that `kd build/run` command overwrites `uconfig.nix`!
+I recommend adding kd files to the global `~/.gitignore
+
+```
+# kd files
+".kd"
+".kd.toml"
+".envrc"
+```
 
 # Config Examples
 
@@ -242,9 +249,49 @@ version = "v6.16"
 repo = "git@github.com:torvalds/linux.git"
 ```
 
+# Custom Nix modules
+
+This is custom module which will automatically included into VM and built image.
+This example enables systemd's coredump service and add config to
+EnterNamespace.
+
+```nix
+# .kd/flake/modules.nix
+{pkgs, ...}: {
+    services.coredump = {
+        enable = true;
+        extraConfig = "EnterNamespace=Pupa";
+    };
+}
+```
+
+# Override system package
+
+This overlay overrides system xfsdump package source to local commit.
+
+```nix
+# .kd/flake/overlays.nix
+final: prev: {
+  xfsdump = (
+    prev.xfsdump.overrideAttrs (
+      final: prev: {
+        src = builtins.fetchGit {
+          url = "file:///home/aalbersh/Projects/xfsdump-dev";
+          rev = "4beb0942a770f9e6f19d8b64f7cc7cc678eae547";
+          allRefs = true;
+        };
+      }
+    )
+  );
+}
+```
+
 # TODO
-- [ ] Do I really need to use TOML instead of just plain Nix? devenv does it but
+- [x] Do I really need to use TOML instead of just plain Nix? devenv does it but
       Nix isn't that nice for configuration
+      - I think so, Nix is not configuration language and I would like to have
+        generic language flexibility. Any future API use/more complext config
+        processing...
 - [ ] Convert `nurl` to front-end + lib to call use the lib directly
 - [ ] After decision on TOML necessity, convert `kd` from string manipulation to
       parsing Nix code with rnix-parse
@@ -252,3 +299,4 @@ repo = "git@github.com:torvalds/linux.git"
 - [ ] Make `kd run` without Nix evaluation, it can put all the things in right
       places and execute a script with qemu
 - [ ] Minimize image as in https://nixcademy.com/posts/minimizing-nixos-images/
+- [ ] Change TOML to kdl?
