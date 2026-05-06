@@ -216,6 +216,31 @@ in rec {
       '';
     };
 
+  mkXfsdumpShell = {}:
+    pkgs.mkShell {
+      nativeBuildInputs = with pkgs; [
+        acl
+        attr
+        automake
+        autoconf
+        libtool
+        libuuid
+        ncurses
+        libxfs
+        (mkLlvmPkgs {clangVersion = "19";})
+      ];
+
+      MAKEFLAGS = "-j$(nproc)";
+      MAKE = "${pkgs.gnumake}/bin/make";
+      MSGFMT = "${pkgs.gettext}/bin/msgfmt";
+      MSGMERGE = "${pkgs.gettext}/bin/msgmerge";
+      XGETTEXT = "${pkgs.gettext}/bin/xgettext";
+
+      shellHook = ''
+        echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd-xfsdump$(tput setaf 166) shell.$(tput sgr0)"
+      '';
+    };
+
   buildKernelHeaders = pkgs.makeLinuxHeaders;
 
   vmtest-deploy = {}:

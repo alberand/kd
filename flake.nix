@@ -64,6 +64,8 @@
 
       xfsprogs = lib.mkXfsprogsShell {};
       xfstests = lib.mkXfstestsShell {};
+      xfsdump = lib.mkXfsdumpShell {};
+      xfsrestore = lib.mkXfsdumpShell {};
 
       kd-dev = let
         rust-pkgs = import nixpkgs {
