@@ -13,29 +13,21 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
-    nixpkgs-clang.url = "github:nixos/nixpkgs/6915a163f351c32bd4557518d047725665e83d37";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
   outputs = {
     self,
     nixpkgs,
-    nixpkgs-clang,
     rust-overlay,
   }: let
     system = "x86_64-linux";
     overlay = final: prev: {
       kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
     };
-    pkgs-clang = import nixpkgs-clang {
-      inherit system;
-    };
     pkgs = import nixpkgs {
       inherit system;
       overlays = [
-        (final: prev: {
-          llvmPackages_latest = pkgs-clang.llvmPackages_latest;
-        })
         overlay
         (import ./xfstests/overlay.nix)
         (import ./xfsprogs/overlay.nix)
