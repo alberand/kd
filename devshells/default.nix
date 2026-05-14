@@ -90,18 +90,23 @@
           CCACHE_SLOPPINESS = "random_seed";
           CCACHE_UMASK = 007;
 
+          MAKE = "${pkgs.gnumake}/bin/make";
+          SORT = "${pkgs.coreutils}/bin/sort";
+          SED = "${pkgs.gnused}/bin/sed";
+          AWK = "${pkgs.gawk}/bin/awk";
+          MSGFMT = "${pkgs.gettext}/bin/msgfmt";
+          MSGMERGE = "${pkgs.gettext}/bin/msgmerge";
+          XGETTEXT = "${pkgs.gettext}/bin/xgettext";
+          TAR = "${pkgs.gnutar}/bin/tar";
+          ZIP = "${pkgs.gzip}/bin/gzip";
+          RPM = "${pkgs.rpm}/bin/rpm";
+          LIBTOOL = "${pkgs.libtool}/bin/libtool";
+
           shellHook = let
             xfsprogs-version = (pkgs.lib.importJSON ../sources/xfsprogs.json).rev;
             xfstests-version = (pkgs.lib.importJSON ../sources/xfstests.json).rev;
           in ''
             export MAKEFLAGS="-j$(nproc)"
-
-            export AWK=$(type -P awk)
-            export ECHO=$(type -P echo)
-            export LIBTOOL=$(type -P libtool)
-            export MAKE=$(type -P make)
-            export SED=$(type -P sed)
-            export SORT=$(type -P sort)
 
             echo "$(tput setaf 166)Welcome to $(tput setaf 227)kd$(tput setaf 166) shell.$(tput sgr0)"
             echo "Envrionment has:"
