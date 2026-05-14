@@ -1,18 +1,69 @@
-final: prev: rec {
+{pkgs, lib}: final: prev: rec {
+  kconfigs = import ../kconfigs/default.nix { inherit (pkgs) lib; };
+  kd = {
+    inherit lib;
+  };
+
+  xfsprogs = let
+    sources = prev.lib.importJSON ../sources/xfsprogs.json;
+  in (prev.xfsprogs.overrideAttrs (
+    old:
+      {
+        src = prev.fetchgit sources;
+        version = "git-${sources.rev}";
+
+        # Drop Python as this is necessary for protofiles and xfs_scrub only but
+        # adds ~100MB to the image
+        buildInputs =
+          prev.lib.lists.remove (prev.python3.withPackages (ps: [
+            ps.dbus-python
+          ]))
+          old.buildInputs;
+        # We need to add autoconfHook because if you look into nixpkgs#xfsprogs
+        # the source code fetched is not a git tree - it's tarball. The tarball is
+        # actually created with 'make dist' command. This tarball already has some
+        # additional stuff produced by autoconf. Here we want to take raw git tree
+        # so we need to run 'make dist', but this is not the best way (why?), just
+        # add autoreconfHook which will do autoconf automatically.
+        nativeBuildInputs =
+          prev.xfsprogs.nativeBuildInputs
+          ++ [
+            prev.autoreconfHook
+            prev.attr
+          ];
+
+        patches = [];
+
+        preConfigure =
+          prev.xfsprogs.preConfigure
+          + ''
+            patchShebangs libfrog/gettext.py.in mkfs/xfs_protofile.py.in
+          '';
+
+        postConfigure = ''
+          cp include/install-sh install-sh
+          patchShebangs ./install-sh
+        '';
+      }
+      // prev.lib.optionalAttrs false {
+        stdenv = prev.ccacheStdenv;
+      }
+  ));
+
   xfstests-configs = prev.stdenv.mkDerivation {
     name = "xfstests-configs";
     version = "v1";
-    src = ./.;
+    src = ../xfstests;
     installPhase = ''
       mkdir -p $out
       cp $src/*.conf $out
     '';
     passthru = {
-      xfstests-all = ./xfstests-all.conf;
-      xfstests-xfs-1k = ./xfstests-xfs-1k.conf;
-      xfstests-xfs-4k = ./xfstests-xfs-4k.conf;
-      xfstests-ext4-1k = ./xfstests-ext4-1k.conf;
-      xfstests-ext4-4k = ./xfstests-ext4-4k.conf;
+      xfstests-all = ../xfstests/xfstests-all.conf;
+      xfstests-xfs-1k = ../xfstests/xfstests-xfs-1k.conf;
+      xfstests-xfs-4k = ../xfstests/xfstests-xfs-4k.conf;
+      xfstests-ext4-1k = ../xfstests/xfstests-ext4-1k.conf;
+      xfstests-ext4-4k = ../xfstests/xfstests-ext4-4k.conf;
     };
   };
 
@@ -38,7 +89,7 @@ final: prev: rec {
 
   xfstests-upload =
     prev.writeShellScriptBin "xfstests-upload" (builtins.readFile
-      ./github-upload.sh);
+      ../xfstests/github-upload.sh);
 
   xfstests = prev.xfstests.overrideAttrs (old: let
     sources = prev.lib.importJSON ../sources/xfstests.json;
@@ -95,11 +146,11 @@ final: prev: rec {
         patchShebangs .
       '';
       patches = [
-        ./0001-common-link-.out-file-to-the-output-directory.patch
-        ./0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-        ./0003-generic-746-follow-symlinks-when-populating-mount.patch
-        ./0004-fstests-generic-test-hook-infrastructure.patch
-        ./0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
+        ../xfstests/0001-common-link-.out-file-to-the-output-directory.patch
+        ../xfstests/0002-common-fix-linked-binaries-such-as-ls-and-true.patch
+        ../xfstests/0003-generic-746-follow-symlinks-when-populating-mount.patch
+        ../xfstests/0004-fstests-generic-test-hook-infrastructure.patch
+        ../xfstests/0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
       ];
 
       nativeBuildInputs =

@@ -23,16 +23,18 @@
     system = "x86_64-linux";
     pkgs = import nixpkgs {
       inherit system;
-      overlays = [kd.overlays.default];
+      overlays =
+        [
+          kd.overlays.default
+        ]
+        ++ pkgs.lib.optional (builtins.pathExists ./overlays.nix) (import ./overlays.nix);
     };
     packages = kd.lib.mkEnv {
-      inherit nixpkgs;
       user-modules =
         [
           (import ./uconfig.nix)
         ]
         ++ (pkgs.lib.optional (builtins.pathExists ./modules.nix) ./modules.nix);
-      user-overlays = pkgs.lib.optional (builtins.pathExists ./overlays.nix) (import ./overlays.nix);
     };
   in {
     packages.${system} = packages;

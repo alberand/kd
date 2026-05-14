@@ -1,6 +1,6 @@
 {
   pkgs,
-  nixpkgs,
+  nixosSystem,
 }: let
   mkLlvmPkgs = {clangVersion}: let
     llvmPackages =
@@ -21,11 +21,8 @@
     )
   ];
 in rec {
-  mkVmImage = {
-    pkgs,
-    user-modules,
-  }:
-    (nixpkgs.lib.nixosSystem {
+  mkVmImage = {user-modules}:
+    (nixosSystem {
       inherit pkgs;
       system = "x86_64-linux";
       modules =
@@ -277,23 +274,9 @@ in rec {
     };
 
   mkEnv = {
-    nixpkgs,
     useGcc ? false,
     user-modules ? [],
-    user-overlays ? [],
   }: let
-    pkgs = import nixpkgs {
-      system = "x86_64-linux";
-      overlays =
-        [
-          (import ./xfsprogs/overlay.nix)
-          (import ./xfstests/overlay.nix)
-          (final: prev: {
-            kconfigs = import ./kconfigs/default.nix {inherit (pkgs) lib;};
-          })
-        ]
-        ++ user-overlays;
-    };
     stdenv =
       if useGcc
       then pkgs.stdenv
@@ -309,7 +292,7 @@ in rec {
       config = {};
     };
     userSystem =
-      (nixpkgs.lib.nixosSystem {
+      (nixosSystem {
         inherit pkgs;
         system = "x86_64-linux";
         modules =
@@ -361,7 +344,6 @@ in rec {
 
     vm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
-        inherit pkgs;
         user-modules =
           user-modules
           ++ [
@@ -379,7 +361,6 @@ in rec {
 
     prebuild = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
-        inherit pkgs;
         user-modules =
           user-modules
           ++ [
@@ -401,7 +382,6 @@ in rec {
 
     kgdbvm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
-        inherit pkgs;
         user-modules =
           user-modules
           ++ [
@@ -471,12 +451,11 @@ in rec {
     };
 
     image =
-      (nixpkgs.lib.nixosSystem {
+      (nixosSystem {
         inherit pkgs;
         system = "x86_64-linux";
         modules =
           [
-            {nixpkgs.hostPlatform = "x86_64-linux";}
             ./xfstests/module.nix
             ./xfsprogs/module.nix
             ./input.nix
