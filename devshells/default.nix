@@ -307,4 +307,6 @@ in rec {
       rustfmt
     ];
   };
+
+  default = shell;
 }

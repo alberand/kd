@@ -39,7 +39,7 @@
   in {
     packages.${system} = packages;
     devShells.${system} = {
-      default = packages.shell;
+      default = kd.devShells.${system}.default;
     };
   };
 }
