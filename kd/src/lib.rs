@@ -111,7 +111,7 @@ pub fn uconfig_xfsprogs(config: &XfsprogsConfig) -> String {
             let src = nurl(&repo, &rev)
                 .expect("Failed to fetch kernel source for xfsprogs headers");
             let value =
-                format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                format!("pkgs.kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
             options.push(uconfig_set_value("kernelHeaders", &value));
         };
     }
@@ -191,7 +191,7 @@ pub fn uconfig_xfstests(config: &XfstestsConfig) -> String {
             let src = nurl(&repo, &rev)
                 .expect("Failed to fetch kernel source for xfstests headers");
             let value =
-                format!("kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
+                format!("pkgs.kd.lib.buildKernelHeaders {{ src = {src}; version = \"{version}\"; }}");
             options.push(uconfig_set_value("kernelHeaders", &value));
         };
     }

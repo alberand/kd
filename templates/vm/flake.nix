@@ -27,7 +27,7 @@
         [
           kd.overlays.default
         ]
-        ++ pkgs.lib.optional (builtins.pathExists ./overlays.nix) (import ./overlays.nix);
+        ++ nixpkgs.lib.optional (builtins.pathExists ./overlays.nix) (import ./overlays.nix);
     };
     packages = kd.lib.mkEnv {
       user-modules =
