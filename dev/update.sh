@@ -70,3 +70,6 @@ nix develop path:templates/vm# --command bash -c "true"
 
 echo "💡Test flake"
 nix flake check -Lv
+
+echo "💡Test template flake"
+nix flake check -Lv path:templates/vm
