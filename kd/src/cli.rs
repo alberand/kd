@@ -28,6 +28,8 @@ pub enum Commands {
     Build {
         #[arg(long, help = "Name of a test config to use")]
         name: Option<String>,
+        #[arg(short, long, help = "kd package to build")]
+        target: Option<String>,
     },
 
     /// Run QEMU test system

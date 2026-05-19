@@ -45,6 +45,8 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
         }
         'kd;build' {
             [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Name of a test config to use')
+            [CompletionResult]::new('-t', '-t', [CompletionResultType]::ParameterName, 'kd package to build')
+            [CompletionResult]::new('--target', '--target', [CompletionResultType]::ParameterName, 'kd package to build')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break

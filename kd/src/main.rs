@@ -69,7 +69,7 @@ fn cmd_init(_: &State) -> Result<()> {
     Ok(())
 }
 
-fn cmd_build(state: &mut State) -> Result<()> {
+fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
     match generate_uconfig(state) {
         Ok(content) => {
             let mut file = std::fs::File::create(&state.user_config)
@@ -82,7 +82,8 @@ fn cmd_build(state: &mut State) -> Result<()> {
         }
     }
 
-    let package = format!("path:{}#image", state.flake_dir.display());
+    let target: &str = if let Some(t) = target { t } else { "image" };
+    let package = format!("path:{}#{}", state.flake_dir.display(), target);
 
     let mut cmd = Command::new("nix");
     cmd.arg("build").args(&state.args).arg(&package);
@@ -259,12 +260,12 @@ fn main() -> Result<()> {
     match &cli.command {
         Some(Commands::Init {}) => cmd_init(&state).context("Initialization failed"),
 
-        Some(Commands::Build { name }) => {
+        Some(Commands::Build { name, target }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }
 
-            cmd_build(&mut state)
+            cmd_build(&mut state, target)
         }
 
         Some(Commands::Run { name }) => {

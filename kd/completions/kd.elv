@@ -40,6 +40,8 @@ set edit:completion:arg-completer[kd] = {|@words|
         }
         &'kd;build'= {
             cand --name 'Name of a test config to use'
+            cand -t 'kd package to build'
+            cand --target 'kd package to build'
             cand -h 'Print help'
             cand --help 'Print help'
         }
