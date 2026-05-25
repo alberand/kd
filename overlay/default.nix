@@ -1,5 +1,8 @@
-{pkgs, lib}: final: prev: rec {
-  kconfigs = import ../kconfigs/default.nix { inherit (pkgs) lib; };
+{
+  pkgs,
+  lib,
+}: final: prev: rec {
+  kconfigs = import ../kconfigs/default.nix {inherit (pkgs) lib;};
 
   xfsprogs = let
     sources = prev.lib.importJSON ../sources/xfsprogs.json;
@@ -73,7 +76,10 @@
       hash = "sha256-YQG4EoIdIeXiZENOfq6sTqN2e5SKRz9hHwslEgoC61Y=";
     };
 
-    phases = ["unpackPhase" "installPhase"];
+    phases = [
+      "unpackPhase"
+      "installPhase"
+    ];
     installPhase = ''
       runHook preInstall
 
@@ -84,130 +90,140 @@
     '';
   };
 
-  xfstests-upload =
-    prev.writeShellScriptBin "xfstests-upload" (builtins.readFile
-      ../xfstests/github-upload.sh);
+  xfstests-upload = prev.writeShellScriptBin "xfstests-upload" (
+    builtins.readFile ../xfstests/github-upload.sh
+  );
 
-  xfstests = prev.xfstests.overrideAttrs (old: let
-    sources = prev.lib.importJSON ../sources/xfstests.json;
-  in
-    {
-      src = prev.fetchgit sources;
-      version = "git-${sources.rev}";
-      patchPhase = with prev; ''
-        # Apply patches if any
-        local -a patchesArray
-        patchesArray=( ''${patches[@]:-} )
-        for p in "''${patchesArray[@]}"; do
-          echo "applying patch $p"
-          patch -p1 < $p
-        done
+  xfstests = prev.xfstests.overrideAttrs (
+    old: let
+      sources = prev.lib.importJSON ../sources/xfstests.json;
+    in
+      {
+        src = prev.fetchgit sources;
+        version = "git-${sources.rev}";
+        patchPhase = with prev; ''
+          # Apply patches if any
+          local -a patchesArray
+          patchesArray=( ''${patches[@]:-} )
+          for p in "''${patchesArray[@]}"; do
+            echo "applying patch $p"
+            patch -p1 < $p
+          done
 
-        # As install-sh is taken from the /nix/store by libtoolize, it's read-only. The
-        # Makefile can not overwrite it latter. Fix this by telling cp to force
-        # overwrite.
-        substituteInPlace Makefile \
-          --replace "cp include/install-sh ." "cp -f include/install-sh ."
+          # As install-sh is taken from the /nix/store by libtoolize, it's read-only. The
+          # Makefile can not overwrite it latter. Fix this by telling cp to force
+          # overwrite.
+          substituteInPlace Makefile \
+            --replace "cp include/install-sh ." "cp -f include/install-sh ."
 
-        # Patch the destination directory
-        sed -i include/builddefs.in -e "s|^PKG_LIB_DIR\s*=.*|PKG_LIB_DIR=$out/lib/xfstests|"
+          # Patch the destination directory
+          sed -i include/builddefs.in -e "s|^PKG_LIB_DIR\s*=.*|PKG_LIB_DIR=$out/lib/xfstests|"
 
-        # Don't canonicalize path to mkfs (in util-linux) - otherwise e.g. mkfs.ext4 isn't found
-        sed -i common/config -e 's|^export MKFS_PROG=.*|export MKFS_PROG=mkfs|'
+          # Don't canonicalize path to mkfs (in util-linux) - otherwise e.g. mkfs.ext4 isn't found
+          sed -i common/config -e 's|^export MKFS_PROG=.*|export MKFS_PROG=mkfs|'
 
-        # Move the Linux-specific test output files to the correct place, or else it will
-        # try to move them at runtime. Also nuke all the irix crap.
-        for f in tests/*/*.out.linux; do
-          mv $f $(echo $f | sed -e 's/\.linux$//')
-        done
-        rm -f tests/*/*.out.irix
+          # Move the Linux-specific test output files to the correct place, or else it will
+          # try to move them at runtime. Also nuke all the irix crap.
+          for f in tests/*/*.out.linux; do
+            mv $f $(echo $f | sed -e 's/\.linux$//')
+          done
+          rm -f tests/*/*.out.irix
 
-        # Fix up lots of impure paths
-        for f in common/* tools/* tests/*/*; do
-          sed -i $f -e 's|/bin/bash|${bash}/bin/bash|'
-          sed -i $f -e 's|/bin/true|${coreutils}/bin/true|'
-          sed -i $f -e 's|/usr/sbin/filefrag|${e2fsprogs}/bin/filefrag|'
-          # `hostname -s` seems problematic on NixOS
-          sed -i $f -e 's|hostname -s|${hostname}/bin/hostname|'
-          # NixOS won't ever have Yellow Pages enabled
-          sed -i $f -e 's|$(_yp_active)|1|'
-        done
+          # Fix up lots of impure paths
+          for f in common/* tools/* tests/*/*; do
+            sed -i $f -e 's|/bin/bash|${bash}/bin/bash|'
+            sed -i $f -e 's|/bin/true|${coreutils}/bin/true|'
+            sed -i $f -e 's|/usr/sbin/filefrag|${e2fsprogs}/bin/filefrag|'
+            # `hostname -s` seems problematic on NixOS
+            sed -i $f -e 's|hostname -s|${hostname}/bin/hostname|'
+            # NixOS won't ever have Yellow Pages enabled
+            sed -i $f -e 's|$(_yp_active)|1|'
+          done
 
-        for f in src/*.c src/*.sh; do
-          sed -e 's|/bin/rm|${coreutils}/bin/rm|' -i $f
-          sed -e 's|/usr/bin/time|${time}/bin/time|' -i $f
-        done
+          for f in src/*.c src/*.sh; do
+            sed -e 's|/bin/rm|${coreutils}/bin/rm|' -i $f
+            sed -e 's|/usr/bin/time|${time}/bin/time|' -i $f
+          done
 
-        sed -e 's|/usr/share/xfsprogs|${xfsprogs}/share|' -i tests/xfs/569
+          sed -e 's|/usr/share/xfsprogs|${xfsprogs}/share|' -i tests/xfs/569
 
-        patchShebangs .
-      '';
-      patches = [
-        ../xfstests/0001-common-link-.out-file-to-the-output-directory.patch
-        ../xfstests/0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-        ../xfstests/0003-generic-746-follow-symlinks-when-populating-mount.patch
-        ../xfstests/0004-fstests-generic-test-hook-infrastructure.patch
-        ../xfstests/0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
-      ];
-
-      nativeBuildInputs =
-        old.nativeBuildInputs
-        ++ [prev.pkg-config prev.gdbm prev.liburing];
-
-      postInstall =
-        old.postInstall
-        + ''
-          ln -s ${xfstests-hooks}/lib/xfstests/hooks $out/lib/xfstests/hooks
+          patchShebangs .
         '';
+        patches = [
+          ../xfstests/0001-common-link-.out-file-to-the-output-directory.patch
+          ../xfstests/0002-common-fix-linked-binaries-such-as-ls-and-true.patch
+          ../xfstests/0003-generic-746-follow-symlinks-when-populating-mount.patch
+          ../xfstests/0004-fstests-generic-test-hook-infrastructure.patch
+          ../xfstests/0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
+        ];
 
-      wrapperScript = prev.writeScript "xfstests-check" ''
-        #!${prev.runtimeShell}
-        set -e
+        nativeBuildInputs =
+          old.nativeBuildInputs
+          ++ [
+            prev.pkg-config
+            prev.gdbm
+            prev.liburing
+          ];
 
-        dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-        trap "rm -rf $dir" EXIT
+        postInstall =
+          old.postInstall
+          + ''
+            ln -s ${xfstests-hooks}/lib/xfstests/hooks $out/lib/xfstests/hooks
+          '';
 
-        chmod a+rx "$dir"
-        cd "$dir"
-        for f in $(cd @out@/lib/xfstests; echo *); do
-          ln -s @out@/lib/xfstests/$f $f
-        done
-        export PATH=${prev.lib.makeBinPath [
-          final.xfsprogs
-          prev.acl
-          prev.attr
-          prev.bc
-          prev.e2fsprogs
-          prev.gawk
-          prev.keyutils
-          prev.libcap
-          prev.lvm2
-          prev.perl
-          prev.procps
-          prev.killall
-          prev.quota
-          prev.util-linux
-          prev.which
-          prev.acct
-          prev.xfsdump
-          prev.indent
-          prev.man
-          prev.thin-provisioning-tools
-          prev.file
-          prev.openssl
-          prev.checkbashisms # xfs mainteiner test
-          prev.findutils
-        ]}:$PATH
-        exec ./check "$@"
-      '';
-    }
-    // prev.lib.optionalAttrs false {
-      stdenv = prev.ccacheStdenv;
-    });
+        wrapperScript = prev.writeScript "xfstests-check" ''
+          #!${prev.runtimeShell}
+          set -e
 
-    kd = (
-      pkgs.callPackage (import ../kd/derivation.nix) {
-        inherit (pkgs.lib) makeBinPath fileset;
+          dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
+          trap "rm -rf $dir" EXIT
+
+          chmod a+rx "$dir"
+          cd "$dir"
+          for f in $(cd @out@/lib/xfstests; echo *); do
+            ln -s @out@/lib/xfstests/$f $f
+          done
+          export PATH=${
+            prev.lib.makeBinPath [
+              final.xfsprogs
+              prev.acl
+              prev.attr
+              prev.bc
+              prev.e2fsprogs
+              prev.gawk
+              prev.keyutils
+              prev.libcap
+              prev.lvm2
+              prev.perl
+              prev.procps
+              prev.killall
+              prev.quota
+              prev.util-linux
+              prev.which
+              prev.acct
+              prev.xfsdump
+              prev.indent
+              prev.man
+              prev.thin-provisioning-tools
+              prev.file
+              prev.openssl
+              prev.checkbashisms # xfs mainteiner test
+              prev.findutils
+            ]
+          }:$PATH
+          exec ./check "$@"
+        '';
       }
-    );
+      // prev.lib.optionalAttrs false {
+        stdenv = prev.ccacheStdenv;
+      }
+  );
+
+  kd = (
+    pkgs.callPackage (import ../kd/derivation.nix) {
+      inherit (pkgs.lib) makeBinPath fileset;
+    }
+  );
+
+  drgn = pkgs.callPackage ../pkgs/drgn/derivation.nix {};
 }

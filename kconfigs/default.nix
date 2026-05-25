@@ -150,6 +150,12 @@ with lib.kernel; {
 
     MEMCG = yes;
 
+    # For drgn and other debug tools
+    DEBUG_INFO = yes;
+    DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT= yes;
+    BPF = yes;
+    BPF_SYSCALL = yes;
+
     # For erofs /nix/store used by systemd-repart
     EROFS_FS = yes;
 
