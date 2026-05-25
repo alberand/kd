@@ -1,8 +1,5 @@
 {pkgs, lib}: final: prev: rec {
   kconfigs = import ../kconfigs/default.nix { inherit (pkgs) lib; };
-  kd = {
-    inherit lib;
-  };
 
   xfsprogs = let
     sources = prev.lib.importJSON ../sources/xfsprogs.json;
@@ -207,4 +204,10 @@
     // prev.lib.optionalAttrs false {
       stdenv = prev.ccacheStdenv;
     });
+
+    kd = (
+      pkgs.callPackage (import ../kd/derivation.nix) {
+        inherit (pkgs.lib) makeBinPath fileset;
+      }
+    );
 }

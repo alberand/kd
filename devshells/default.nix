@@ -60,10 +60,8 @@
               b4
               patchutils_0_4_2
               vmtest-deploy
+              kd
 
-              (callPackage (import ../kd/derivation.nix) {
-                inherit (pkgs.lib) makeBinPath fileset;
-              })
               smatch
             ]
             ++ (
@@ -190,6 +188,7 @@ in rec {
       man
       gettext
       patchutils_0_4_2
+      kd
       (mkLlvmPkgs {clangVersion = "19";})
     ];
 
@@ -240,6 +239,7 @@ in rec {
       readline
       gnutar
       gzip
+      kd
       (mkLlvmPkgs {clangVersion = "19";})
     ];
 
@@ -276,6 +276,7 @@ in rec {
       libuuid
       ncurses
       libxfs
+      kd
       (mkLlvmPkgs {clangVersion = "19";})
     ];
 
