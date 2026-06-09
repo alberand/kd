@@ -29,12 +29,6 @@ in {
         1000
       ];
       diskImage = lib.mkDefault "$ENVDIR/${config.system.name}.qcow2";
-      sharedDirectories = lib.mkDefault {
-        share = {
-          source = "$ENVDIR/share";
-          target = "/root/share";
-        };
-      };
     };
   };
 }

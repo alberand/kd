@@ -14,6 +14,16 @@ in rec {
           ./system.nix
           ./vm.nix
           ./input.nix
+          (
+            {config, ...}: {
+              virtualisation.sharedDirectories = {
+                share = {
+                  source = "$ENVDIR/share";
+                  target = "/root/share";
+                };
+              };
+            }
+          )
         ]
         ++ user-modules;
     }).config.system.build.vm;
