@@ -204,6 +204,7 @@ in {
               pkgs.openssl
               pkgs.checkbashisms # xfs mainteiner test
               pkgs.findutils
+              pkgs.python3 # xfs/818 aka xfs_protofile
             ]
             ++ (
               if cfg.fat
