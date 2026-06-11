@@ -235,7 +235,6 @@ with lib.kernel; {
     DEBUG_SHIRQ = yes;
     DEBUG_ATOMIC_SLEEP = yes;
     DEBUG_KMEMLEAK = yes;
-    DEBUG_INFO_DWARF5 = yes;
     DEBUG_INFO_COMPRESSED_NONE = yes;
     DEBUG_VM = yes;
     FUNCTION_TRACER = yes;
