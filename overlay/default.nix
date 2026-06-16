@@ -186,29 +186,29 @@
           export PATH=${
             prev.lib.makeBinPath [
               final.xfsprogs
-              prev.acl
-              prev.attr
-              prev.bc
-              prev.e2fsprogs
-              prev.gawk
-              prev.keyutils
-              prev.libcap
-              prev.lvm2
-              prev.perl
-              prev.procps
-              prev.killall
-              prev.quota
-              prev.util-linux
-              prev.which
-              prev.acct
-              prev.xfsdump
-              prev.indent
-              prev.man
-              prev.thin-provisioning-tools
-              prev.file
-              prev.openssl
-              prev.checkbashisms # xfs mainteiner test
-              prev.findutils
+              final.acl
+              final.attr
+              final.bc
+              final.e2fsprogs
+              final.gawk
+              final.keyutils
+              final.libcap
+              final.lvm2
+              final.perl
+              final.procps
+              final.killall
+              final.quota
+              final.util-linux
+              final.which
+              final.acct
+              final.xfsdump
+              final.indent
+              final.man
+              final.thin-provisioning-tools
+              final.file
+              final.openssl
+              final.checkbashisms # xfs mainteiner test
+              final.findutils
             ]
           }:$PATH
           exec ./check "$@"
