@@ -31,10 +31,12 @@
     };
     overlay = import ./overlay {inherit pkgs lib;};
     lib = import ./lib.nix {
-      inherit pkgs;
+      pkgs-lib = pkgs;
       inherit (nixpkgs.lib) nixosSystem;
     };
-    default = lib.mkEnv {};
+    default = lib.mkEnv {
+      inherit pkgs;
+    };
   in {
     inherit lib;
 

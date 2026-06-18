@@ -1,9 +1,11 @@
 {
-  pkgs,
+  pkgs-lib,
   nixosSystem,
-}: let
-in rec {
-  mkVmImage = {user-modules}:
+}: rec {
+  mkVmImage = {
+    pkgs,
+    user-modules,
+  }:
     (nixosSystem {
       inherit pkgs;
       system = "x86_64-linux";
@@ -28,9 +30,10 @@ in rec {
         ++ user-modules;
     }).config.system.build.vm;
 
-  buildKernelHeaders = pkgs.makeLinuxHeaders;
+  buildKernelHeaders = pkgs-lib.makeLinuxHeaders;
 
   mkEnv = {
+    pkgs,
     useGcc ? false,
     user-modules ? [],
   }: let
@@ -101,6 +104,7 @@ in rec {
 
     vm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
+        inherit pkgs;
         user-modules =
           user-modules
           ++ [
@@ -118,6 +122,7 @@ in rec {
 
     prebuild = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
+        inherit pkgs;
         user-modules =
           user-modules
           ++ [
@@ -139,6 +144,7 @@ in rec {
 
     kgdbvm = pkgs.callPackage ./runner.nix {
       nixos = mkVmImage {
+        inherit pkgs;
         user-modules =
           user-modules
           ++ [

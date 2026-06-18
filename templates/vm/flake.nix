@@ -30,6 +30,7 @@
         ++ nixpkgs.lib.optional (builtins.pathExists ./overlays.nix) (import ./overlays.nix);
     };
     packages = kd.lib.mkEnv {
+      inherit pkgs;
       user-modules =
         [
           (import ./uconfig.nix)
