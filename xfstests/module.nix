@@ -217,6 +217,7 @@ in {
       // pkgs.lib.optionalAttrs false {
         stdenv = pkgs.ccacheStdenv;
       }));
+            export MANPATH="${xfsprogs.man}/share/man"
   in
     mkIf cfg.enable
     {
@@ -295,6 +296,11 @@ in {
           };
         };
       };
+
+      # There's test which check manual pages of xfsprogs utils
+      environment.variables.MANPATH = [
+        "${pkgs.xfsprogs}/share/man"
+      ];
 
       systemd.tmpfiles.rules = [
         "d /mnt 1777 root root"

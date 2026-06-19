@@ -34,6 +34,20 @@
 
         patches = [];
 
+        # Even with documentation.man.enable = false; install a manual pages for
+        # xfsprogs package. This is necessary for some xfstests (xfs/505,
+        # xfs/514, xfs/515, xfs/293)
+        outputs =
+          old.outputs or [
+            "out"
+            "man"
+          ];
+        postInstall =
+          (old.postInstall or "")
+          + ''
+            # Ensure man pages are kept
+          '';
+
         preConfigure =
           prev.xfsprogs.preConfigure
           + ''
@@ -183,6 +197,7 @@
           for f in $(cd @out@/lib/xfstests; echo *); do
             ln -s @out@/lib/xfstests/$f $f
           done
+          export MANPATH="${final.xfsprogs.man}/share/man"
           export PATH=${
             prev.lib.makeBinPath [
               final.xfsprogs
