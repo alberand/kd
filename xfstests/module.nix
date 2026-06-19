@@ -436,10 +436,15 @@ in {
 
             echo "xfstests config is at ${config.environment.variables.HOST_OPTIONS}"
 
+            export ARGUMENTS="${cfg.arguments}"
+            if [ -f "/root/xfstests.env" ]; then
+              source /root/xfstests.env
+            fi
+
             echo "Running:"
-            echo -e "\txfstests-check ${cfg.arguments}"
+            echo -e "\txfstests-check $ARGUMENTS"
             ${pkgs.bash}/bin/bash -lc \
-              "echo ${cfg.arguments} | xargs ${xfstests}/bin/xfstests-check"
+              "echo $ARGUMENTS | xargs ${xfstests}/bin/xfstests-check"
 
           ''
           + (optionalString (cfg.upload-results) ''
