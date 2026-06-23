@@ -3,7 +3,7 @@
     llvmPackages =
       if clangVersion != ""
       then pkgs."llvmPackages_${clangVersion}"
-      else pkgs."llvmPackages_latest";
+      else pkgs.llvmPackages;
   in
     with llvmPackages; [
       clang
@@ -115,6 +115,16 @@
         }
         // (pkgs.lib.optionalAttrs (!gcc) {
           LLVM = 1;
+          # Fix '-nostdlibinc' preventing linux kernel compilation in the
+          # devshell. TODO This should be properly fixed upstream (should this
+          # flag be added at all???). Or better workaround would be to override
+          # this in llvmPackages.
+          # https://github.com/NixOS/nixpkgs/issues/368850
+          # https://github.com/NixOS/nixpkgs/pull/191152
+          # Fix `--target` spam.
+          NIX_CC_WRAPPER_SUPPRESS_TARGET_WARNING = 1;
+          # Fix `-nostdinc` warnings.
+          NIX_CFLAGS_COMPILE = "-Wno-unused-command-line-argument";
         })
       );
     };
