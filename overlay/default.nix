@@ -248,7 +248,9 @@
   # https://maskray.me/blog/2022-11-06-fortify-source
   # https://sourceforge.net/p/cdesktopenv/tickets/193/
   # https://sourceware.org/glibc/manual/latest/html_node/Source-Fortification.html
-  xfsdump = prev.xfsdump.overrideAttrs (final: prev: {
-    hardeningDisable = ["fortify"];
-  });
+  xfsdump = prev.xfsdump.overrideAttrs (
+    final: prev: {
+      hardeningDisable = ["fortify"];
+    }
+  );
 }

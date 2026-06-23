@@ -148,90 +148,103 @@ in {
 
   config = let
     xfspcfg = config.services.xfsprogs;
-    xfsprogs = pkgs.xfsprogs.overrideAttrs (_final: prev: ({
-        inherit (xfspcfg) src;
-        version = "git-${xfspcfg.src.rev}";
+    xfsprogs = pkgs.xfsprogs.overrideAttrs (
+      _final: prev: (
+        {
+          inherit (xfspcfg) src;
+          version = "git-${xfspcfg.src.rev}";
 
-        nativeBuildInputs = [xfspcfg.kernelHeaders] ++ prev.nativeBuildInputs;
+          nativeBuildInputs = [xfspcfg.kernelHeaders] ++ prev.nativeBuildInputs;
 
-        dontStrip = config.dev.dontStrip;
-      }
-      // lib.optionalAttrs false {
-        stdenv = pkgs.ccacheStdenv;
-      }));
-    xfstests = pkgs.xfstests.overrideAttrs (_final: prev: ({
-        inherit (cfg) src;
-        version = "git-${cfg.src.rev}";
+          dontStrip = config.dev.dontStrip;
+        }
+        // lib.optionalAttrs false {
+          stdenv = pkgs.ccacheStdenv;
+        }
+      )
+    );
+    xfstests = pkgs.xfstests.overrideAttrs (
+      _final: prev: (
+        {
+          inherit (cfg) src;
+          version = "git-${cfg.src.rev}";
 
-        nativeBuildInputs = prev.nativeBuildInputs ++ [cfg.kernelHeaders];
+          nativeBuildInputs = prev.nativeBuildInputs ++ [cfg.kernelHeaders];
 
-        dontStrip = config.dev.dontStrip;
+          dontStrip = config.dev.dontStrip;
 
-        wrapperScript = pkgs.writeScript "xfstests-check" ''
-          #!${pkgs.runtimeShell}
-          set -e
+          wrapperScript = pkgs.writeScript "xfstests-check" ''
+            #!${pkgs.runtimeShell}
+            set -e
 
-          dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-          trap "rm -rf $dir" EXIT
+            dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
+            trap "rm -rf $dir" EXIT
 
-          chmod a+rx "$dir"
-          cd "$dir"
-          for f in $(cd @out@/lib/xfstests; echo *); do
-            ln -s @out@/lib/xfstests/$f $f
-          done
-          export PATH=${pkgs.lib.makeBinPath ([
-              xfsprogs
-              pkgs.acl
-              pkgs.attr
-              pkgs.bc
-              pkgs.e2fsprogs
-              pkgs.gawk
-              pkgs.keyutils
-              pkgs.libcap
-              pkgs.lvm2
-              pkgs.perl
-              pkgs.procps
-              pkgs.killall
-              pkgs.quota
-              pkgs.util-linux
-              pkgs.which
-              pkgs.acct
-              pkgs.xfsdump
-              pkgs.indent
-              pkgs.man
-              pkgs.thin-provisioning-tools
-              pkgs.file
-              pkgs.openssl
-              pkgs.checkbashisms # xfs mainteiner test
-              pkgs.findutils
-              pkgs.python3 # xfs/818 aka xfs_protofile
-            ]
-            ++ (
-              if cfg.fat
-              then [fio duperemove]
-              else []
-            ))}:$PATH
-          exec ./check "$@"
-        '';
-      }
-      // pkgs.lib.optionalAttrs false {
-        stdenv = pkgs.ccacheStdenv;
-      }));
+            chmod a+rx "$dir"
+            cd "$dir"
+            for f in $(cd @out@/lib/xfstests; echo *); do
+              ln -s @out@/lib/xfstests/$f $f
+            done
             export MANPATH="${xfsprogs.man}/share/man"
+            export PATH=${
+              pkgs.lib.makeBinPath (
+                [
+                  xfsprogs
+                  pkgs.acl
+                  pkgs.attr
+                  pkgs.bc
+                  pkgs.e2fsprogs
+                  pkgs.gawk
+                  pkgs.keyutils
+                  pkgs.libcap
+                  pkgs.lvm2
+                  pkgs.perl
+                  pkgs.procps
+                  pkgs.killall
+                  pkgs.quota
+                  pkgs.util-linux
+                  pkgs.which
+                  pkgs.acct
+                  pkgs.xfsdump
+                  pkgs.indent
+                  pkgs.man
+                  pkgs.thin-provisioning-tools
+                  pkgs.file
+                  pkgs.openssl
+                  pkgs.checkbashisms # xfs mainteiner test
+                  pkgs.findutils
+                  pkgs.python3 # xfs/818 aka xfs_protofile
+                ]
+                ++ (
+                  if cfg.fat
+                  then [
+                    fio
+                    duperemove
+                  ]
+                  else []
+                )
+              )
+            }:$PATH
+            exec ./check "$@"
+          '';
+        }
+        // pkgs.lib.optionalAttrs false {
+          stdenv = pkgs.ccacheStdenv;
+        }
+      )
+    );
   in
-    mkIf cfg.enable
-    {
+    mkIf cfg.enable {
       warnings = (
-        lib.optionals (cfg.upload-results && (cfg.repository == ""))
-        "To upload results set services.xfstests.repository"
+        lib.optionals (
+          cfg.upload-results && (cfg.repository == "")
+        ) "To upload results set services.xfstests.repository"
       );
 
       # Setup envirionment
       environment.variables = {
         XFSTESTS_SRC = "${xfstests.src}";
-        HOST_OPTIONS =
-          pkgs.writeText "xfstests.config"
-          (builtins.readFile cfg.testconfig);
+        HOST_OPTIONS = pkgs.writeText "xfstests.config" (builtins.readFile cfg.testconfig);
       };
 
       users = {
@@ -371,8 +384,16 @@ in {
           xfsprogs
           pkgs.e2fsprogs
         ];
-        after = ["network.target" "network-online.target" "local-fs.target"];
-        wants = ["network.target" "network-online.target" "local-fs.target"];
+        after = [
+          "network.target"
+          "network-online.target"
+          "local-fs.target"
+        ];
+        wants = [
+          "network.target"
+          "network-online.target"
+          "local-fs.target"
+        ];
         wantedBy = ["multi-user.target"];
         postStop =
           ''
