@@ -14,18 +14,16 @@ const CONFIG: &str = include_str!("../assets/config.kdl");
 
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
-    let config_path = curdir.clone().join(".kd.toml");
-
+    let config_path = curdir.clone().join(".kd.kdl");
     if !config_path.exists() {
         match &mut File::create(&config_path) {
-            Ok(target) => {
-                writeln!(target, "{}", CONFIG).context("Failed to write config to .kd.toml")?
-            }
+            Ok(target) => writeln!(target, include_str!("config.tmpl"))
+                .context("Failed to write config to .kd.kdl")?,
             Err(error) => {
                 bail!("Unable to create {}: {}", config_path.display(), error);
             }
         };
-    }
+     };
 
     let flake_dir = curdir.clone().join(".kd/flake");
     if flake_dir.exists() {
@@ -261,7 +259,7 @@ fn main() -> Result<()> {
     }
 
     if let Some(config) = &state.config.dev {
-        if let Some(args) = &config.args {
+        if let Some(args) = &config.args() {
             for arg in args {
                 state.args.push(arg.to_string())
             }

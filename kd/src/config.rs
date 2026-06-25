@@ -1,76 +1,150 @@
 use anyhow::{bail, Context, Result};
-use serde::{Deserialize, Serialize};
+use knuffel::Decode;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{absolute, Path, PathBuf};
-use toml;
-use toml::Table;
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Decode, Clone, Default, Debug)]
 pub struct KernelConfigOption {
+    #[knuffel(argument)]
     pub name: String,
+    #[knuffel(argument)]
     pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Decode, Clone, Default, Debug)]
 pub struct KernelHeaders {
+    #[knuffel(property)]
     pub version: Option<String>,
+    #[knuffel(property)]
     pub rev: Option<String>,
+    #[knuffel(property)]
     pub repo: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Decode, Clone, Debug)]
+pub struct Flavor {
+    #[knuffel(argument)]
+    pub name: String,
+}
+
+#[derive(knuffel::Decode, Clone, Debug)]
+pub struct KString {
+    #[knuffel(argument)]
+    pub path: String,
+}
+
+#[derive(Decode, Default, Clone, Debug)]
 pub struct KernelConfig {
-    pub prebuild: Option<String>,
+    #[knuffel(child)]
+    pub prebuild: Option<KString>,
+    #[knuffel(property)]
     pub version: Option<String>,
+    #[knuffel(property)]
     pub rev: Option<String>,
+    #[knuffel(property)]
     pub repo: Option<String>,
-    pub config: Option<Table>,
+    #[knuffel(children(name = "config"))]
+    pub config_options: Vec<KernelConfigOption>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+impl KernelConfig {
+    pub fn config(&self) -> Option<HashMap<String, String>> {
+        if self.config_options.is_empty() {
+            None
+        } else {
+            let mut map = HashMap::new();
+            for opt in &self.config_options {
+                map.insert(opt.name.clone(), opt.value.clone());
+            }
+            Some(map)
+        }
+    }
+}
+
+#[derive(Decode, Default, Clone, Debug)]
 pub struct XfstestsDevices {
+    #[knuffel(property)]
     pub test: Option<String>,
+    #[knuffel(property)]
     pub test_rtdev: Option<String>,
+    #[knuffel(property)]
     pub test_logdev: Option<String>,
+    #[knuffel(property)]
     pub scratch: Option<String>,
+    #[knuffel(property)]
     pub scratch_rtdev: Option<String>,
+    #[knuffel(property)]
     pub scratch_logdev: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Decode, Default, Clone, Debug)]
 pub struct XfstestsConfig {
+    #[knuffel(property)]
     pub repo: Option<String>,
+    #[knuffel(property)]
     pub rev: Option<String>,
+    #[knuffel(child)]
     pub devices: Option<XfstestsDevices>,
+    #[knuffel(property)]
     pub args: Option<String>,
+    #[knuffel(property)]
     pub extra_env: Option<String>,
+    #[knuffel(property)]
     pub filesystem: Option<String>,
+    #[knuffel(property)]
     pub hooks: Option<String>,
+    #[knuffel(child)]
     pub kernel_headers: Option<KernelHeaders>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Decode, Default, Clone, Debug)]
 pub struct XfsprogsConfig {
+    #[knuffel(property)]
     pub repo: Option<String>,
+    #[knuffel(property)]
     pub rev: Option<String>,
+    #[knuffel(child)]
     pub kernel_headers: Option<KernelHeaders>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Decode, Default, Clone, Debug)]
 pub struct ScriptConfig {
-    pub script: String,
+    #[knuffel(property)]
+    pub script: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Decode, Clone, Debug)]
+pub struct QemuOption {
+    #[knuffel(argument)]
+    pub value: String,
+}
+
+#[derive(Decode, Default, Clone, Debug)]
 pub struct QemuConfig {
-    pub options: Option<Vec<String>>,
+    #[knuffel(children(name = "option"))]
+    pub options_vec: Vec<QemuOption>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+impl QemuConfig {
+    pub fn options(&self) -> Option<Vec<String>> {
+        if self.options_vec.is_empty() {
+            None
+        } else {
+            Some(self.options_vec.iter().map(|o| o.value.clone()).collect())
+        }
+    }
+}
+
+#[derive(Decode, Default, Clone, Debug)]
 pub struct SystemConfig {
+    #[knuffel(child)]
     pub kernel: Option<KernelConfig>,
+    #[knuffel(child)]
     pub xfstests: Option<XfstestsConfig>,
+    #[knuffel(child)]
     pub xfsprogs: Option<XfsprogsConfig>,
+    #[knuffel(child)]
     pub script: Option<ScriptConfig>,
 }
 
@@ -98,8 +172,8 @@ impl SystemConfig {
                     me.repo = Some(repo);
                 }
 
-                if let Some(config) = kernel.config {
-                    me.config = Some(config);
+                if !kernel.config_options.is_empty() {
+                    me.config_options = kernel.config_options;
                 }
             }
         }
@@ -172,30 +246,105 @@ impl SystemConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub struct DevConfig {
-    pub args: Option<Vec<String>>,
+#[derive(Decode, Clone, Debug)]
+pub struct DevArg {
+    #[knuffel(argument)]
+    pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub struct Config {
-    pub packages: Option<Vec<String>>,
+#[derive(Decode, Default, Clone, Debug)]
+pub struct DevConfig {
+    #[knuffel(children(name = "arg"))]
+    pub args_vec: Vec<DevArg>,
+}
+
+impl DevConfig {
+    pub fn args(&self) -> Option<Vec<String>> {
+        if self.args_vec.is_empty() {
+            None
+        } else {
+            Some(self.args_vec.iter().map(|a| a.value.clone()).collect())
+        }
+    }
+}
+
+#[derive(Decode, Clone, Debug)]
+pub struct Package {
+    #[knuffel(argument)]
+    pub name: String,
+}
+
+#[derive(Decode, Clone, Debug)]
+pub struct NamedConfig {
+    #[knuffel(argument)]
+    pub name: String,
+    #[knuffel(child)]
     pub kernel: Option<KernelConfig>,
+    #[knuffel(child)]
     pub xfstests: Option<XfstestsConfig>,
+    #[knuffel(child)]
     pub xfsprogs: Option<XfsprogsConfig>,
+    #[knuffel(child)]
     pub script: Option<ScriptConfig>,
+}
+
+impl From<NamedConfig> for SystemConfig {
+    fn from(nc: NamedConfig) -> Self {
+        SystemConfig {
+            kernel: nc.kernel,
+            xfstests: nc.xfstests,
+            xfsprogs: nc.xfsprogs,
+            script: nc.script,
+        }
+    }
+}
+
+#[derive(Decode, Default, Clone, Debug)]
+pub struct Config {
+    #[knuffel(children(name = "package"))]
+    pub packages_vec: Vec<Package>,
+    #[knuffel(child)]
+    pub kernel: Option<KernelConfig>,
+    #[knuffel(child)]
+    pub xfstests: Option<XfstestsConfig>,
+    #[knuffel(child)]
+    pub xfsprogs: Option<XfsprogsConfig>,
+    #[knuffel(child)]
+    pub script: Option<ScriptConfig>,
+    #[knuffel(child)]
     pub qemu: Option<QemuConfig>,
+    #[knuffel(child)]
     pub common: Option<SystemConfig>,
-    pub named: Option<Table>,
+    #[knuffel(children(name = "named"))]
+    pub named_vec: Vec<NamedConfig>,
+    #[knuffel(child)]
     pub dev: Option<DevConfig>,
 }
 
 impl Config {
     pub fn load<T: AsRef<Path>>(path: T) -> Result<Self> {
-        let data = fs::read_to_string(path).context("Failed to read config")?;
-        let config: Config = toml::from_str(&data).context("Invalid TOML")?;
+        let data = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read config from {:?}", path.as_ref()))?;
+        let config: Config = knuffel::parse(path.as_ref().to_str().unwrap_or("config.kdl"), &data)
+            .map_err(|e| anyhow::anyhow!("Invalid KDL: {:?}", e))?;
 
         Ok(config)
+    }
+
+    pub fn packages(&self) -> Option<Vec<String>> {
+        if self.packages_vec.is_empty() {
+            None
+        } else {
+            Some(self.packages_vec.iter().map(|p| p.name.clone()).collect())
+        }
+    }
+
+    pub fn named(&self) -> HashMap<String, SystemConfig> {
+        let mut map = HashMap::new();
+        for nc in &self.named_vec {
+            map.insert(nc.name.clone(), nc.clone().into());
+        }
+        map
     }
 
     pub fn validate(&self) -> Result<()> {
@@ -203,9 +352,9 @@ impl Config {
             let kernel = subconfig.version.is_some()
                 || subconfig.rev.is_some()
                 || subconfig.repo.is_some()
-                || subconfig.config.is_some();
+                || !subconfig.config_options.is_empty();
             if subconfig.prebuild.is_some() && kernel {
-                println!("Note! You're using 'prebuild', none of the [kernel] options applies.");
+                println!("Note! You're using 'prebuild', none of the kernel options applies.");
             }
         }
 
@@ -259,10 +408,11 @@ impl Config {
                 let curdir =
                     std::env::current_dir().context("No able to get current working directory")?;
 
-                let path = absolute(curdir.join(kernel)).context("Failed to parse kernel path")?;
+                let path =
+                    absolute(curdir.join(&kernel.path)).context("Failed to parse kernel path")?;
 
                 if !(path.exists()) {
-                    bail!("Kernel doesn't exists: {}", kernel);
+                    bail!("Kernel doesn't exists: {}", kernel.path);
                 }
             }
         }

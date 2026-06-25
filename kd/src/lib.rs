@@ -65,7 +65,7 @@ impl State {
         let config_path = if let Some(config_path) = config_path {
             config_path
         } else {
-            curdir.clone().join(".kd.toml")
+            curdir.clone().join(".kd.kdl")
         };
 
         let config = Config::load(&config_path)?;
@@ -222,10 +222,10 @@ pub fn uconfig_kernel(config: &KernelConfig) -> String {
 pub fn generate_uconfig(state: &mut State) -> Result<String> {
     let mut options = vec![];
 
-    if let Some(packages) = &state.config.packages {
+    if let Some(packages) = &state.config.packages() {
         let mut list = String::from("with pkgs; [");
         for package in packages {
-            list.push_str(package);
+            list.push_str(&package);
             list.push_str("\n");
         }
         list.push_str("]");
@@ -234,7 +234,8 @@ pub fn generate_uconfig(state: &mut State) -> Result<String> {
     }
 
     let merged: SystemConfig = if state.name != "" {
-        if let Some(named) = &state.config.named {
+        let named = state.config.named();
+        if !named.is_empty() {
             if !named.contains_key(&state.name) {
                 bail!("Config doesn't define requested run: {}", &state.name);
             }
@@ -244,8 +245,7 @@ pub fn generate_uconfig(state: &mut State) -> Result<String> {
                 SystemConfig::default()
             };
 
-            let run_config: SystemConfig =
-                named.get(&state.name).unwrap().clone().try_into().unwrap();
+            let run_config = named.get(&state.name).unwrap().clone();
             result = result.merge(run_config).clone();
             result
         } else {
@@ -275,7 +275,7 @@ pub fn generate_uconfig(state: &mut State) -> Result<String> {
 
     if let Some(subconfig) = &merged.kernel {
         if let Some(kernel) = &subconfig.prebuild {
-            let path = path::absolute(&state.curdir.join(kernel))
+            let path = path::absolute(&state.curdir.join(&kernel.path))
                 .context("Failed to parse kernel path")?;
 
             state.envs.insert(
@@ -284,7 +284,7 @@ pub fn generate_uconfig(state: &mut State) -> Result<String> {
             );
         } else {
             options.push(uconfig_kernel(&subconfig));
-            if let Some(config) = &subconfig.config {
+            if let Some(config) = &subconfig.config() {
                 let mut config_options: Vec<KernelConfigOption> = vec![];
                 for (key, value) in config.iter() {
                     config_options.push(KernelConfigOption {
@@ -309,7 +309,7 @@ pub fn generate_uconfig(state: &mut State) -> Result<String> {
     };
 
     if let Some(subconfig) = &state.config.qemu {
-        if let Some(qemu_options) = &subconfig.options {
+        if let Some(qemu_options) = &subconfig.options() {
             let mut list = String::from("[");
             for option in qemu_options {
                 list.push_str("\"");

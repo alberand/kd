@@ -1,0 +1,34 @@
+package "gdb"
+package "blktrace"
+package "tmux"
+
+kernel repo="git@github.com:alberand/linux.git" rev="ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516" version="v7.0-rc1" {
+  flavor "xfstests"
+  flavor "xfs"
+  flavor "debug"
+  config "CONFIG_FS_VERITY" "yes"
+  config "CONFIG_FS_VERITY_BUILTIN_SIGNATURES" "yes"
+}
+
+xfstests repo="git@github.com:alberand/linux.git" rev="ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516" args="-d -s xfs_4k -g auto" {
+  kernel-headers repo="git@github.com:alberand/linux.git" rev="ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516" version="v7.0-rc2"
+  devices test="/dev/sda" test-rtdev="/dev/sda" test-logdev="/dev/sda" scratch="/dev/sda" scratch-rtdev="/dev/sda" scratch-logdev="/dev/sda"
+}
+
+xfsprogs repo="git@github.com:alberand/linux.git" rev="ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
+
+common {
+  kernel prebuild="arch/x86/boot/bzImage" repo="git@github.com:alberand/linux.git" rev="3d2d783f553d73824a6f5eaf26065de97dea0871" version="v7.0-rc1" {
+    flavor "xfstests"
+    flavor "xfs"
+    flavor "debug"
+    config "CONFIG_FS_VERITY" "yes"
+    config "CONFIG_FS_VERITY_BUILTIN_SIGNATURES" "yes"
+  }
+  xfstests repo="file:///home/alberand/Projects/xfstests-dev" rev="c0bea11ded74fe4d763018b5b233be14c298c048"
+  xfsprogs repo="file:///home/alberand/Projects/xfsprogs-dev" rev="6a3a4ed7d5a06576f5934c0b907303137320e011"
+}
+
+named "quick" {
+  xfstests args="-d -s xfs_1k -s xfs_4k -s xfs_8k -g verity"
+}

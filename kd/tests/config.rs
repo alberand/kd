@@ -1,10 +1,9 @@
 use kd::config::Config;
-use kd::{generate_uconfig, State};
 use anyhow::Result;
 
 #[test]
 fn kd_normal_config() -> Result<()> {
-    let config = Config::load("tests/assets/config.toml");
+    let config = Config::load("tests/assets/config.kdl");
     assert!(config.is_ok());
     assert!(config?.validate().is_ok());
     Ok(())
@@ -12,14 +11,14 @@ fn kd_normal_config() -> Result<()> {
 
 #[test]
 fn kd_corrupted_config() -> Result<()> {
-    let config = Config::load("tests/assets/corrupted.toml");
+    let config = Config::load("tests/assets/corrupted.kdl");
     assert!(config.is_err());
     Ok(())
 }
 
 //#[test]
 //fn kd_xfstests_no_repo() -> Result<()> {
-//    let config = Config::load("tests/assets/xfstests-no-repo.toml")?;
+//    let config = Config::load("tests/assets/xfstests-no-repo.kdl")?;
 //    let mut state = State::default();
 //    state.config = config;
 //    state.name = "auto".to_string();
