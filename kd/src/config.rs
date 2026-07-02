@@ -24,7 +24,6 @@ pub struct KernelConfig {
     pub version: Option<String>,
     pub rev: Option<String>,
     pub repo: Option<String>,
-    pub flavors: Option<Vec<String>>,
     pub config: Option<Table>,
 }
 
@@ -97,10 +96,6 @@ impl SystemConfig {
 
                 if let Some(repo) = kernel.repo {
                     me.repo = Some(repo);
-                }
-
-                if let Some(flavors) = kernel.flavors {
-                    me.flavors = Some(flavors);
                 }
 
                 if let Some(config) = kernel.config {

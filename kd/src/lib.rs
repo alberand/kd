@@ -215,11 +215,6 @@ pub fn uconfig_kernel(config: &KernelConfig) -> String {
         }
     };
 
-    if let Some(flavors) = &config.flavors {
-        let value = format!(r#"with pkgs.kconfigs; [{}]"#, flavors.join(" "));
-        options.push(uconfig_set_value("flavors", &value));
-    };
-
     format!("kernel = {{ {} }};", options.join("\n"))
 }
 

@@ -36,12 +36,6 @@ in {
         default = {};
       };
 
-      flavors = mkOption {
-        type = types.listOf types.attrs;
-        default = [];
-        example = "[ pkgs.kconfigs.xfsprogs ]";
-      };
-
       prebuild = mkOption {
         type = types.nullOr types.path;
         default = null;
@@ -64,8 +58,7 @@ in {
         kconfig = buildKernelConfig {
           inherit (cfg) src version;
           kconfig =
-            pkgs.lib.foldl (acc: set: acc // set) {} (cfg.flavors
-              ++ [cfg.kconfig]);
+            pkgs.lib.foldl (acc: set: acc // set) {} [cfg.kconfig];
         };
       }
     );

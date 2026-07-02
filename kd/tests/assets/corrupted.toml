@@ -1,7 +1,6 @@
 packages = [ "gdb", "blktrace", "tmux" ]
 
 [kernel]
-flavors = ["xfstests", "xfs", "debug"]
 repo = "git@github.com:alberand/linux.git"
 rev = "ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
 version = "v7.0-rc1"
@@ -35,7 +34,6 @@ rev = "ca58485b0b9566d5bfa3cfe1d88fdee5b78e1516"
 prebuild = "arch/x86/boot/bzImage"
 repo = "git@github.com:alberand/linux.git"
 rev = "3d2d783f553d73824a6f5eaf26065de97dea0871"
-flavors = ["xfstests", "xfs", "debug"]
 version = "v7.0-rc1"
 
 [common.kernel.config]
