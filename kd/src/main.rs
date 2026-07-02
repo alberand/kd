@@ -244,15 +244,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // All the command require .kd.toml. Only init can go without the config as it creates it
-    let mut state = State::new(cli.config).unwrap_or_else(|error| {
-        if let Some(Commands::Init {}) = &cli.command {
-            // we good to go as we doing init
-            State::default()
-        } else {
-            println!("Initialization failed: {}", error);
-            std::process::exit(1);
-        }
-    });
+    let mut state = if let Some(Commands::Init {}) = &cli.command {
+        State::default()
+    } else {
+        State::new(cli.config)?
+    };
 
     state.debug = cli.debug;
     if let Err(error) = state.config.validate() {
