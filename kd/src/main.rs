@@ -15,19 +15,29 @@ const CONFIG: &str = include_str!("../assets/config.kdl");
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
     let config_path = curdir.clone().join(".kd.toml");
-    match &mut File::create(&config_path) {
-        Ok(target) => writeln!(target, "{}", CONFIG)
-             .context("Failed to write config to .kd.kdl")?,
-        Err(error) => {
-            bail!("Unable to create {}: {}", config_path.display(), error);
-        }
-    };
+
+    if !config_path.exists() {
+        match &mut File::create(&config_path) {
+            Ok(target) => {
+                writeln!(target, "{}", CONFIG).context("Failed to write config to .kd.toml")?
+            }
+            Err(error) => {
+                bail!("Unable to create {}: {}", config_path.display(), error);
+            }
+        };
+    }
 
     let flake_dir = curdir.clone().join(".kd/flake");
+    if flake_dir.exists() {
+        println!("Reinitializing flake (.kd/flake exists)");
+        std::fs::remove_file(flake_dir.join("flake.nix"))?;
+        std::fs::remove_file(flake_dir.join("flake.lock"))?;
+        std::fs::remove_file(flake_dir.join("uconfig.nix"))?;
+    }
+
     std::fs::create_dir_all(&flake_dir)
         .with_context(|| format!("Unable to create {}", flake_dir.display()))?;
 
-    println!("Creating new environment");
     let mut cmd = Command::new("nix");
     cmd.arg("flake")
         .arg("init")
@@ -52,21 +62,24 @@ fn cmd_init(_: &State) -> Result<()> {
         let mut backup = direnv.clone();
         backup.set_extension("bup");
         std::fs::copy(&direnv, backup).context("Failed to make backup of .envrc")?;
+        println!("You already have .envrc. Update with:");
+        println!(
+            "\tmv .envrc .envrc.bup && echo \"use flake path:.kd/flake\" > .envrc"
+        );
+    } else {
+        match &mut File::create(&direnv) {
+            Ok(target) => {
+                writeln!(target, "use flake path:.kd/flake")
+                    .context("Failed to overwrite .envrc")?;
+            }
+            Err(error) => {
+                bail!("Unable to create {}: {}", direnv.display(), error);
+            }
+        };
     }
 
-    match &mut File::create(&direnv) {
-        Ok(target) => {
-            writeln!(target, "use flake path:.kd/flake").context("Failed to overwrite .envrc")?;
-        }
-        Err(error) => {
-            bail!("Unable to create {}: {}", direnv.display(), error);
-        }
-    };
-
-    // Check that these commands exists
-    println!("All done!");
-    println!("Active the environment with:");
-    println!("direnv allow");
+    println!("Activate with:");
+    println!("\tdirenv allow");
 
     Ok(())
 }
