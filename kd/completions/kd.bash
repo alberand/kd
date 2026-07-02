@@ -17,46 +17,46 @@ _kd() {
                 cmd="kd"
                 ;;
             kd,build)
-                cmd="kd__build"
+                cmd="kd__subcmd__build"
                 ;;
             kd,config)
-                cmd="kd__config"
+                cmd="kd__subcmd__config"
                 ;;
             kd,debug)
-                cmd="kd__debug"
+                cmd="kd__subcmd__debug"
                 ;;
             kd,help)
-                cmd="kd__help"
+                cmd="kd__subcmd__help"
                 ;;
             kd,init)
-                cmd="kd__init"
+                cmd="kd__subcmd__init"
                 ;;
             kd,run)
-                cmd="kd__run"
+                cmd="kd__subcmd__run"
                 ;;
             kd,update)
-                cmd="kd__update"
+                cmd="kd__subcmd__update"
                 ;;
-            kd__help,build)
-                cmd="kd__help__build"
+            kd__subcmd__help,build)
+                cmd="kd__subcmd__help__subcmd__build"
                 ;;
-            kd__help,config)
-                cmd="kd__help__config"
+            kd__subcmd__help,config)
+                cmd="kd__subcmd__help__subcmd__config"
                 ;;
-            kd__help,debug)
-                cmd="kd__help__debug"
+            kd__subcmd__help,debug)
+                cmd="kd__subcmd__help__subcmd__debug"
                 ;;
-            kd__help,help)
-                cmd="kd__help__help"
+            kd__subcmd__help,help)
+                cmd="kd__subcmd__help__subcmd__help"
                 ;;
-            kd__help,init)
-                cmd="kd__help__init"
+            kd__subcmd__help,init)
+                cmd="kd__subcmd__help__subcmd__init"
                 ;;
-            kd__help,run)
-                cmd="kd__help__run"
+            kd__subcmd__help,run)
+                cmd="kd__subcmd__help__subcmd__run"
                 ;;
-            kd__help,update)
-                cmd="kd__help__update"
+            kd__subcmd__help,update)
+                cmd="kd__subcmd__help__subcmd__update"
                 ;;
             *)
                 ;;
@@ -86,7 +86,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__build)
+        kd__subcmd__build)
             opts="-t -h --name --target --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -112,7 +112,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__config)
+        kd__subcmd__config)
             opts="-o -h --output --name --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -138,7 +138,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__debug)
+        kd__subcmd__debug)
             opts="-c -h --config --name --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -156,7 +156,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help)
+        kd__subcmd__help)
             opts="init build run update config debug help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -170,7 +170,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__build)
+        kd__subcmd__help__subcmd__build)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -184,7 +184,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__config)
+        kd__subcmd__help__subcmd__config)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -198,7 +198,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__debug)
+        kd__subcmd__help__subcmd__debug)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -212,7 +212,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__help)
+        kd__subcmd__help__subcmd__help)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -226,7 +226,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__init)
+        kd__subcmd__help__subcmd__init)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -240,7 +240,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__run)
+        kd__subcmd__help__subcmd__run)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -254,7 +254,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__help__update)
+        kd__subcmd__help__subcmd__update)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -268,7 +268,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__init)
+        kd__subcmd__init)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -282,7 +282,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__run)
+        kd__subcmd__run)
             opts="-h --name --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -300,7 +300,7 @@ _kd() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        kd__update)
+        kd__subcmd__update)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
