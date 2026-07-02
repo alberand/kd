@@ -10,12 +10,14 @@ use kd::*;
 mod cli;
 use cli::{Cli, Commands};
 
+const CONFIG: &str = include_str!("../assets/config.kdl");
+
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
     let config_path = curdir.clone().join(".kd.toml");
     match &mut File::create(&config_path) {
-        Ok(target) => writeln!(target, include_str!("config.tmpl"))
-            .context("Failed to write env name to .kd.toml")?,
+        Ok(target) => writeln!(target, "{}", CONFIG)
+             .context("Failed to write config to .kd.kdl")?,
         Err(error) => {
             bail!("Unable to create {}: {}", config_path.display(), error);
         }
