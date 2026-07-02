@@ -35,7 +35,7 @@
     builtins.getAttr "shell" {
       shell = pkgs.mkShell (
         {
-          nativeBuildInputs = with pkgs;
+          packages = with pkgs;
             [
               gitFull
               getopt
@@ -47,7 +47,6 @@
               pkg-config
               binutils
               elfutils
-              ncurses
               lld
               gettext
               libtool
@@ -55,13 +54,13 @@
               autoconf
               pahole
               trace-cmd
-              #python312Packages.ply # b4 prep --check and ./script/checkpatch
-              #python312Packages.gitpython # b4 prep --check and ./script/checkpatch
               b4
               patchutils_0_4_2
               vmtest-deploy
               kd
-
+              elfutils
+              openssl
+              zlib
               smatch
             ]
             ++ (
@@ -71,12 +70,12 @@
             )
             ++ packages;
 
-          buildInputs = with pkgs; [
-            elfutils
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath (with pkgs; [
             ncurses
+            elfutils
             openssl
             zlib
-          ];
+          ])}";
 
           KBUILD_BUILD_TIMESTAMP = "";
           # Disable all automatically applied hardening. The Linux
@@ -170,7 +169,7 @@ in rec {
   };
 
   xfsprogs = pkgs.mkShell {
-    nativeBuildInputs = with pkgs; [
+    packages = with pkgs; [
       acl
       attr
       automake
@@ -225,7 +224,7 @@ in rec {
     '';
   };
   xfstests = pkgs.mkShell {
-    nativeBuildInputs = with pkgs; [
+    packages = with pkgs; [
       udev
       flex
       bison
@@ -277,7 +276,7 @@ in rec {
   };
 
   xfsdump = pkgs.mkShell {
-    nativeBuildInputs = with pkgs; [
+    packages = with pkgs; [
       acl
       attr
       automake
@@ -309,7 +308,7 @@ in rec {
   xfsrestore = xfsdump;
 
   kd-dev = pkgs.mkShell {
-    buildInputs = with pkgs; [
+    packages = with pkgs; [
       cargo
       rustc
       pkg-config
