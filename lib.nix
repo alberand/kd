@@ -198,13 +198,29 @@
                     SizeMinBytes = "1G";
                     SizeMaxBytes = "10G";
                     Type = "linux-generic";
-                    Weight = 500;
+                    Weight = 1000;
                   };
                   scratch = {
                     Format = "ext4";
                     Label = "scratch";
                     SizeMinBytes = "1G";
                     SizeMaxBytes = "10G";
+                    Type = "linux-generic";
+                    Weight = 1000;
+                  };
+                  rt = {
+                    Format = "ext4";
+                    Label = "rt";
+                    SizeMinBytes = "1G";
+                    SizeMaxBytes = "5G";
+                    Type = "linux-generic";
+                    Weight = 500;
+                  };
+                  log = {
+                    Format = "ext4";
+                    Label = "log";
+                    SizeMinBytes = "500M";
+                    SizeMaxBytes = "1G";
                     Type = "linux-generic";
                     Weight = 500;
                   };
@@ -213,10 +229,10 @@
                 services.xfstests = {
                   dev = {
                     test = {
-                      main = pkgs.lib.mkDefault "/dev/sda5";
+                      main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/test";
                     };
                     scratch = {
-                      main = pkgs.lib.mkDefault "/dev/sda4";
+                      main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/scratch";
                     };
                   };
                 };

@@ -13,7 +13,7 @@
   fileSystems = {
     "/" = {
       fsType = "tmpfs";
-      options = ["size=2G"];
+      options = ["size=4G"];
     };
     "/boot" = {
       device = "/dev/disk/by-partlabel/boot";
@@ -38,14 +38,6 @@
     };
     "/var" = {
       device = "/dev/disk/by-partlabel/var";
-      fsType = "ext4";
-    };
-    "/mnt/test" = {
-      device = "/dev/disk/by-partlabel/test";
-      fsType = "ext4";
-    };
-    "/mnt/scratch" = {
-      device = "/dev/disk/by-partlabel/scratch";
       fsType = "ext4";
     };
   };
@@ -90,7 +82,6 @@
     # suitable partition. This tells systemd-repart that this partition should
     # not be touched.
     nix-store = {
-      Format = "no";
       Label = "nix-store";
       Type = "linux-generic";
     };
@@ -98,13 +89,17 @@
       Format = "ext4";
       Label = "home";
       Type = "home";
-      Weight = 2000;
+      SizeMinBytes = "3G";
+      SizeMaxBytes = "3G";
+      Weight = 500;
     };
     var = {
       Format = "ext4";
       Label = "var";
       Type = "var";
-      Weight = 1000;
+      SizeMinBytes = "3G";
+      SizeMaxBytes = "3G";
+      Weight = 500;
     };
   };
 }
