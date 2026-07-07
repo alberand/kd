@@ -42,7 +42,7 @@ virt-install --connect $SYSURI \
 	--name "$NODE" \
 	--hvm \
 	--osinfo "nixos-unstable" \
-	--memory=8000 \
+	--memory=4096 \
 	--vcpu 4 \
 	--disk path="/tmp/$NODE",target.bus=sata,driver.type=raw \
 	--network network=anet \
@@ -51,6 +51,7 @@ virt-install --connect $SYSURI \
 	--serial pty \
 	--graphics none \
 	--noautoconsole \
+	--memballoon model=virtio,autodeflate=on,freePageReporting=on \
 	--transient
 
 echo "Open console with:"
