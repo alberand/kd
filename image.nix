@@ -84,6 +84,7 @@
     nix-store = {
       Label = "nix-store";
       Type = "linux-generic";
+      Priority = -1;
     };
     home = {
       Format = "ext4";

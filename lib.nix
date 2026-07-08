@@ -199,6 +199,7 @@
                     SizeMaxBytes = "10G";
                     Type = "linux-generic";
                     Weight = 1000;
+                    Priority = 1;
                   };
                   scratch = {
                     Format = "ext4";
@@ -207,6 +208,7 @@
                     SizeMaxBytes = "10G";
                     Type = "linux-generic";
                     Weight = 1000;
+                    Priority = 1;
                   };
                   rt = {
                     Format = "ext4";
@@ -215,6 +217,7 @@
                     SizeMaxBytes = "5G";
                     Type = "linux-generic";
                     Weight = 500;
+                    Priority = 2;
                   };
                   log = {
                     Format = "ext4";
@@ -223,6 +226,7 @@
                     SizeMaxBytes = "1G";
                     Type = "linux-generic";
                     Weight = 500;
+                    Priority = 2;
                   };
                 };
 
