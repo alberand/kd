@@ -442,13 +442,21 @@ in {
               2>&1 >> $setup_log
             echo "Initial mkfs output for test/scratch can be found at $setup_log"
 
-            export TEST_DEV="${cfg.dev.test.main}"
-            export TEST_RTDEV="${cfg.dev.test.rtdev}"
-            export TEST_LOGDEV="${cfg.dev.test.logdev}"
-            export SCRATCH_DEV="${cfg.dev.scratch.main}"
-            export SCRATCH_RTDEV="${cfg.dev.scratch.rtdev}"
-            export SCRATCH_LOGDEV="${cfg.dev.scratch.logdev}"
+            ${optionalString (cfg.dev.test.main != "") ''
+            export TEST_DEV="$(readlink -f ${cfg.dev.test.main})"
+            ''}${optionalString (cfg.dev.test.rtdev != "") ''
+            export TEST_RTDEV="$(readlink -f ${cfg.dev.test.rtdev})"
+            ''}${optionalString (cfg.dev.test.logdev != "") ''
+            export TEST_LOGDEV="$(readlink -f ${cfg.dev.test.logdev})"
+            ''}${optionalString (cfg.dev.scratch.main != "") ''
+            export SCRATCH_DEV="$(readlink -f ${cfg.dev.scratch.main})"
+            ''}${optionalString (cfg.dev.scratch.rtdev != "") ''
+            export SCRATCH_RTDEV="$(readlink -f ${cfg.dev.scratch.rtdev})"
+            ''}${optionalString (cfg.dev.scratch.logdev != "") ''
+            export SCRATCH_LOGDEV="$(readlink -f ${cfg.dev.scratch.logdev})"
+            ''}${optionalString (use_external != "") ''
             export USE_EXTERNAL="${use_external}"
+            ''}
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
             export WORKAREA=${xfsprogs.src}
