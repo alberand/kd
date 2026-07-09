@@ -51,7 +51,6 @@ virt-install --connect $SYSURI \
 	--serial pty \
 	--graphics none \
 	--noautoconsole \
-	--memballoon model=virtio,autodeflate=on,freePageReporting=on \
 	--transient
 
 echo "Open console with:"

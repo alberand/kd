@@ -170,6 +170,7 @@ in rec {
 
   xfsprogs = pkgs.mkShell {
     packages = with pkgs; [
+      gitFull
       acl
       attr
       automake
@@ -225,6 +226,7 @@ in rec {
   };
   xfstests = pkgs.mkShell {
     packages = with pkgs; [
+      gitFull
       udev
       flex
       bison
@@ -277,6 +279,7 @@ in rec {
 
   xfsdump = pkgs.mkShell {
     packages = with pkgs; [
+      gitFull
       acl
       attr
       automake
@@ -309,6 +312,7 @@ in rec {
 
   kd-dev = pkgs.mkShell {
     packages = with pkgs; [
+      gitFull
       cargo
       rustc
       pkg-config
