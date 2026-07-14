@@ -86,10 +86,10 @@
     lvm2
     fscrypt-experimental
     lsof
-    (pkgs.writeShellScriptBin "drgn" ''
-      exec ${pkgs.drgn}/bin/drgn  \
-        --kernel-directory ${config.boot.kernelPackages.kernel.dev} "$@"
-    '')
+    #(pkgs.writeShellScriptBin "drgn" ''
+    #  exec ${pkgs.drgn}/bin/drgn  \
+    #    --kernel-directory ${config.boot.kernelPackages.kernel.dev} "$@"
+    #'')
   ];
 
   environment.variables.EDITOR = "nvim";

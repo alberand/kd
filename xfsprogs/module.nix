@@ -50,7 +50,7 @@ in {
               buildInputs =
                 prev.buildInputs
                 ++ (lib.optionals (cfg.enablePython) [
-                  (python3.withPackages (ps: [ps.dbus-python]))
+                  (python3Minimal.withPackages (ps: [ps.dbus-python]))
                 ]);
 
               nativeBuildInputs = [cfg.kernelHeaders] ++ prev.nativeBuildInputs;

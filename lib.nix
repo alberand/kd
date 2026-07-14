@@ -178,7 +178,7 @@
     #  inherit nixpkgs;
     #};
 
-    image =
+    build =
       (nixosSystem {
         inherit pkgs;
         system = "x86_64-linux";
@@ -191,6 +191,8 @@
             ./image.nix
             (
               {config, ...}: {
+                dev.dontStrip = pkgs.lib.mkDefault false;
+
                 systemd.repart.partitions = {
                   test = {
                     Format = "ext4";
@@ -244,7 +246,10 @@
             )
           ]
           ++ user-modules;
-      }).config.system.build.image;
+      }).config.system.build;
+
+    image = build.image;
+    image-toplevel = build.toplevel;
 
     run-image = pkgs.callPackage ./run-image.nix {
       inherit image;
