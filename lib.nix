@@ -16,16 +16,14 @@
           ./system.nix
           ./vm.nix
           ./input.nix
-          (
-            {config, ...}: {
-              virtualisation.sharedDirectories = {
-                share = {
-                  source = "$ENVDIR/share";
-                  target = "/root/share";
-                };
+          ({config, ...}: {
+            virtualisation.sharedDirectories = {
+              share = {
+                source = "$ENVDIR/share";
+                target = "/root/share";
               };
-            }
-          )
+            };
+          })
         ]
         ++ user-modules;
     }).config.system.build.vm;
@@ -83,6 +81,73 @@
         inherit src version;
         kconfig = kkconfig // pkgs.kconfigs."${config}";
       };
+    build =
+      (nixosSystem {
+        inherit pkgs;
+        system = "x86_64-linux";
+        modules =
+          [
+            ./xfstests/module.nix
+            ./xfsprogs/module.nix
+            ./input.nix
+            ./system.nix
+            ./image.nix
+            ({config, ...}: {
+              dev.dontStrip = pkgs.lib.mkDefault false;
+
+              systemd.repart.partitions = {
+                test = {
+                  Format = "ext4";
+                  Label = "test";
+                  SizeMinBytes = "1G";
+                  SizeMaxBytes = "10G";
+                  Type = "linux-generic";
+                  Weight = 1000;
+                  Priority = 1;
+                };
+                scratch = {
+                  Format = "ext4";
+                  Label = "scratch";
+                  SizeMinBytes = "1G";
+                  SizeMaxBytes = "10G";
+                  Type = "linux-generic";
+                  Weight = 1000;
+                  Priority = 1;
+                };
+                rt = {
+                  Format = "ext4";
+                  Label = "rt";
+                  SizeMinBytes = "1G";
+                  SizeMaxBytes = "5G";
+                  Type = "linux-generic";
+                  Weight = 500;
+                  Priority = 2;
+                };
+                log = {
+                  Format = "ext4";
+                  Label = "log";
+                  SizeMinBytes = "500M";
+                  SizeMaxBytes = "1G";
+                  Type = "linux-generic";
+                  Weight = 500;
+                  Priority = 2;
+                };
+              };
+
+              services.xfstests = {
+                dev = {
+                  test = {
+                    main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/test";
+                  };
+                  scratch = {
+                    main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/scratch";
+                  };
+                };
+              };
+            })
+          ]
+          ++ user-modules;
+      }).config.system.build;
   in rec {
     inherit (pkgs) xfsprogs xfstests;
 
@@ -108,14 +173,12 @@
         user-modules =
           user-modules
           ++ [
-            (
-              {...}: {
-                kernel = pkgs.lib.mkDefault {
-                  inherit src version;
-                  kconfig = kkconfig;
-                };
-              }
-            )
+            ({...}: {
+              kernel = pkgs.lib.mkDefault {
+                inherit src version;
+                kconfig = kkconfig;
+              };
+            })
           ];
       };
     };
@@ -126,18 +189,16 @@
         user-modules =
           user-modules
           ++ [
-            (
-              {...}: {
-                kernel = pkgs.lib.mkDefault {
-                  inherit src version;
-                  kconfig = kkconfig;
-                };
+            ({...}: {
+              kernel = pkgs.lib.mkDefault {
+                inherit src version;
+                kconfig = kkconfig;
+              };
 
-                # As our dummy derivation doesn't provide any .config we need to tell
-                # NixOS not to check for any required configurations
-                system.requiredKernelConfig = pkgs.lib.mkForce [];
-              }
-            )
+              # As our dummy derivation doesn't provide any .config we need to tell
+              # NixOS not to check for any required configurations
+              system.requiredKernelConfig = pkgs.lib.mkForce [];
+            })
           ];
       };
     };
@@ -148,28 +209,26 @@
         user-modules =
           user-modules
           ++ [
-            (
-              {...}: {
-                kernel = pkgs.lib.mkDefault {
-                  inherit src version;
-                  kconfig = kkconfig;
-                };
+            ({...}: {
+              kernel = pkgs.lib.mkDefault {
+                inherit src version;
+                kconfig = kkconfig;
+              };
 
-                boot.kernelParams = pkgs.lib.mkForce [
-                  # consistent eth* naming
-                  "net.ifnames=0"
-                  "biosdevnames=0"
-                  "console=tty0"
-                  "kgdboc=ttyS0,115200"
-                  "nokaslr"
-                  "kgdbwait"
-                ];
+              boot.kernelParams = pkgs.lib.mkForce [
+                # consistent eth* naming
+                "net.ifnames=0"
+                "biosdevnames=0"
+                "console=tty0"
+                "kgdboc=ttyS0,115200"
+                "nokaslr"
+                "kgdbwait"
+              ];
 
-                # As our dummy derivation doesn't provide any .config we need to tell
-                # NixOS not to check for any required configurations
-                system.requiredKernelConfig = pkgs.lib.mkForce [];
-              }
-            )
+              # As our dummy derivation doesn't provide any .config we need to tell
+              # NixOS not to check for any required configurations
+              system.requiredKernelConfig = pkgs.lib.mkForce [];
+            })
           ];
       };
     };
@@ -177,76 +236,6 @@
     #initrd = pkgs.callPackage (import ./initrd/default.nix) {
     #  inherit nixpkgs;
     #};
-
-    build =
-      (nixosSystem {
-        inherit pkgs;
-        system = "x86_64-linux";
-        modules =
-          [
-            ./xfstests/module.nix
-            ./xfsprogs/module.nix
-            ./input.nix
-            ./system.nix
-            ./image.nix
-            (
-              {config, ...}: {
-                dev.dontStrip = pkgs.lib.mkDefault false;
-
-                systemd.repart.partitions = {
-                  test = {
-                    Format = "ext4";
-                    Label = "test";
-                    SizeMinBytes = "1G";
-                    SizeMaxBytes = "10G";
-                    Type = "linux-generic";
-                    Weight = 1000;
-                    Priority = 1;
-                  };
-                  scratch = {
-                    Format = "ext4";
-                    Label = "scratch";
-                    SizeMinBytes = "1G";
-                    SizeMaxBytes = "10G";
-                    Type = "linux-generic";
-                    Weight = 1000;
-                    Priority = 1;
-                  };
-                  rt = {
-                    Format = "ext4";
-                    Label = "rt";
-                    SizeMinBytes = "1G";
-                    SizeMaxBytes = "5G";
-                    Type = "linux-generic";
-                    Weight = 500;
-                    Priority = 2;
-                  };
-                  log = {
-                    Format = "ext4";
-                    Label = "log";
-                    SizeMinBytes = "500M";
-                    SizeMaxBytes = "1G";
-                    Type = "linux-generic";
-                    Weight = 500;
-                    Priority = 2;
-                  };
-                };
-
-                services.xfstests = {
-                  dev = {
-                    test = {
-                      main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/test";
-                    };
-                    scratch = {
-                      main = pkgs.lib.mkDefault "/dev/disk/by-partlabel/scratch";
-                    };
-                  };
-                };
-              }
-            )
-          ]
-          ++ user-modules;
-      }).config.system.build;
 
     image = build.image;
     image-toplevel = build.toplevel;
