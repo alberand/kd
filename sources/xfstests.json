@@ -1,5 +1,5 @@
 {
   "hash": "sha256-hngS9Hnsz9XKQ42yh6mcXHiTOzL+Zk9hRpai7e2tU0E=",
   "rev": "v2026.06.21",
-  "url": "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git"
+  "url": "https://kernel.googlesource.com/pub/scm/fs/xfs/xfstests-dev.git"
 }
