@@ -25,27 +25,30 @@ nurl \
 	--fetcher fetchgit \
 	--json \
 	--indent 2 \
-	git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+	--overwrite-str rev $VERSION_KERNEL \
+	https://github.com/torvalds/linux.git \
 	$VERSION_KERNEL \
 	> $OUTPUT/kernel.json
 nurl \
 	--fetcher fetchgit \
 	--json \
 	--indent 2 \
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git \
+	--overwrite-str rev $VERSION_XFSPROGS \
+	https://kernel.googlesource.com/pub/scm/fs/xfs/xfsprogs-dev.git \
 	$VERSION_XFSPROGS \
 	> $OUTPUT/xfsprogs.json
 nurl \
 	--fetcher fetchgit \
 	--json \
 	--indent 2 \
-	git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git \
+	--overwrite-str rev $VERSION_XFSTESTS \
+	https://kernel.googlesource.com/pub/scm/fs/xfs/xfstests-dev.git \
 	$VERSION_XFSTESTS \
 	> $OUTPUT/xfstests.json
 
 temp=$(mktemp)
 for file in $OUTPUT/*.json; do
-	jq .args $file > $temp
+	jq '.args | del(.tag)' $file > $temp
 	cp $temp $file
 done;
 
