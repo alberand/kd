@@ -250,7 +250,14 @@
   # https://sourceware.org/glibc/manual/latest/html_node/Source-Fortification.html
   xfsdump = prev.xfsdump.overrideAttrs (
     final: prev: {
-      hardeningDisable = ["fortify"];
+      # Remove when merge:
+      # https://github.com/NixOS/nixpkgs/pull/533325
+      patches = [
+        (pkgs.fetchpatch {
+          url = "https://lore.kernel.org/linux-xfs/20260625222337.54449-1-celeste@collar.sh/raw";
+          sha256 = "sha256-iOxnd9lgdeNQThinzEjMRKN90YLRcGdTuczUFU61Cm8=";
+        })
+      ];
     }
   );
 }
