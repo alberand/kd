@@ -121,6 +121,72 @@
           assert ' '.join(status.split()) == "ExecMainStatus=0"
         '';
       };
+
+      xfstests-quick = pkgs.testers.runNixOSTest {
+        name = "xfstests-quick";
+        globalTimeout = 10800; # 3h
+        nodes = {
+          machine = {
+            pkgs,
+            config,
+            ...
+          }: let
+            buildKernelHeaders = pkgs.makeLinuxHeaders;
+            sources = pkgs.lib.importJSON ./sources/kernel.json;
+          in {
+            imports = [
+              ./xfstests/module.nix
+              ./xfsprogs/module.nix
+              ./script/module.nix
+              ./input.nix
+              ./vm.nix
+            ];
+
+            config = {
+              boot = {
+                kernelModules = pkgs.lib.mkForce [];
+                initrd = {
+                  systemd.emergencyAccess = true;
+                  # Override required kernel modules by nixos/modules/profiles/qemu-guest.nix
+                  # As we use kernel build outside of Nix, it will have different uname and
+                  # will not be able to find these modules. This probably can be fixed
+                  availableKernelModules = pkgs.lib.mkForce [];
+                  kernelModules = pkgs.lib.mkForce [];
+                };
+              };
+              networking.hostName = "kd-test";
+              kernel = {
+                src = pkgs.fetchgit sources;
+                version = sources.rev;
+              };
+              virtualisation.diskImage = "/tmp/${config.system.name}.qcow2";
+
+              services.xfsprogs = {
+                enable = true;
+                kernelHeaders = buildKernelHeaders {
+                  inherit (config.kernel) src version;
+                };
+              };
+              services.xfstests = {
+                enable = true;
+                arguments = "-s xfs_4k -g quick";
+                kernelHeaders = buildKernelHeaders {
+                  inherit (config.kernel) src version;
+                };
+              };
+            };
+          };
+        };
+
+        testScript = ''
+          machine.start()
+          machine.wait_for_unit("default.target")
+          # 3h timeout
+          machine.wait_until_fails("systemctl is-active xfstests.service", timeout=10800)
+          status = machine.succeed("systemctl show --property=ExecMainStatus xfstests.service")
+          assert ' '.join(status.split()) == "ExecMainStatus=0"
+        '';
+      };
     };
   };
 }
