@@ -59,6 +59,7 @@
           Label = "boot";
           SizeMinBytes = "60M";
           Type = "esp";
+          UUID = "a0b1c2d3-e4f5-6a7b-8c9d-0e1f2a3b4c5d";
         };
       };
       nix-store = {
@@ -80,7 +81,13 @@
   systemd.repart.partitions = {
     # Systemd-repart is trying to reuse /nix/store partition for any other
     # suitable partition. This tells systemd-repart that this partition should
-    # not be touched.
+    # not be touched. Same for boot.
+    boot = {
+      Label = "boot";
+      Type = "esp";
+      Priority = -1;
+      UUID = "a0b1c2d3-e4f5-6a7b-8c9d-0e1f2a3b4c5d";
+    };
     nix-store = {
       Label = "nix-store";
       Type = "linux-generic";
