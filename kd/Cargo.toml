@@ -8,7 +8,11 @@ build = "build.rs"
 anyhow = "1.0.102"
 clap = { version = "4.5.32", features = ["derive"] }
 knuffel = "3.2.0"
+miette = { version = "5.10.0", features = ["fancy"] }
 
 [build-dependencies]
 clap = { version = "4.5.32", features = ["derive"] }
 clap_complete = "*"
+
+[dev-dependencies]
+insta = "1.48.0"

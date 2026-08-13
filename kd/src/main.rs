@@ -17,7 +17,7 @@ fn cmd_init(_: &State) -> Result<()> {
     let config_path = curdir.clone().join(".kd.kdl");
     if !config_path.exists() {
         match &mut File::create(&config_path) {
-            Ok(target) => writeln!(target, include_str!("config.tmpl"))
+            Ok(target) => writeln!(target, "{}", CONFIG)
                 .context("Failed to write config to .kd.kdl")?,
             Err(error) => {
                 bail!("Unable to create {}: {}", config_path.display(), error);
@@ -249,22 +249,17 @@ fn main() -> Result<()> {
     };
 
     state.debug = cli.debug;
-    if let Err(error) = state.config.validate() {
-        println!("Invalid config: {error}");
-        std::process::exit(1);
-    }
-
     if state.debug {
         state.args.push("--show-trace".to_string());
     }
 
-    if let Some(config) = &state.config.dev {
-        if let Some(args) = &config.args() {
-            for arg in args {
-                state.args.push(arg.to_string())
-            }
-        }
-    }
+    //if let Some(config) = &state.config.dev {
+    //    if let Some(args) = &config.args() {
+    //        for arg in args {
+    //            state.args.push(arg.to_string())
+    //        }
+    //    }
+    //}
 
     match &cli.command {
         Some(Commands::Init {}) => cmd_init(&state).context("Initialization failed"),
