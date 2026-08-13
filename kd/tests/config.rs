@@ -1,5 +1,5 @@
-use kd::config::Config;
 use insta::assert_debug_snapshot;
+use kd::config::Config;
 
 #[test]
 fn kd_normal_config() {
@@ -166,11 +166,42 @@ Config {
                                 ],
                             ),
                         ),
-                        kernel: None,
+                        kernel: Some(
+                            Kernel {
+                                prebuild: Some(
+                                    "arch/x86/boot/bzImage",
+                                ),
+                                version: Some(
+                                    "v7.0-rc1",
+                                ),
+                                rev: Some(
+                                    "3d2d783f553d73824a6f5eaf26065de97dea0871",
+                                ),
+                                repo: Some(
+                                    "git@github.com:alberand/linux.git",
+                                ),
+                                config: KernelConfig(
+                                    [
+                                        KernelConfigOption {
+                                            name: "CONFIG_FS_VERITY",
+                                            value: Y,
+                                        },
+                                        KernelConfigOption {
+                                            name: "CONFIG_FS_VERITY_BUILTIN_SIGNATURES",
+                                            value: Y,
+                                        },
+                                    ],
+                                ),
+                            },
+                        ),
                         xfstests: Some(
                             Xfstests {
-                                repo: None,
-                                rev: None,
+                                repo: Some(
+                                    "file:///home/alberand/Projects/xfstests-dev",
+                                ),
+                                rev: Some(
+                                    "c0bea11ded74fe4d763018b5b233be14c298c048",
+                                ),
                                 args: Some(
                                     "-d -s xfs_1k -s xfs_4k -s xfs_8k -g verity",
                                 ),
@@ -181,7 +212,17 @@ Config {
                                 extra_env: None,
                             },
                         ),
-                        xfsprogs: None,
+                        xfsprogs: Some(
+                            Xfsprogs {
+                                repo: Some(
+                                    "file:///home/alberand/Projects/xfsprogs-dev",
+                                ),
+                                rev: Some(
+                                    "6a3a4ed7d5a06576f5934c0b907303137320e011",
+                                ),
+                                kernel_headers: None,
+                            },
+                        ),
                         script: None,
                         qemu: None,
                     },
