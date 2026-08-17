@@ -69,6 +69,16 @@ impl Merge<KernelHeadersPart> for KernelHeaders {
     }
 }
 
+impl From<KernelHeaders> for KernelHeadersPart {
+    fn from(val: KernelHeaders) -> Self {
+        KernelHeadersPart {
+            version: Some(val.version),
+            rev: Some(val.rev),
+            repo: Some(val.repo),
+        }
+    }
+}
+
 #[derive(knuffel::DecodeScalar, Debug, Default, Eq, Clone, Copy, PartialEq)]
 pub enum KernelConfigOptionValue {
     Y,
@@ -101,6 +111,12 @@ impl Merge<KernelConfigPart> for KernelConfig {
                 true
             });
         }
+    }
+}
+
+impl From<KernelConfig> for KernelConfigPart {
+    fn from(val: KernelConfig) -> Self {
+        KernelConfigPart(val.0)
     }
 }
 
@@ -138,6 +154,18 @@ impl Merge<KernelPart> for Kernel {
     fn merge_with(&mut self, part: &KernelPart) {
         merge_clone_opt!((self, part), prebuild, version, rev, repo);
         self.config.merge_with(&part.config);
+    }
+}
+
+impl From<Kernel> for KernelPart {
+    fn from(val: Kernel) -> Self {
+        KernelPart {
+            prebuild: val.prebuild,
+            version: val.version,
+            rev: val.rev,
+            repo: val.repo,
+            config: val.config.into(),
+        }
     }
 }
 
@@ -184,6 +212,19 @@ impl Merge<XfstestsDevicesPart> for XfstestsDevices {
             scratch_rtdev,
             scratch_logdev
         );
+    }
+}
+
+impl From<XfstestsDevices> for XfstestsDevicesPart {
+    fn from(val: XfstestsDevices) -> Self {
+        XfstestsDevicesPart {
+            test: val.test,
+            test_rtdev: val.test_rtdev,
+            test_logdev: val.test_logdev,
+            scratch: val.scratch,
+            scratch_rtdev: val.scratch_rtdev,
+            scratch_logdev: val.scratch_logdev,
+        }
     }
 }
 
@@ -234,6 +275,21 @@ impl Merge<XfstestsPart> for Xfstests {
     }
 }
 
+impl From<Xfstests> for XfstestsPart {
+    fn from(val: Xfstests) -> Self {
+        XfstestsPart {
+            repo: val.repo,
+            rev: val.rev,
+            args: val.args,
+            filesystem: val.filesystem,
+            hooks: val.hooks,
+            kernel_headers: val.kernel_headers.map(|h| h.into()),
+            devices: val.devices.map(|d| d.into()),
+            extra_env: val.extra_env,
+        }
+    }
+}
+
 #[derive(knuffel::Decode, Default, Clone, Debug, PartialEq, Eq)]
 pub struct Xfsprogs {
     #[knuffel(child, unwrap(argument))]
@@ -261,6 +317,16 @@ impl Merge<XfsprogsPart> for Xfsprogs {
     }
 }
 
+impl From<Xfsprogs> for XfsprogsPart {
+    fn from(val: Xfsprogs) -> Self {
+        XfsprogsPart {
+            repo: val.repo,
+            rev: val.rev,
+            kernel_headers: val.kernel_headers.map(|h| h.into()),
+        }
+    }
+}
+
 #[derive(knuffel::Decode, Default, Clone, Debug, PartialEq, Eq)]
 pub struct Script {
     #[knuffel(child, unwrap(argument))]
@@ -276,6 +342,14 @@ pub struct ScriptPart {
 impl Merge<ScriptPart> for Script {
     fn merge_with(&mut self, part: &ScriptPart) {
         merge_clone!((self, part), script);
+    }
+}
+
+impl From<Script> for ScriptPart {
+    fn from(val: Script) -> Self {
+        ScriptPart {
+            script: Some(val.script),
+        }
     }
 }
 
@@ -297,6 +371,14 @@ impl Merge<QemuPart> for Qemu {
     }
 }
 
+impl From<Qemu> for QemuPart {
+    fn from(val: Qemu) -> Self {
+        QemuPart {
+            options: val.options,
+        }
+    }
+}
+
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Developer {
     #[knuffel(children, unwrap(argument))]
@@ -315,6 +397,14 @@ impl Merge<DeveloperPart> for Developer {
     }
 }
 
+impl From<Developer> for DeveloperPart {
+    fn from(val: Developer) -> Self {
+        DeveloperPart {
+            arg: val.arg,
+        }
+    }
+}
+
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Packages(#[knuffel(arguments)] pub Vec<String>);
 
@@ -324,6 +414,12 @@ pub struct PackagesPart(#[knuffel(arguments)] pub Vec<String>);
 impl Merge<PackagesPart> for Packages {
     fn merge_with(&mut self, part: &PackagesPart) {
         self.0.extend(part.0.clone());
+    }
+}
+
+impl From<Packages> for PackagesPart {
+    fn from(val: Packages) -> Self {
+        PackagesPart(val.0)
     }
 }
 
@@ -373,6 +469,19 @@ impl Merge<SystemPart> for System {
     }
 }
 
+impl From<System> for SystemPart {
+    fn from(val: System) -> Self {
+        SystemPart {
+            packages: val.packages.map(|p| p.into()),
+            kernel: val.kernel.map(|k| k.into()),
+            xfstests: val.xfstests.map(|x| x.into()),
+            xfsprogs: val.xfsprogs.map(|x| x.into()),
+            script: val.script.map(|s| s.into()),
+            qemu: val.qemu.map(|q| q.into()),
+        }
+    }
+}
+
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq, Eq)]
 pub struct NamedSystem {
     #[knuffel(argument)]
@@ -411,7 +520,8 @@ impl Config {
         if let Some(configs) = &mut config.configs {
             for named_system in &mut configs.config {
                 let mut merged = configs.common.clone();
-                merged.merge_with(&named_system.common);
+                let named_part: SystemPart = named_system.common.clone().into();
+                merged.merge_with(&named_part);
 
                 named_system.common = merged;
             }
