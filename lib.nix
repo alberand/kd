@@ -237,7 +237,21 @@
     #  inherit nixpkgs;
     #};
 
-    image = build.image;
+    # The image/repart.nix module has no built-in checksum option, so hook into
+    # the image derivation's install phase and drop a sha256sum next to the raw
+    # image(s). Runs in the same derivation, after (optional) compression.
+    image = build.image.overrideAttrs (old: {
+      postInstall =
+        (old.postInstall or "")
+        + ''
+          cd $out
+          for f in *.raw *.raw.*; do
+            [ -e "$f" ] || continue
+            sha256sum "$f" > "$f.sha256sum"
+          done
+        '';
+    });
+
     image-toplevel = build.toplevel;
 
     run-image = pkgs.callPackage ./run-image.nix {
