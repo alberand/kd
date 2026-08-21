@@ -19,6 +19,9 @@ PREFIX="aalbersh"
 SYSURI="qemu+ssh://$TEST_HOST/system"
 NODE="$PREFIX-$2"
 REMOTE_DIR="/tmp/$NODE"
+SSH="ssh -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    -o LogLevel=quiet"
 
 step "Stopping old VM (if running)"
 if virsh --connect "$SYSURI" domstate "$NODE" >/dev/null 2>&1; then
@@ -26,21 +29,25 @@ if virsh --connect "$SYSURI" domstate "$NODE" >/dev/null 2>&1; then
 fi
 
 sha_local=$(awk '{print $1}' "$IMAGE.sha256sum")
-sha_remote=$(ssh "$TEST_HOST" "cat $REMOTE_DIR/image.raw.sha256sum 2>/dev/null" | awk '{print $1}')
+sha_remote=$($SSH "$TEST_HOST" "cat $REMOTE_DIR/image.raw.sha256sum 2>/dev/null" | awk '{print $1}')
 if [ "$sha_local" != "$sha_remote" ]; then
 	step "Image changed -- uploading to $TEST_HOST:$REMOTE_DIR"
-	ssh "$TEST_HOST" "sudo rm -rf -- $REMOTE_DIR && mkdir -p -- $REMOTE_DIR"
+	$SSH "$TEST_HOST" "sudo rm -rf -- $REMOTE_DIR"
+	$SSH "$TEST_HOST" "mkdir -p -- $REMOTE_DIR"
 	# Upload the image first and the checksum last, so an interrupted
 	# transfer never leaves a matching sha next to a truncated image.
-	rsync -az -P "$IMAGE" "$TEST_HOST:$REMOTE_DIR/image.raw"
-	rsync -az -P "$IMAGE.sha256sum" "$TEST_HOST:$REMOTE_DIR/image.raw.sha256sum"
+	rsync -e "$SSH" -az -P "$IMAGE" "$TEST_HOST:$REMOTE_DIR/image.raw"
+	rsync -e "$SSH" -az -P "$IMAGE.sha256sum" "$TEST_HOST:$REMOTE_DIR/image.raw.sha256sum"
 
 	step "Resizing disk image (+50G)"
-	ssh "$TEST_HOST" << ENDSSH
+	$SSH "$TEST_HOST" << ENDSSH
 set -eu
 DISK_IMAGE="$REMOTE_DIR/image.raw"
-chmod +w "\$DISK_IMAGE"
-qemu-img resize -f raw "\$DISK_IMAGE" "+50G" >/dev/null
+sudo chmod +rw "$REMOTE_DIR"
+sudo chmod +rw "$REMOTE_DIR/image.raw.sha256sum"
+sudo chmod +rw "\$DISK_IMAGE"
+sudo qemu-img resize -f raw "\$DISK_IMAGE" "+50G" >/dev/null
+sudo chown -R qemu:qemu "$REMOTE_DIR"
 ENDSSH
 else
 	step "Image unchanged -- skipping upload"
