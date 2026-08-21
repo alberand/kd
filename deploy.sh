@@ -20,16 +20,21 @@ if virsh --connect $SYSURI list | grep -q "$NODE"; then
 	virsh --connect $SYSURI destroy $NODE
 fi
 
-echo "Removing /tmp/$NODE from $TEST_HOST"
-ssh $TEST_HOST "sudo rm -f -- /tmp/$NODE"
+sha_local=$(awk '{print $1}' $IMAGE.sha256sum)
+sha_remote=$(ssh $TEST_HOST "cat /tmp/$NODE.sha256sum 2>/dev/null" | awk '{print $1}')
+if [ "$sha_local" != "$sha_remote" ]; then
+	echo "Removing /tmp/$NODE from $TEST_HOST"
+	ssh $TEST_HOST "sudo rm -f -- /tmp/$NODE"
 
-echo "Uploading '$IMAGE' to '$TEST_HOST:/tmp/$NODE'"
-rsync -avz -P \
-       $IMAGE \
-       $TEST_HOST:/tmp/$NODE
-if [ $? -ne 0 ]; then
-	exit 1;
-fi;
+	echo "Uploading '$IMAGE' to '$TEST_HOST:/tmp/$NODE'"
+	rsync -avz -P \
+		$IMAGE \
+		$IMAGE.sha256sum \
+		$TEST_HOST:/tmp/$NODE
+	if [ $? -ne 0 ]; then
+		exit 1;
+	fi;
+fi
 
 ssh $TEST_HOST << ENDSSH
 DISK_IMAGE="/tmp/$NODE"
