@@ -131,7 +131,12 @@ with lib.kernel; {
     BLK_DEV_DM = yes;
 
     # Enable kernel tracers
+    TRACING = yes;
+    TRACEPOINTS = yes;
+    FTRACE_SYSCALLS = yes;
     FTRACE = yes;
+    KPROBES = yes;
+    FUNCTION_TRACER = yes;
     # Creates /proc/pid/stack which shows current stack for each process
     STACKTRACE = yes;
 
@@ -152,9 +157,23 @@ with lib.kernel; {
 
     # For drgn and other debug tools
     DEBUG_INFO = yes;
-    DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT= yes;
+    DEBUG_INFO_NONE = no;
+    DEBUG_INFO_DWARF5 = yes;
+    DEBUG_INFO_COMPRESSED_NONE = yes;
+    DEBUG_INFO_BTF = yes;
+    DEBUG_INFO_BTF_MODULES = yes;
+
+    # bpftrace
     BPF = yes;
     BPF_SYSCALL = yes;
+    BPF_JIT = yes;
+    BPF_JIT_DEFAULT_ON = yes;
+    BPF_EVENTS = yes;
+    FUNCTION_ERROR_INJECTION = yes;
+
+    # Load all symbols into kernel
+    KALLSYMS = yes;
+    KALLSYMS_ALL = yes;
 
     # For erofs /nix/store used by systemd-repart
     EROFS_FS = yes;

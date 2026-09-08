@@ -42,7 +42,13 @@
   })
 .overrideAttrs (old:
     {
-      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.cpio];
+      nativeBuildInputs =
+        old.nativeBuildInputs
+        ++ [
+          pkgs.cpio
+          pkgs.pahole
+          pkgs.zlib
+        ];
       dontStrip = true;
       patches = [
         ./randstruct-provide-seed.patch
