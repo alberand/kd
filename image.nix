@@ -92,6 +92,7 @@
       Label = "nix-store";
       Type = "linux-generic";
       Priority = -1;
+      UUID = "b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e";
     };
     home = {
       Format = "ext4";
@@ -100,6 +101,7 @@
       SizeMinBytes = "3G";
       SizeMaxBytes = "3G";
       Weight = 500;
+      UUID = "c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f";
     };
     var = {
       Format = "ext4";
@@ -108,6 +110,7 @@
       SizeMinBytes = "3G";
       SizeMaxBytes = "3G";
       Weight = 500;
+      UUID = "d3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f80";
     };
   };
 }

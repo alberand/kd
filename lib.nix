@@ -104,6 +104,7 @@
                   Type = "linux-generic";
                   Weight = 1000;
                   Priority = 1;
+                  UUID = "e4f5a6b7-c8d9-0e1f-2a3b-4c5d6e7f8091";
                 };
                 scratch = {
                   Format = "ext4";
@@ -113,6 +114,7 @@
                   Type = "linux-generic";
                   Weight = 1000;
                   Priority = 1;
+                  UUID = "f5a6b7c8-d9e0-1f2a-3b4c-5d6e7f809102";
                 };
                 rt = {
                   Format = "ext4";
@@ -122,6 +124,7 @@
                   Type = "linux-generic";
                   Weight = 500;
                   Priority = 2;
+                  UUID = "a6b7c8d9-e0f1-2a3b-4c5d-6e7f80910203";
                 };
                 log = {
                   Format = "ext4";
@@ -131,6 +134,7 @@
                   Type = "linux-generic";
                   Weight = 500;
                   Priority = 2;
+                  UUID = "b7c8d9e0-f1a2-3b4c-5d6e-7f8091020304";
                 };
               };
 
