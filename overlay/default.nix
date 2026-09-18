@@ -124,24 +124,11 @@
             patch -p1 < $p
           done
 
-          # As install-sh is taken from the /nix/store by libtoolize, it's read-only. The
-          # Makefile can not overwrite it latter. Fix this by telling cp to force
-          # overwrite.
-          substituteInPlace Makefile \
-            --replace "cp include/install-sh ." "cp -f include/install-sh ."
-
           # Patch the destination directory
           sed -i include/builddefs.in -e "s|^PKG_LIB_DIR\s*=.*|PKG_LIB_DIR=$out/lib/xfstests|"
 
           # Don't canonicalize path to mkfs (in util-linux) - otherwise e.g. mkfs.ext4 isn't found
           sed -i common/config -e 's|^export MKFS_PROG=.*|export MKFS_PROG=mkfs|'
-
-          # Move the Linux-specific test output files to the correct place, or else it will
-          # try to move them at runtime. Also nuke all the irix crap.
-          for f in tests/*/*.out.linux; do
-            mv $f $(echo $f | sed -e 's/\.linux$//')
-          done
-          rm -f tests/*/*.out.irix
 
           # Fix up lots of impure paths
           for f in common/* tools/* tests/*/*; do
@@ -164,9 +151,6 @@
           patchShebangs .
         '';
         patches = [
-          ../xfstests/0001-common-link-.out-file-to-the-output-directory.patch
-          ../xfstests/0002-common-fix-linked-binaries-such-as-ls-and-true.patch
-          ../xfstests/0003-generic-746-follow-symlinks-when-populating-mount.patch
           ../xfstests/0004-fstests-generic-test-hook-infrastructure.patch
           ../xfstests/0005-hooks-make-hooks-directory-changable-with-HOOK_DIR.patch
         ];
@@ -189,14 +173,6 @@
           #!${prev.runtimeShell}
           set -e
 
-          dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-          trap "rm -rf $dir" EXIT
-
-          chmod a+rx "$dir"
-          cd "$dir"
-          for f in $(cd @out@/lib/xfstests; echo *); do
-            ln -s @out@/lib/xfstests/$f $f
-          done
           export MANPATH="${final.xfsprogs.man}/share/man"
           export PATH=${
             prev.lib.makeBinPath [
