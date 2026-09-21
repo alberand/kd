@@ -1,15 +1,16 @@
 {
   description = "kd - Linux Kernel development toolset";
 
-  nixConfig = {
-    extra-substituters = [
-      "https://cache.alberand.com"
-    ];
+  # Cache is disabled as it's in behind VPN
+  #nixConfig = {
+  #  extra-substituters = [
+  #    "https://cache.alberand.com"
+  #  ];
 
-    extra-trusted-public-keys = [
-      "cache.alberand.com:wZXao5e2MQRInFBR0GkNbwSSmIhC3maO1W7D8QPUL0o="
-    ];
-  };
+  #  extra-trusted-public-keys = [
+  #    "cache.alberand.com:wZXao5e2MQRInFBR0GkNbwSSmIhC3maO1W7D8QPUL0o="
+  #  ];
+  #};
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
