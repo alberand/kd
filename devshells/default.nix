@@ -70,12 +70,14 @@
             )
             ++ packages;
 
-          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath (with pkgs; [
-            ncurses
-            elfutils
-            openssl
-            zlib
-          ])}";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath (
+            with pkgs; [
+              ncurses
+              elfutils
+              openssl
+              zlib
+            ]
+          )}";
 
           KBUILD_BUILD_TIMESTAMP = "";
           # Disable all automatically applied hardening. The Linux
@@ -320,6 +322,10 @@ in rec {
       rust-analyzer
       rustfmt
     ];
+  };
+
+  dev = pkgs.mkShell {
+    packages = with pkgs; [cachix];
   };
 
   default = shell;

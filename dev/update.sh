@@ -76,3 +76,7 @@ nix flake check -Lv
 
 echo "💡Test template flake"
 nix flake check -Lv path:templates/vm
+
+echo "💡Pushing artifacts to cachix"
+nix build --no-link --print-out-paths .#vm | cachix push kd
+nix build --no-link --print-out-paths .#kd | cachix push kd
