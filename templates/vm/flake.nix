@@ -3,11 +3,11 @@
 
   nixConfig = {
     extra-substituters = [
-      "https://cache.alberand.com"
+      "https://kd.cachix.org"
     ];
 
     extra-trusted-public-keys = [
-      "cache.alberand.com:wZXao5e2MQRInFBR0GkNbwSSmIhC3maO1W7D8QPUL0o="
+      "kd.cachix.org-1:bm6NSngyz8Ncm+S1FhKWvSq7XQWIc34Kab656Jhhlxc="
     ];
   };
 
