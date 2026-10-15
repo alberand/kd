@@ -40,7 +40,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (build)
 _arguments "${_arguments_options[@]}" : \
-'--name=[Name of a test config to use]:NAME:_default' \
+'*--name=[Name of a test config to use]:NAME:_default' \
 '-t+[kd package to build]:TARGET:_default' \
 '--target=[kd package to build]:TARGET:_default' \
 '-h[Print help]' \
@@ -49,7 +49,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (run)
 _arguments "${_arguments_options[@]}" : \
-'--name=[Name of a test config to use]:NAME:_default' \
+'*--name=[Name of a test config to use]:NAME:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -64,14 +64,14 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '-o+[Output filename]:OUTPUT:_default' \
 '--output=[Output filename]:OUTPUT:_default' \
-'--name=[Name of a test config to use]:NAME:_default' \
+'*--name=[Name of a test config to use]:NAME:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (debug)
 _arguments "${_arguments_options[@]}" : \
-'--name=[Name of a config to use]:NAME:_default' \
+'*--name=[Name of a config to use]:NAME:_default' \
 '-c[Output config]' \
 '--config[Output config]' \
 '-h[Print help]' \

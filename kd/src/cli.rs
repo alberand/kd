@@ -27,7 +27,7 @@ pub enum Commands {
     /// Build image
     Build {
         #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
+        name: Option<Vec<String>>,
         #[arg(short, long, help = "kd package to build")]
         target: Option<String>,
     },
@@ -35,7 +35,7 @@ pub enum Commands {
     /// Run QEMU test system
     Run {
         #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
+        name: Option<Vec<String>>,
     },
 
     /// Update 'kd' environment
@@ -46,7 +46,7 @@ pub enum Commands {
         #[arg(short, long, default_value = ".config", help = "Output filename")]
         output: Option<String>,
         #[arg(long, help = "Name of a test config to use")]
-        name: Option<String>,
+        name: Option<Vec<String>>,
     },
 
     /// Developer tools
@@ -54,6 +54,6 @@ pub enum Commands {
         #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Output config")]
         config: bool,
         #[arg(long, help = "Name of a config to use")]
-        name: Option<String>,
+        name: Option<Vec<String>>,
     },
 }

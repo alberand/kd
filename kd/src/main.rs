@@ -10,14 +10,13 @@ use kd::*;
 mod cli;
 use cli::{Cli, Commands};
 
-const CONFIG: &str = include_str!("../assets/config.kdl");
-
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
-    let config_path = curdir.clone().join(".kd.kdl");
+    let config_path = curdir.join(".kd.kdl");
+    let config: &str = include_str!("../assets/config.kdl");
     if !config_path.exists() {
         match &mut File::create(&config_path) {
-            Ok(target) => writeln!(target, "{}", CONFIG)
+            Ok(target) => writeln!(target, "{}", config)
                 .context("Failed to write config to .kd.kdl")?,
             Err(error) => {
                 bail!("Unable to create {}: {}", config_path.display(), error);
@@ -25,16 +24,16 @@ fn cmd_init(_: &State) -> Result<()> {
         };
      };
 
-    let flake_dir = curdir.clone().join(".kd/flake");
+    let flake_dir = curdir.join(".kd/flake");
     if flake_dir.exists() {
         println!("Reinitializing flake (.kd/flake exists)");
         std::fs::remove_file(flake_dir.join("flake.nix"))?;
         std::fs::remove_file(flake_dir.join("flake.lock"))?;
         std::fs::remove_file(flake_dir.join("uconfig.nix"))?;
+    } else {
+        std::fs::create_dir_all(&flake_dir)
+            .with_context(|| format!("Unable to create {}", flake_dir.display()))?;
     }
-
-    std::fs::create_dir_all(&flake_dir)
-        .with_context(|| format!("Unable to create {}", flake_dir.display()))?;
 
     let mut cmd = Command::new("nix");
     cmd.arg("flake")
@@ -44,16 +43,11 @@ fn cmd_init(_: &State) -> Result<()> {
         .current_dir(&flake_dir);
 
     let output = cmd.output().expect("Failed to execute command");
-
     if !output.status.success() {
         println!("Failed to create Nix Flake:");
         println!("{}", String::from_utf8_lossy(&output.stderr));
         std::process::exit(1);
     }
-
-    let user_config = PathBuf::from(flake_dir.clone()).join("uconfig.nix");
-    File::create(&user_config)
-        .with_context(|| format!("Unable to create {}", user_config.display()))?;
 
     let direnv = curdir.join(".envrc");
     if direnv.exists() {
@@ -83,9 +77,11 @@ fn cmd_init(_: &State) -> Result<()> {
 }
 
 fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
+    let flake_dir = state.curdir.join(".kd/flake");
+    let user_config = flake_dir.join("uconfig.nix");
     match generate_uconfig(state) {
         Ok(content) => {
-            let mut file = std::fs::File::create(&state.user_config)
+            let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
             file.write_all(content.as_bytes())
                 .context("Failed to write out uconfig.nix data")?;
@@ -96,7 +92,7 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
     }
 
     let target: &str = if let Some(t) = target { t } else { "image" };
-    let package = format!("path:{}#{}", state.flake_dir.display(), target);
+    let package = format!("path:{}#{}", flake_dir.display(), target);
 
     let mut cmd = Command::new("nix");
     cmd.arg("build").args(&state.args).arg(&package);
@@ -114,9 +110,11 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
 }
 
 fn cmd_run(state: &mut State) -> Result<()> {
+    let flake_dir = state.curdir.join(".kd/flake");
+    let user_config = flake_dir.join("uconfig.nix");
     match generate_uconfig(state) {
         Ok(content) => {
-            let mut file = std::fs::File::create(&state.user_config)
+            let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
             file.write_all(content.as_bytes())
                 .context("Failed to write out uconfig.nix data")?;
@@ -128,7 +126,7 @@ fn cmd_run(state: &mut State) -> Result<()> {
 
     state
         .args
-        .push(format!("path:{}#vm", state.flake_dir.display()));
+        .push(format!("path:{}#vm", flake_dir.display()));
     let mut cmd = Command::new("nix");
     cmd.arg("run")
         .args(state.args.clone())
@@ -147,13 +145,14 @@ fn cmd_run(state: &mut State) -> Result<()> {
 }
 
 fn cmd_update(state: &State) -> Result<()> {
-    let package = format!("path:{}", state.flake_dir.display());
+    let flake_dir = state.curdir.join(".kd/flake");
+    let package = format!("path:{}", flake_dir.display());
     let mut cmd = Command::new("nix");
     cmd.arg("flake")
         .arg("update")
         .arg("--flake")
         .arg(&package)
-        .current_dir(&state.flake_dir);
+        .current_dir(&flake_dir);
 
     if state.debug {
         println!("command: {:?}", &cmd);
@@ -168,9 +167,11 @@ fn cmd_update(state: &State) -> Result<()> {
 }
 
 fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
+    let flake_dir = state.curdir.join(".kd/flake");
+    let user_config = flake_dir.join("uconfig.nix");
     match generate_uconfig(state) {
         Ok(content) => {
-            let mut file = std::fs::File::create(&state.user_config)
+            let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
             file.write_all(content.as_bytes())
                 .context("Failed to write out uconfig.nix data")?;
@@ -180,9 +181,9 @@ fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
         }
     }
 
-    let package = format!("path:{}#kconfig", state.flake_dir.display());
+    let package = format!("path:{}#kconfig", flake_dir.display());
     let mut cmd = Command::new("nix");
-    cmd.arg("build").arg(&package).current_dir(&state.envdir);
+    cmd.arg("build").arg(&package).current_dir(&state.curdir.clone().join(".kd"));
 
     if state.debug {
         println!("command: {:?}", cmd);
@@ -205,7 +206,7 @@ fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
         std::fs::copy(&output, backup).context("Failed to create config backup")?;
     }
 
-    let source = state.envdir.clone().join("result");
+    let source = state.curdir.join(".kd/result");
     std::fs::copy(source, &output).context("Failed to copy config to .config")?;
     std::fs::set_permissions(output, std::fs::Permissions::from_mode(0o644))
         .context("Failed to set 644 permission on config")
@@ -252,14 +253,6 @@ fn main() -> Result<()> {
     if state.debug {
         state.args.push("--show-trace".to_string());
     }
-
-    //if let Some(config) = &state.config.dev {
-    //    if let Some(args) = &config.args() {
-    //        for arg in args {
-    //            state.args.push(arg.to_string())
-    //        }
-    //    }
-    //}
 
     match &cli.command {
         Some(Commands::Init {}) => cmd_init(&state).context("Initialization failed"),

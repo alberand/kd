@@ -5,7 +5,7 @@ use std::process::Command;
 
 pub mod config;
 
-fn nurl(repo: &str, rev: &str) -> Result<String> {
+fn _nurl(repo: &str, rev: &str) -> Result<String> {
     println!("Fetching source for {} at {}", repo, rev);
     let output = Command::new("nurl")
         .arg("--fetcher")
@@ -25,19 +25,13 @@ fn nurl(repo: &str, rev: &str) -> Result<String> {
     String::from_utf8(output.stdout).context("Failed to parse nurl output")
 }
 
-// Agh, so ugly
-// TODO fix nrix to parse nix from rust
-
 pub struct State {
     pub debug: bool,
     pub curdir: PathBuf,
-    pub envdir: PathBuf,
-    pub flake_dir: PathBuf,
     pub config: config::Config,
-    pub user_config: PathBuf,
     pub args: Vec<String>,
     pub envs: HashMap<String, String>,
-    pub name: String,
+    pub name: Vec<String>,
 }
 
 impl Default for State {
@@ -45,13 +39,10 @@ impl Default for State {
         Self {
             debug: false,
             curdir: PathBuf::default(),
-            envdir: PathBuf::default(),
-            flake_dir: PathBuf::default(),
             config: config::Config::default(),
-            user_config: PathBuf::default(),
             args: Vec::<String>::default(),
             envs: HashMap::<String, String>::default(),
-            name: String::default(),
+            name: vec![],
         }
     }
 }
@@ -65,27 +56,20 @@ impl State {
             curdir.clone().join(".kd.kdl")
         };
 
-        let config = config::Config::load(&config_path)
-            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
-        let envdir = curdir.clone().join(".kd");
-        let flake_dir = envdir.clone().join("flake");
-        let user_config = flake_dir.clone().join("uconfig.nix");
+        let config = config::Config::load(&config_path).map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
         Ok(Self {
             debug: false,
             curdir,
-            envdir,
-            flake_dir,
             config,
-            user_config,
             args: vec![],
             envs: HashMap::new(),
-            name: String::default(),
+            name: vec![],
         })
     }
 }
 
 /// TODO all this parsing should be just done nrix
-pub fn generate_uconfig(state: &mut State) -> Result<String> {
+pub fn generate_uconfig(_state: &mut State) -> Result<String> {
     Ok("".to_string())
 }
