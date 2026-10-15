@@ -29,6 +29,9 @@ in
     };
     cargoLock = {
       lockFile = ./Cargo.lock;
+      outputHashes = {
+        "rnix-0.14.0" = "sha256-bnkQQxJ1NM3gUQ3tISLZKSESUq7MUf2Du8r0Wr7zI5I=";
+      };
     };
     nativeBuildInputs = [
       pkg-config

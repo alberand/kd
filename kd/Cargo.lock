@@ -511,6 +511,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 [[package]]
 name = "rnix"
 version = "0.14.0"
+source = "git+https://github.com/alberand/rnix-parser.git?branch=edit#ff2a8c10e4051b62f34692b9b298fed1526cb26f"
 dependencies = [
  "rowan",
 ]
