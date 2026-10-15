@@ -13,7 +13,7 @@ use cli::{Cli, Commands};
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
     let config_path = curdir.join(".kd.kdl");
-    let config: &str = include_str!("../assets/config.kdl");
+    let config: &str = include_str!("config.kdl");
     if !config_path.exists() {
         match &mut File::create(&config_path) {
             Ok(target) => writeln!(target, "{}", config)
@@ -79,7 +79,7 @@ fn cmd_init(_: &State) -> Result<()> {
 fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match generate_uconfig(state) {
+    match state.uconfig() {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -112,7 +112,7 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
 fn cmd_run(state: &mut State) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match generate_uconfig(state) {
+    match state.uconfig() {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -169,7 +169,7 @@ fn cmd_update(state: &State) -> Result<()> {
 fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match generate_uconfig(state) {
+    match state.uconfig() {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -213,7 +213,7 @@ fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
 }
 
 fn cmd_debug(state: &mut State, output: &bool) -> Result<()> {
-    match generate_uconfig(state) {
+    match state.uconfig() {
         Ok(content) => {
             if *output {
                 let mut cmd = Command::new("alejandra")

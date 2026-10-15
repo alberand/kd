@@ -1,5 +1,6 @@
 use knuffel;
 use miette::{Context, IntoDiagnostic};
+use std::fmt;
 use std::fs;
 use std::path::Path;
 
@@ -85,6 +86,17 @@ pub enum KernelConfigOptionValue {
     #[default]
     N,
     M,
+}
+
+impl fmt::Display for KernelConfigOptionValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            KernelConfigOptionValue::Y => "yes",
+            KernelConfigOptionValue::N => "no",
+            KernelConfigOptionValue::M => "module",
+        };
+        f.write_str(s)
+    }
 }
 
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq, Eq)]
@@ -510,6 +522,23 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn select(&self, name: Option<&str>) -> miette::Result<System> {
+        let Some(name) = name else {
+            return Ok(self.common.clone());
+        };
+
+        let configs = self
+            .configs
+            .as_ref()
+            .ok_or_else(|| miette::miette!("Config doesn't define any named runs"))?;
+        configs
+            .config
+            .iter()
+            .find(|c| c.name == name)
+            .map(|c| c.common.clone())
+            .ok_or_else(|| miette::miette!("Config doesn't define requested run: {}", name))
+    }
+
     pub fn load<T: AsRef<Path>>(path: T) -> miette::Result<Self> {
         let data = fs::read_to_string(&path)
             .into_diagnostic()
