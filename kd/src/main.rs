@@ -76,6 +76,31 @@ fn cmd_init(_: &State) -> Result<()> {
     Ok(())
 }
 
+fn run_hook(state: &State, hook: &str) -> Result<()> {
+    let hook_path = state.curdir.join(".kd").join(hook);
+    if !hook_path.exists() {
+        return Ok(());
+    }
+
+    if state.debug {
+        println!("Running hook: {}", hook_path.display());
+    }
+
+    let status = Command::new("sh")
+        .arg(&hook_path)
+        .current_dir(&state.curdir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()
+        .with_context(|| format!("Failed to spawn hook '{}'", hook_path.display()))?;
+
+    if !status.success() {
+        bail!("Hook '{}' failed with status: {}", hook_path.display(), status);
+    }
+
+    Ok(())
+}
+
 fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
@@ -101,10 +126,19 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
         println!("command: {:?}", cmd);
     }
 
-    cmd.spawn()
+    run_hook(state, "prebuild.sh")?;
+
+    let status = cmd
+        .spawn()
         .context("Failed to spawn 'nix build'")?
         .wait()
         .context("'nix build' wasn't running")?;
+
+    if !status.success() {
+        bail!("'nix build' failed with status: {}", status);
+    }
+
+    run_hook(state, "postbuild.sh")?;
 
     Ok(())
 }
@@ -136,10 +170,19 @@ fn cmd_run(state: &mut State) -> Result<()> {
         println!("command: {:?}", cmd);
     }
 
-    cmd.spawn()
+    run_hook(state, "prerun.sh")?;
+
+    let status = cmd
+        .spawn()
         .context("Failed to spawn 'nix run'")?
         .wait()
         .context("'nix run' wasn't running")?;
+
+    if !status.success() {
+        bail!("'nix run' failed with status: {}", status);
+    }
+
+    run_hook(state, "postrun.sh")?;
 
     Ok(())
 }
