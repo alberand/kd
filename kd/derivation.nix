@@ -52,7 +52,7 @@ in
 
     postFixup = ''
       wrapProgram $out/bin/kd \
-        --set PATH ${
+        --prefix PATH : ${
         makeBinPath [
           gitMinimal
           openssh
