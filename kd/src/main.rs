@@ -86,8 +86,13 @@ fn run_hook(state: &State, hook: &str) -> Result<()> {
         println!("Running hook: {}", hook_path.display());
     }
 
-    let status = Command::new("sh")
-        .arg(&hook_path)
+    let mut cmd = Command::new("sh");
+    cmd.arg(&hook_path);
+    if let Some(name) = state.name.first() {
+        cmd.arg(name);
+    }
+
+    let status = cmd
         .current_dir(&state.curdir)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
