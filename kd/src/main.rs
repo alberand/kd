@@ -16,13 +16,14 @@ fn cmd_init(_: &State) -> Result<()> {
     let config: &str = include_str!("config.kdl");
     if !config_path.exists() {
         match &mut File::create(&config_path) {
-            Ok(target) => writeln!(target, "{}", config)
-                .context("Failed to write config to .kd.kdl")?,
+            Ok(target) => {
+                writeln!(target, "{}", config).context("Failed to write config to .kd.kdl")?
+            }
             Err(error) => {
                 bail!("Unable to create {}: {}", config_path.display(), error);
             }
         };
-     };
+    };
 
     let flake_dir = curdir.join(".kd/flake");
     if flake_dir.exists() {
@@ -55,9 +56,7 @@ fn cmd_init(_: &State) -> Result<()> {
         backup.set_extension("bup");
         std::fs::copy(&direnv, backup).context("Failed to make backup of .envrc")?;
         println!("You already have .envrc. Update with:");
-        println!(
-            "\tmv .envrc .envrc.bup && echo \"use flake path:.kd/flake\" > .envrc"
-        );
+        println!("\tmv .envrc .envrc.bup && echo \"use flake path:.kd/flake\" > .envrc");
     } else {
         match &mut File::create(&direnv) {
             Ok(target) => {
@@ -76,7 +75,7 @@ fn cmd_init(_: &State) -> Result<()> {
     Ok(())
 }
 
-fn run_hook(state: &State, hook: &str) -> Result<()> {
+fn run_hook(state: &State, hook: &str, index: usize) -> Result<()> {
     if state.skip_hooks {
         return Ok(());
     }
@@ -92,7 +91,8 @@ fn run_hook(state: &State, hook: &str) -> Result<()> {
 
     let mut cmd = Command::new("sh");
     cmd.arg(&hook_path);
-    if let Some(name) = state.name.first() {
+
+    if let Some(name) = state.name.get(index) {
         cmd.arg(name);
     }
 
@@ -104,16 +104,20 @@ fn run_hook(state: &State, hook: &str) -> Result<()> {
         .with_context(|| format!("Failed to spawn hook '{}'", hook_path.display()))?;
 
     if !status.success() {
-        bail!("Hook '{}' failed with status: {}", hook_path.display(), status);
+        bail!(
+            "Hook '{}' failed with status: {}",
+            hook_path.display(),
+            status
+        );
     }
 
     Ok(())
 }
 
-fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
+fn cmd_build(state: &mut State, target: &Option<String>, index: usize) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match state.uconfig() {
+    match state.uconfig(index) {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -135,7 +139,7 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
         println!("command: {:?}", cmd);
     }
 
-    run_hook(state, "prebuild.sh")?;
+    run_hook(state, "prebuild.sh", index)?;
 
     let status = cmd
         .spawn()
@@ -147,15 +151,15 @@ fn cmd_build(state: &mut State, target: &Option<String>) -> Result<()> {
         bail!("'nix build' failed with status: {}", status);
     }
 
-    run_hook(state, "postbuild.sh")?;
+    run_hook(state, "postbuild.sh", index)?;
 
     Ok(())
 }
 
-fn cmd_run(state: &mut State) -> Result<()> {
+fn cmd_run(state: &mut State, index: usize) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match state.uconfig() {
+    match state.uconfig(index) {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -167,9 +171,7 @@ fn cmd_run(state: &mut State) -> Result<()> {
         }
     }
 
-    state
-        .args
-        .push(format!("path:{}#vm", flake_dir.display()));
+    state.args.push(format!("path:{}#vm", flake_dir.display()));
     let mut cmd = Command::new("nix");
     cmd.arg("run")
         .args(state.args.clone())
@@ -179,7 +181,7 @@ fn cmd_run(state: &mut State) -> Result<()> {
         println!("command: {:?}", cmd);
     }
 
-    run_hook(state, "prerun.sh")?;
+    run_hook(state, "prerun.sh", index)?;
 
     let status = cmd
         .spawn()
@@ -191,7 +193,7 @@ fn cmd_run(state: &mut State) -> Result<()> {
         bail!("'nix run' failed with status: {}", status);
     }
 
-    run_hook(state, "postrun.sh")?;
+    run_hook(state, "postrun.sh", index)?;
 
     Ok(())
 }
@@ -218,10 +220,10 @@ fn cmd_update(state: &State) -> Result<()> {
     Ok(())
 }
 
-fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
+fn cmd_config(state: &mut State, output: Option<String>, index: usize) -> Result<()> {
     let flake_dir = state.curdir.join(".kd/flake");
     let user_config = flake_dir.join("uconfig.nix");
-    match state.uconfig() {
+    match state.uconfig(index) {
         Ok(content) => {
             let mut file = std::fs::File::create(&user_config)
                 .context("Failed to create user config uconfig.nix")?;
@@ -235,7 +237,9 @@ fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
 
     let package = format!("path:{}#kconfig", flake_dir.display());
     let mut cmd = Command::new("nix");
-    cmd.arg("build").arg(&package).current_dir(&state.curdir.clone().join(".kd"));
+    cmd.arg("build")
+        .arg(&package)
+        .current_dir(&state.curdir.clone().join(".kd"));
 
     if state.debug {
         println!("command: {:?}", cmd);
@@ -264,8 +268,8 @@ fn cmd_config(state: &mut State, output: Option<String>) -> Result<()> {
         .context("Failed to set 644 permission on config")
 }
 
-fn cmd_debug(state: &mut State, output: &bool) -> Result<()> {
-    match state.uconfig() {
+fn cmd_debug(state: &mut State, output: &bool, index: usize) -> Result<()> {
+    match state.uconfig(index) {
         Ok(content) => {
             if *output {
                 let mut cmd = Command::new("alejandra")
@@ -309,13 +313,24 @@ fn main() -> Result<()> {
     match &cli.command {
         Some(Commands::Init {}) => cmd_init(&state).context("Initialization failed"),
 
-        Some(Commands::Build { name, target, skip_hooks }) => {
+        Some(Commands::Build {
+            name,
+            target,
+            skip_hooks,
+        }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }
             state.skip_hooks = *skip_hooks;
 
-            cmd_build(&mut state, target)
+            let mut result = Ok(());
+            for index in 0..state.name.len() {
+                result = cmd_build(&mut state, target, index);
+                if result.is_err() {
+                    return result;
+                }
+            }
+            result
         }
 
         Some(Commands::Run { name, skip_hooks }) => {
@@ -324,7 +339,14 @@ fn main() -> Result<()> {
             }
             state.skip_hooks = *skip_hooks;
 
-            cmd_run(&mut state)
+            let mut result = Ok(());
+            for index in 0..state.name.len() {
+                result = cmd_run(&mut state, index);
+                if result.is_err() {
+                    return result;
+                }
+            }
+            result
         }
 
         Some(Commands::Update {}) => cmd_update(&state),
@@ -334,7 +356,14 @@ fn main() -> Result<()> {
                 state.name = name.clone();
             }
 
-            cmd_config(&mut state, output.clone())
+            let mut result = Ok(());
+            for index in 0..state.name.len() {
+                result = cmd_config(&mut state, output.clone(), index);
+                if result.is_err() {
+                    return result;
+                }
+            }
+            result
         }
 
         Some(Commands::Debug { config, name }) => {
@@ -342,7 +371,14 @@ fn main() -> Result<()> {
                 state.name = name.clone();
             }
 
-            cmd_debug(&mut state, config)
+            let mut result = Ok(());
+            for index in 0..state.name.len() {
+                result = cmd_debug(&mut state, config, index);
+                if result.is_err() {
+                    return result;
+                }
+            }
+            result
         }
 
         None => Ok(()),

@@ -119,9 +119,9 @@ impl State {
         })
     }
 
-    pub fn uconfig(&mut self) -> Result<String> {
+    pub fn uconfig(&mut self, index: usize) -> Result<String> {
         // "First name only": use the first requested named config, if any.
-        let name = self.name.first().map(|s| s.as_str());
+        let name = self.name.get(index).map(|s| s.as_str());
         let merged: System = self
             .config
             .select(name)
