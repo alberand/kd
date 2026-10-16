@@ -87,7 +87,7 @@ _kd() {
             return 0
             ;;
         kd__subcmd__build)
-            opts="-t -h --name --target --help"
+            opts="-t -h --name --target --skip-hooks --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -283,7 +283,7 @@ _kd() {
             return 0
             ;;
         kd__subcmd__run)
-            opts="-h --name --help"
+            opts="-h --name --skip-hooks --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

@@ -47,12 +47,14 @@ Register-ArgumentCompleter -Native -CommandName 'kd' -ScriptBlock {
             [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Name of a test config to use')
             [CompletionResult]::new('-t', '-t', [CompletionResultType]::ParameterName, 'kd package to build')
             [CompletionResult]::new('--target', '--target', [CompletionResultType]::ParameterName, 'kd package to build')
+            [CompletionResult]::new('--skip-hooks', '--skip-hooks', [CompletionResultType]::ParameterName, 'Skip pre/post hooks')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'kd;run' {
             [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Name of a test config to use')
+            [CompletionResult]::new('--skip-hooks', '--skip-hooks', [CompletionResultType]::ParameterName, 'Skip pre/post hooks')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break

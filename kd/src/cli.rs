@@ -30,12 +30,16 @@ pub enum Commands {
         name: Option<Vec<String>>,
         #[arg(short, long, help = "kd package to build")]
         target: Option<String>,
+        #[arg(long, action = clap::ArgAction::SetTrue, help = "Skip pre/post hooks")]
+        skip_hooks: bool,
     },
 
     /// Run QEMU test system
     Run {
         #[arg(long, help = "Name of a test config to use")]
         name: Option<Vec<String>>,
+        #[arg(long, action = clap::ArgAction::SetTrue, help = "Skip pre/post hooks")]
+        skip_hooks: bool,
     },
 
     /// Update 'kd' environment

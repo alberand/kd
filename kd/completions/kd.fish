@@ -38,8 +38,10 @@ complete -c kd -n "__fish_kd_needs_command" -f -a "help" -d 'Print this message 
 complete -c kd -n "__fish_kd_using_subcommand init" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand build" -l name -d 'Name of a test config to use' -r
 complete -c kd -n "__fish_kd_using_subcommand build" -s t -l target -d 'kd package to build' -r
+complete -c kd -n "__fish_kd_using_subcommand build" -l skip-hooks -d 'Skip pre/post hooks'
 complete -c kd -n "__fish_kd_using_subcommand build" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand run" -l name -d 'Name of a test config to use' -r
+complete -c kd -n "__fish_kd_using_subcommand run" -l skip-hooks -d 'Skip pre/post hooks'
 complete -c kd -n "__fish_kd_using_subcommand run" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand update" -s h -l help -d 'Print help'
 complete -c kd -n "__fish_kd_using_subcommand config" -s o -l output -d 'Output filename' -r

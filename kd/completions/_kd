@@ -43,6 +43,7 @@ _arguments "${_arguments_options[@]}" : \
 '*--name=[Name of a test config to use]:NAME:_default' \
 '-t+[kd package to build]:TARGET:_default' \
 '--target=[kd package to build]:TARGET:_default' \
+'--skip-hooks[Skip pre/post hooks]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -50,6 +51,7 @@ _arguments "${_arguments_options[@]}" : \
 (run)
 _arguments "${_arguments_options[@]}" : \
 '*--name=[Name of a test config to use]:NAME:_default' \
+'--skip-hooks[Skip pre/post hooks]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0

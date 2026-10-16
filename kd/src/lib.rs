@@ -75,6 +75,7 @@ fn nurl(repo: &str, rev: &str) -> Result<String> {
 
 pub struct State {
     pub debug: bool,
+    pub skip_hooks: bool,
     pub curdir: PathBuf,
     pub config: config::Config,
     pub args: Vec<String>,
@@ -86,6 +87,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             debug: false,
+            skip_hooks: false,
             curdir: PathBuf::default(),
             config: config::Config::default(),
             args: Vec::<String>::default(),
@@ -108,6 +110,7 @@ impl State {
 
         Ok(Self {
             debug: false,
+            skip_hooks: false,
             curdir,
             config,
             args: vec![],

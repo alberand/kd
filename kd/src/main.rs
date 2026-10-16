@@ -77,6 +77,10 @@ fn cmd_init(_: &State) -> Result<()> {
 }
 
 fn run_hook(state: &State, hook: &str) -> Result<()> {
+    if state.skip_hooks {
+        return Ok(());
+    }
+
     let hook_path = state.curdir.join(".kd").join(hook);
     if !hook_path.exists() {
         return Ok(());
@@ -305,18 +309,20 @@ fn main() -> Result<()> {
     match &cli.command {
         Some(Commands::Init {}) => cmd_init(&state).context("Initialization failed"),
 
-        Some(Commands::Build { name, target }) => {
+        Some(Commands::Build { name, target, skip_hooks }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }
+            state.skip_hooks = *skip_hooks;
 
             cmd_build(&mut state, target)
         }
 
-        Some(Commands::Run { name }) => {
+        Some(Commands::Run { name, skip_hooks }) => {
             if let Some(name) = &name {
                 state.name = name.clone();
             }
+            state.skip_hooks = *skip_hooks;
 
             cmd_run(&mut state)
         }

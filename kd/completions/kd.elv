@@ -42,11 +42,13 @@ set edit:completion:arg-completer[kd] = {|@words|
             cand --name 'Name of a test config to use'
             cand -t 'kd package to build'
             cand --target 'kd package to build'
+            cand --skip-hooks 'Skip pre/post hooks'
             cand -h 'Print help'
             cand --help 'Print help'
         }
         &'kd;run'= {
             cand --name 'Name of a test config to use'
+            cand --skip-hooks 'Skip pre/post hooks'
             cand -h 'Print help'
             cand --help 'Print help'
         }
