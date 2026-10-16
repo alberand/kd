@@ -312,7 +312,7 @@ in rec {
   };
   xfsrestore = xfsdump;
 
-  kd-dev = pkgs.mkShell {
+  dev = pkgs.mkShell {
     packages = with pkgs; [
       gitFull
       cargo
@@ -321,11 +321,8 @@ in rec {
       openssl
       rust-analyzer
       rustfmt
+      cachix
     ];
-  };
-
-  dev = pkgs.mkShell {
-    packages = with pkgs; [cachix];
   };
 
   default = shell;
