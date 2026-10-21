@@ -95,8 +95,11 @@
             ({config, ...}: {
               dev.dontStrip = pkgs.lib.mkDefault false;
 
+              # Numeric prefixes keep these linux-generic partitions sorted
+              # after "20-nix-store" (see image.nix) so systemd-repart never
+              # matches one of them to the pre-existing nix-store partition.
               systemd.repart.partitions = {
-                test = {
+                "50-test" = {
                   Format = "ext4";
                   Label = "test";
                   SizeMinBytes = "1G";
@@ -106,7 +109,7 @@
                   Priority = 1;
                   UUID = "e4f5a6b7-c8d9-0e1f-2a3b-4c5d6e7f8091";
                 };
-                scratch = {
+                "60-scratch" = {
                   Format = "ext4";
                   Label = "scratch";
                   SizeMinBytes = "1G";
@@ -116,7 +119,7 @@
                   Priority = 1;
                   UUID = "f5a6b7c8-d9e0-1f2a-3b4c-5d6e7f809102";
                 };
-                rt = {
+                "70-rt" = {
                   Format = "ext4";
                   Label = "rt";
                   SizeMinBytes = "1G";
@@ -126,7 +129,7 @@
                   Priority = 2;
                   UUID = "a6b7c8d9-e0f1-2a3b-4c5d-6e7f80910203";
                 };
-                log = {
+                "80-log" = {
                   Format = "ext4";
                   Label = "log";
                   SizeMinBytes = "500M";

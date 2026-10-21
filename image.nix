@@ -71,6 +71,7 @@
           Minimize = "guess";
           ReadOnly = "yes";
           Type = "linux-generic";
+          UUID = "b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e";
         };
       };
     };
@@ -79,22 +80,27 @@
   boot.initrd.systemd.repart.enable = true;
   boot.initrd.systemd.repart.device = pkgs.lib.mkDefault "/dev/sda";
   systemd.repart.partitions = {
-    # Systemd-repart is trying to reuse /nix/store partition for any other
-    # suitable partition. This tells systemd-repart that this partition should
-    # not be touched. Same for boot.
-    boot = {
+    # systemd-repart reads drop-ins in alphanumeric filename order and matches
+    # existing on-disk partitions to definitions by GPT Type, first-unused-wins.
+    # The numeric prefixes pin that order so the pre-existing nix-store partition
+    # (the only linux-generic partition in the deployed image) is matched to
+    # "20-nix-store" and left untouched, instead of being hijacked by the first
+    # alphabetically-sorted linux-generic definition (e.g. "log"). Keep the
+    # prefixes ascending in physical layout order: boot, nix-store, then the
+    # rest.
+    "10-boot" = {
       Label = "boot";
       Type = "esp";
       Priority = -1;
       UUID = "a0b1c2d3-e4f5-6a7b-8c9d-0e1f2a3b4c5d";
     };
-    nix-store = {
+    "20-nix-store" = {
       Label = "nix-store";
       Type = "linux-generic";
       Priority = -1;
       UUID = "b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e";
     };
-    home = {
+    "30-home" = {
       Format = "ext4";
       Label = "home";
       Type = "home";
@@ -103,7 +109,7 @@
       Weight = 500;
       UUID = "c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f";
     };
-    var = {
+    "40-var" = {
       Format = "ext4";
       Label = "var";
       Type = "var";
