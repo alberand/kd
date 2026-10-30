@@ -164,74 +164,14 @@ in {
       )
     );
     xfstests = pkgs.xfstests.overrideAttrs (
-      _final: prev: (
-        {
-          inherit (cfg) src;
-          version = "git-${cfg.src.rev}";
+      _final: prev: {
+        inherit (cfg) src;
+        version = "git-${cfg.src.rev}";
 
-          nativeBuildInputs = prev.nativeBuildInputs ++ [cfg.kernelHeaders];
+        nativeBuildInputs = prev.nativeBuildInputs ++ [cfg.kernelHeaders];
 
-          dontStrip = config.dev.dontStrip;
-
-          wrapperScript = pkgs.writeScript "xfstests-check" ''
-            #!${pkgs.runtimeShell}
-            set -e
-
-            dir=$(mktemp --tmpdir -d xfstests.XXXXXX)
-            trap "rm -rf $dir" EXIT
-
-            chmod a+rx "$dir"
-            cd "$dir"
-            for f in $(cd @out@/lib/xfstests; echo *); do
-              ln -s @out@/lib/xfstests/$f $f
-            done
-            export MANPATH="${xfsprogs.man}/share/man"
-            export PATH=${
-              pkgs.lib.makeBinPath (
-                [
-                  xfsprogs
-                  pkgs.acl
-                  pkgs.attr
-                  pkgs.bc
-                  pkgs.e2fsprogs
-                  pkgs.gawk
-                  pkgs.keyutils
-                  pkgs.libcap
-                  pkgs.lvm2
-                  pkgs.perl
-                  pkgs.procps
-                  pkgs.killall
-                  pkgs.quota
-                  pkgs.util-linux
-                  pkgs.which
-                  pkgs.acct
-                  pkgs.xfsdump
-                  pkgs.indent
-                  pkgs.man
-                  pkgs.thin-provisioning-tools
-                  pkgs.file
-                  pkgs.openssl
-                  pkgs.checkbashisms # xfs mainteiner test
-                  pkgs.findutils
-                  pkgs.python3Minimal # xfs/818 aka xfs_protofile
-                ]
-                ++ (
-                  if cfg.fat
-                  then [
-                    fio
-                    duperemove
-                  ]
-                  else []
-                )
-              )
-            }:$PATH
-            exec ./check "$@"
-          '';
-        }
-        // pkgs.lib.optionalAttrs false {
-          stdenv = pkgs.ccacheStdenv;
-        }
-      )
+        dontStrip = config.dev.dontStrip;
+      }
     );
   in
     mkIf cfg.enable {
@@ -443,19 +383,19 @@ in {
             echo "Initial mkfs output for test/scratch can be found at $setup_log"
 
             ${optionalString (cfg.dev.test.main != "") ''
-            export TEST_DEV="$(readlink -f ${cfg.dev.test.main})"
+              export TEST_DEV="$(readlink -f ${cfg.dev.test.main})"
             ''}${optionalString (cfg.dev.test.rtdev != "") ''
-            export TEST_RTDEV="$(readlink -f ${cfg.dev.test.rtdev})"
+              export TEST_RTDEV="$(readlink -f ${cfg.dev.test.rtdev})"
             ''}${optionalString (cfg.dev.test.logdev != "") ''
-            export TEST_LOGDEV="$(readlink -f ${cfg.dev.test.logdev})"
+              export TEST_LOGDEV="$(readlink -f ${cfg.dev.test.logdev})"
             ''}${optionalString (cfg.dev.scratch.main != "") ''
-            export SCRATCH_DEV="$(readlink -f ${cfg.dev.scratch.main})"
+              export SCRATCH_DEV="$(readlink -f ${cfg.dev.scratch.main})"
             ''}${optionalString (cfg.dev.scratch.rtdev != "") ''
-            export SCRATCH_RTDEV="$(readlink -f ${cfg.dev.scratch.rtdev})"
+              export SCRATCH_RTDEV="$(readlink -f ${cfg.dev.scratch.rtdev})"
             ''}${optionalString (cfg.dev.scratch.logdev != "") ''
-            export SCRATCH_LOGDEV="$(readlink -f ${cfg.dev.scratch.logdev})"
+              export SCRATCH_LOGDEV="$(readlink -f ${cfg.dev.scratch.logdev})"
             ''}${optionalString (use_external != "") ''
-            export USE_EXTERNAL="${use_external}"
+              export USE_EXTERNAL="${use_external}"
             ''}
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner

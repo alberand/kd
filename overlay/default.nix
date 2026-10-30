@@ -200,8 +200,12 @@
               final.openssl
               final.checkbashisms # xfs mainteiner test
               final.findutils
+              final.python3Minimal # xfs/818 aka xfs_protofile
+              # final.fio
+              # final.duperemove
             ]
           }:$PATH
+          cd @out@/lib/xfstests
           exec ./check "$@"
         '';
       }
