@@ -10,6 +10,16 @@ use kd::*;
 mod cli;
 use cli::{Cli, Commands};
 
+fn for_each_config<F>(state: &mut State, mut f: F) -> Result<()>
+where
+    F: FnMut(&mut State, usize) -> Result<()>,
+{
+    for index in 0..state.name.len().max(1) {
+        f(state, index)?;
+    }
+    Ok(())
+}
+
 fn cmd_init(_: &State) -> Result<()> {
     let curdir = std::env::current_dir().context("No able to get current working directory")?;
     let config_path = curdir.join(".kd.kdl");
@@ -323,14 +333,7 @@ fn main() -> Result<()> {
             }
             state.skip_hooks = *skip_hooks;
 
-            let mut result = Ok(());
-            for index in 0..state.name.len() {
-                result = cmd_build(&mut state, target, index);
-                if result.is_err() {
-                    return result;
-                }
-            }
-            result
+            for_each_config(&mut state, |state, index| cmd_build(state, target, index))
         }
 
         Some(Commands::Run { name, skip_hooks }) => {
@@ -339,14 +342,7 @@ fn main() -> Result<()> {
             }
             state.skip_hooks = *skip_hooks;
 
-            let mut result = Ok(());
-            for index in 0..state.name.len() {
-                result = cmd_run(&mut state, index);
-                if result.is_err() {
-                    return result;
-                }
-            }
-            result
+            for_each_config(&mut state, |state, index| cmd_run(state, index))
         }
 
         Some(Commands::Update {}) => cmd_update(&state),
@@ -356,14 +352,9 @@ fn main() -> Result<()> {
                 state.name = name.clone();
             }
 
-            let mut result = Ok(());
-            for index in 0..state.name.len() {
-                result = cmd_config(&mut state, output.clone(), index);
-                if result.is_err() {
-                    return result;
-                }
-            }
-            result
+            for_each_config(&mut state, |state, index| {
+                cmd_config(state, output.clone(), index)
+            })
         }
 
         Some(Commands::Debug { config, name }) => {
@@ -371,14 +362,7 @@ fn main() -> Result<()> {
                 state.name = name.clone();
             }
 
-            let mut result = Ok(());
-            for index in 0..state.name.len() {
-                result = cmd_debug(&mut state, config, index);
-                if result.is_err() {
-                    return result;
-                }
-            }
-            result
+            for_each_config(&mut state, |state, index| cmd_debug(state, config, index))
         }
 
         None => Ok(()),
