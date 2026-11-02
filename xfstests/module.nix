@@ -147,22 +147,6 @@ in {
   };
 
   config = let
-    xfspcfg = config.services.xfsprogs;
-    xfsprogs = pkgs.xfsprogs.overrideAttrs (
-      _final: prev: (
-        {
-          inherit (xfspcfg) src;
-          version = "git-${xfspcfg.src.rev}";
-
-          nativeBuildInputs = [xfspcfg.kernelHeaders] ++ prev.nativeBuildInputs;
-
-          dontStrip = config.dev.dontStrip;
-        }
-        // lib.optionalAttrs false {
-          stdenv = pkgs.ccacheStdenv;
-        }
-      )
-    );
     xfstests = pkgs.xfstests.overrideAttrs (
       _final: prev: {
         inherit (cfg) src;
@@ -180,6 +164,24 @@ in {
           cfg.upload-results && (cfg.repository == "")
         ) "To upload results set services.xfstests.repository"
       );
+
+      nixpkgs.overlays = [
+        (_final: prev: {
+          xfsprogs = prev.xfsprogs.overrideAttrs (old: (let
+            xfspcfg = config.services.xfsprogs;
+          in {
+            inherit (xfspcfg) src;
+            version = "git-${xfspcfg.src.rev}";
+
+            nativeBuildInputs = [xfspcfg.kernelHeaders] ++ old.nativeBuildInputs;
+
+            dontStrip = config.dev.dontStrip;
+          }
+          // lib.optionalAttrs false {
+            stdenv = pkgs.ccacheStdenv;
+          }));
+        })
+      ];
 
       # Setup envirionment
       environment.variables = {
@@ -321,7 +323,7 @@ in {
           WorkingDirectory = "/root";
         };
         path = [
-          xfsprogs
+          pkgs.xfsprogs
           pkgs.e2fsprogs
         ];
         after = [
@@ -399,7 +401,7 @@ in {
             ''}
             # These activates some xfsprogs maintaner tests, not strictly
             # necessary but I'm currently maintaner
-            export WORKAREA=${xfsprogs.src}
+            export WORKAREA=${pkgs.xfsprogs.src}
             if [ -d /root/share/hooks ]; then
               export HOOK_DIR="/root/share/hooks"
             fi
