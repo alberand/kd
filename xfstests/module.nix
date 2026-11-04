@@ -325,6 +325,8 @@ in {
         path = [
           pkgs.xfsprogs
           pkgs.e2fsprogs
+          pkgs.btrfs-progs
+          pkgs.f2fs-tools
         ];
         after = [
           "network.target"
@@ -350,6 +352,14 @@ in {
           mkfs-options = getAttr "${cfg.filesystem}" {
             xfs = "-f";
             ext4 = "-F";
+            btrfs = "-f";
+            f2fs = "-f";
+          };
+          label-flag = getAttr "${cfg.filesystem}" {
+            xfs = "-L";
+            ext4 = "-L";
+            btrfs = "-L";
+            f2fs = "-l";
           };
           use_external =
             if
@@ -375,12 +385,12 @@ in {
             ${pkgs.util-linux}/bin/mkfs \
               -t ${cfg.filesystem} \
               ${mkfs-options} \
-              -L test ${cfg.dev.test.main} \
+              ${label-flag} test ${cfg.dev.test.main} \
               2>&1 >> $setup_log
             ${pkgs.util-linux}/bin/mkfs \
               -t ${cfg.filesystem} \
               ${mkfs-options} \
-              -L scratch ${cfg.dev.scratch.main} \
+              ${label-flag} scratch ${cfg.dev.scratch.main} \
               2>&1 >> $setup_log
             echo "Initial mkfs output for test/scratch can be found at $setup_log"
 

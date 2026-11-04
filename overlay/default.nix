@@ -201,6 +201,9 @@
               final.checkbashisms # xfs mainteiner test
               final.findutils
               final.python3Minimal # xfs/818 aka xfs_protofile
+              final.btrfs-progs
+              final.f2fs-tools
+              final.e2fsprogs
               # final.fio
               # final.duperemove
             ]
