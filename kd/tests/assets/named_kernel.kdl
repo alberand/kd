@@ -1,0 +1,30 @@
+configs {
+  kernel {
+    prebuild "arch/x86/boot/bzImage"
+    repo "file:///home/user/linux"
+    rev "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    version "v7.4-rc1"
+    config {
+      CONFIG_FS_VERITY "y"
+      CONFIG_QUOTA "y"
+    }
+  }
+
+  config "btrfs" {
+    kernel {
+      repo "file:///home/user/linux"
+      rev "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      version "v7.3"
+      config {
+        CONFIG_FS_VERITY "y"
+        CONFIG_BTRFS_FS "y"
+      }
+    }
+  }
+
+  config "verity" {
+    xfstests {
+      args "-g verity"
+    }
+  }
+}

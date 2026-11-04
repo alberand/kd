@@ -235,6 +235,38 @@ Config {
     "#);
 }
 
+#[test]
+fn named_kernel_block_clears_inherited_prebuild() {
+    let config = Config::load("tests/assets/named_kernel.kdl").unwrap();
+
+    // A named config that defines its own kernel block must drop the prebuild
+    // inherited from the common config, so that its own kernel (and config) is
+    // actually built/emitted.
+    let btrfs = config.select(Some("btrfs")).unwrap();
+    let kernel = btrfs.kernel.expect("btrfs should have a kernel");
+    assert_eq!(kernel.prebuild, None);
+    assert_eq!(kernel.rev.as_deref(), Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+    assert_eq!(kernel.version.as_deref(), Some("v7.3"));
+
+    // Overridden option keeps value, inherited option is preserved, and a new
+    // option only present in the named config is appended.
+    let names: Vec<_> = kernel.config.0.iter().map(|o| o.name.as_str()).collect();
+    assert!(names.contains(&"CONFIG_FS_VERITY"));
+    assert!(names.contains(&"CONFIG_QUOTA"));
+    assert!(names.contains(&"CONFIG_BTRFS_FS"));
+}
+
+#[test]
+fn named_without_kernel_block_keeps_inherited_prebuild() {
+    let config = Config::load("tests/assets/named_kernel.kdl").unwrap();
+
+    // A named config that does NOT define a kernel block keeps the inherited
+    // prebuild from the common config.
+    let verity = config.select(Some("verity")).unwrap();
+    let kernel = verity.kernel.expect("verity should inherit a kernel");
+    assert_eq!(kernel.prebuild.as_deref(), Some("arch/x86/boot/bzImage"));
+}
+
 //#[test]
 //fn kd_corrupted_config() -> Result<()> {
 //    let config = Config::load("tests/assets/corrupted.kdl");

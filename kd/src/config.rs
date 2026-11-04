@@ -116,12 +116,11 @@ pub struct KernelConfigPart(#[knuffel(children)] pub Vec<KernelConfigOption>);
 impl Merge<KernelConfigPart> for KernelConfig {
     fn merge_with(&mut self, part: &KernelConfigPart) {
         for option in &part.0 {
-            self.0.retain_mut(|val| {
-                if option.name == *val.name {
-                    *val = option.clone();
-                };
-                true
-            });
+            if let Some(existing) = self.0.iter_mut().find(|v| v.name == option.name) {
+                *existing = option.clone();
+            } else {
+                self.0.push(option.clone());
+            }
         }
     }
 }
@@ -164,6 +163,14 @@ pub struct KernelPart {
 
 impl Merge<KernelPart> for Kernel {
     fn merge_with(&mut self, part: &KernelPart) {
+        // A named config that defines its own kernel block intends to build a
+        // kernel from source, so any prebuild inherited from the common config
+        // must be dropped (unless this block sets its own prebuild). Without
+        // this, the inherited prebuild would short-circuit kernel config
+        // generation in uconfig().
+        if part.prebuild.is_none() {
+            self.prebuild = None;
+        }
         merge_clone_opt!((self, part), prebuild, version, rev, repo);
         self.config.merge_with(&part.config);
     }
