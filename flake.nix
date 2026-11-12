@@ -60,12 +60,11 @@
     checks."${system}" = {
       default = pkgs.testers.runNixOSTest {
         name = "basic-test";
+        # Allow nodes to configure nixpkgs.* (e.g. the xfsprogs overlay set by
+        # xfstests/module.nix). runNixOSTest makes nixpkgs read-only by default.
+        node.pkgsReadOnly = false;
         nodes = {
-          machine = {
-            pkgs,
-            config,
-            ...
-          }: let
+          machine = {config, ...}: let
             buildKernelHeaders = pkgs.makeLinuxHeaders;
             sources = pkgs.lib.importJSON ./sources/kernel.json;
           in {
@@ -78,6 +77,9 @@
             ];
 
             config = {
+              # Use the flake's overlaid pkgs as the base; the traditional
+              # nixpkgs module then appends module-provided overlays on top.
+              nixpkgs.pkgs = pkgs;
               boot = {
                 kernelModules = pkgs.lib.mkForce [];
                 initrd = {
@@ -125,12 +127,11 @@
       xfstests-quick = pkgs.testers.runNixOSTest {
         name = "xfstests-quick";
         globalTimeout = 10800; # 3h
+        # Allow nodes to configure nixpkgs.* (e.g. the xfsprogs overlay set by
+        # xfstests/module.nix). runNixOSTest makes nixpkgs read-only by default.
+        node.pkgsReadOnly = false;
         nodes = {
-          machine = {
-            pkgs,
-            config,
-            ...
-          }: let
+          machine = {config, ...}: let
             buildKernelHeaders = pkgs.makeLinuxHeaders;
             sources = pkgs.lib.importJSON ./sources/kernel.json;
           in {
@@ -143,6 +144,9 @@
             ];
 
             config = {
+              # Use the flake's overlaid pkgs as the base; the traditional
+              # nixpkgs module then appends module-provided overlays on top.
+              nixpkgs.pkgs = pkgs;
               boot = {
                 kernelModules = pkgs.lib.mkForce [];
                 initrd = {
