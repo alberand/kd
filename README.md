@@ -55,14 +55,14 @@ systemd unit will run `auto` test group.
 
 ```kdl
 xfstests {
-  repo="git@github.com:alberand/xfstests.git"
-  rev="eb01a1c8b1007bcad534730d38a8dda4c005c15e"
-  args="-g auto"
+  repo "git@github.com:alberand/xfstests.git"
+  rev "eb01a1c8b1007bcad534730d38a8dda4c005c15e"
+  args "-g auto"
 }
 
 xfsprogs {
-  repo="git@github.com:alberand/xfsprogs.git"
-  rev="dc00e8f7de86fe862df3a9f3fda11b710d10434b"
+  repo "git@github.com:alberand/xfsprogs.git"
+  rev "dc00e8f7de86fe862df3a9f3fda11b710d10434b"
 }
 ```
 
@@ -78,11 +78,13 @@ configuration options.
 
 ```kdl
 kernel {
-  repo="git@github.com:alberand/linux.git"
-  rev="7d0a66e4bb9081d75c82ec4957c50034cb0ea449"
-  version="v6.18"
-  config "CONFIG_FS_VERITY" "yes"
-  config "CONFIG_FS_VERITY_BUILTIN_SIGNATURES" "yes"
+  repo "git@github.com:alberand/linux.git"
+  rev "7d0a66e4bb9081d75c82ec4957c50034cb0ea449"
+  version "v6.18"
+  config {
+    CONFIG_FS_VERITY "y"
+    CONFIG_FS_VERITY_BUILTIN_SIGNATURES "y"
+  }
 }
 ```
 
@@ -94,7 +96,7 @@ again, `kd` will take your kernel at `arch/x86/boot/bzImage`.
 
 ```kdl
 kernel {
-  prebuild="arch/x86/boot/bzImage"
+  prebuild "arch/x86/boot/bzImage"
 }
 ```
 
@@ -113,11 +115,11 @@ haven't done any network configuration, so, no way to install tools directly
 from the system buy you can add them in config.
 
 ```kdl
-package "gdb"
+packages "gdb"
 
 kernel {
   // Use already build kernel from the current directory
-  prebuild="arch/x86/boot/bzImage"
+  prebuild "arch/x86/boot/bzImage"
 }
 ```
 
@@ -129,33 +131,35 @@ This is config used for xfsprogs package testing with latest kernel.
 
 ```kdl
 kernel {
-  config "CONFIG_XFS_FS" "yes"
-  config "CONFIG_XFS_QUOTA" "yes"
-  config "CONFIG_XFS_RT" "yes"
-  config "CONFIG_XFS_ONLINE_SCRUB" "yes"
-  config "CONFIG_XFS_ONLINE_REPAIR" "yes"
-  config "CONFIG_XFS_POSIX_ACL" "yes"
-  config "CONFIG_DM_FLAKEY" "yes"
-  config "CONFIG_DM_SNAPSHOT" "yes"
-  config "CONFIG_DM_DELAY" "yes"
-  config "CONFIG_DM_THIN_PROVISIONING" "yes"
-  config "CONFIG_SCSI_DEBUG" "yes"
-  config "CONFIG_USER_NS" "yes"
-  config "CONFIG_DAX" "yes"
-  config "CONFIG_IO_URING" "yes"
+  config {
+    CONFIG_XFS_FS "y"
+    CONFIG_XFS_QUOTA "y"
+    CONFIG_XFS_RT "y"
+    CONFIG_XFS_ONLINE_SCRUB "y"
+    CONFIG_XFS_ONLINE_REPAIR "y"
+    CONFIG_XFS_POSIX_ACL "y"
+    CONFIG_DM_FLAKEY "y"
+    CONFIG_DM_SNAPSHOT "y"
+    CONFIG_DM_DELAY "y"
+    CONFIG_DM_THIN_PROVISIONING "y"
+    CONFIG_SCSI_DEBUG "y"
+    CONFIG_USER_NS "y"
+    CONFIG_DAX "y"
+    CONFIG_IO_URING "y"
+  }
 }
 
 xfstests {
-  args="-r -s xfs_4k -g all -x deprecated,dangerous_fuzzers,broken,recoveryloop"
+  args "-r -s xfs_4k -g all -x deprecated,dangerous_fuzzers,broken,recoveryloop"
   devices {
-    test="/dev/vdb"
-    scratch="/dev/vdc"
+    test "/dev/vdb"
+    scratch "/dev/vdc"
   }
 }
 
 xfsprogs {
-  repo="git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
-  rev="v6.14.0"
+  repo "git://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git"
+  rev "v6.14.0"
 }
 ```
 
@@ -174,104 +178,111 @@ would like to try and then run them (manually so far, but I'm playing with
 kexec) with `kd run --name name`. Here is config for 8 different configs with
 common section for all of them.
 
+All named configs live inside a single `configs { }` block. Fields written
+directly under `configs` form the common base that is merged into every named
+variant; each `named "name" { }` overrides or extends that base.
+
 ```kdl
-common {
+configs {
+  // Common base, merged into every named variant below.
   kernel {
-    rev="038d61fd642278bab63ee8ef722c50d10ab01e8f"
-    version="v6.16"
-    config "CONFIG_QUOTA" "yes"
-    config "CONFIG_XFS_QUOTA" "yes"
+    rev "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+    version "v6.16"
+    config {
+      CONFIG_QUOTA "y"
+      CONFIG_XFS_QUOTA "y"
+    }
   }
   xfstests {
-    args="-s xfs_4k_quota xfs/508"
-    rev="4936d48ac0d3632d07f6dec310be145d973212a6"
-    repo="file:///home/alberand/Projects/xfstests-dev"
+    args "-s xfs_4k_quota xfs/508"
+    rev "4936d48ac0d3632d07f6dec310be145d973212a6"
+    repo "file:///home/alberand/Projects/xfstests-dev"
   }
   xfsprogs {
-    repo="file:///home/alberand/Projects/xfsprogs-dev"
+    repo "file:///home/alberand/Projects/xfsprogs-dev"
   }
-}
 
-named "alpha" {
-  xfsprogs {
-    // Good - yes; Good - yes
-    // both fixes
-    rev="7692fde9e4697f7c623619652c699c4575b01932"
-  }
-}
-
-named "beta" {
-  xfsprogs {
-    // Good - yes; Good - yes
-    // both fixes
-    rev="7692fde9e4697f7c623619652c699c4575b01932"
-    kernel_headers {
-      rev="038d61fd642278bab63ee8ef722c50d10ab01e8f"
-      version="v6.16"
-      repo="git@github.com:torvalds/linux.git"
+  named "alpha" {
+    xfsprogs {
+      // Good - yes; Good - yes
+      // both fixes
+      rev "7692fde9e4697f7c623619652c699c4575b01932"
     }
   }
-}
 
-named "gamma" {
-  xfsprogs {
-    // Good - yes
-    // only argument fix
-    rev="c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
-  }
-}
-
-named "delta" {
-  xfsprogs {
-    // Good - yes
-    // only argument fix
-    rev="c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
-    kernel_headers {
-      rev="038d61fd642278bab63ee8ef722c50d10ab01e8f"
-      version="v6.16"
-      repo="git@github.com:torvalds/linux.git"
+  named "beta" {
+    xfsprogs {
+      // Good - yes; Good - yes
+      // both fixes
+      rev "7692fde9e4697f7c623619652c699c4575b01932"
+      kernel-headers {
+        rev "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+        version "v6.16"
+        repo "git@github.com:torvalds/linux.git"
+      }
     }
   }
-}
 
-named "epsilon" {
-  xfsprogs {
-    // Fail - yes
-    // only struct fix
-    rev="680d46221cc526a21f61704233b8a3fcdda1d35a"
-  }
-}
-
-named "zeta" {
-  xfsprogs {
-    // Fail - yes
-    // only struct fix
-    rev="680d46221cc526a21f61704233b8a3fcdda1d35a"
-    kernel_headers {
-      rev="038d61fd642278bab63ee8ef722c50d10ab01e8f"
-      version="v6.16"
-      repo="git@github.com:torvalds/linux.git"
+  named "gamma" {
+    xfsprogs {
+      // Good - yes
+      // only argument fix
+      rev "c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
     }
   }
-}
 
-named "eta" {
-  xfsprogs {
-    // Fail - yes
-    // clean v6.17
-    rev="14d9a689d8b086a7b2c4b027c55861e5f2a82745"
+  named "delta" {
+    xfsprogs {
+      // Good - yes
+      // only argument fix
+      rev "c7e7b140829ff3c6b6a42322c84564fbfb14c1e4"
+      kernel-headers {
+        rev "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+        version "v6.16"
+        repo "git@github.com:torvalds/linux.git"
+      }
+    }
   }
-}
 
-named "theta" {
-  xfsprogs {
-    // Good - yes
-    // clean v6.17
-    rev="14d9a689d8b086a7b2c4b027c55861e5f2a82745"
-    kernel_headers {
-      rev="038d61fd642278bab63ee8ef722c50d10ab01e8f"
-      version="v6.16"
-      repo="git@github.com:torvalds/linux.git"
+  named "epsilon" {
+    xfsprogs {
+      // Fail - yes
+      // only struct fix
+      rev "680d46221cc526a21f61704233b8a3fcdda1d35a"
+    }
+  }
+
+  named "zeta" {
+    xfsprogs {
+      // Fail - yes
+      // only struct fix
+      rev "680d46221cc526a21f61704233b8a3fcdda1d35a"
+      kernel-headers {
+        rev "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+        version "v6.16"
+        repo "git@github.com:torvalds/linux.git"
+      }
+    }
+  }
+
+  named "eta" {
+    xfsprogs {
+      // Fail - yes
+      // clean v6.17
+      rev "14d9a689d8b086a7b2c4b027c55861e5f2a82745"
+    }
+  }
+
+  named "theta" {
+    xfsprogs {
+      // Good - yes
+      // clean v6.17
+      rev "14d9a689d8b086a7b2c4b027c55861e5f2a82745"
+      kernel-headers {
+        rev "038d61fd642278bab63ee8ef722c50d10ab01e8f"
+        version "v6.16"
+        repo "git@github.com:torvalds/linux.git"
+      }
     }
   }
 }
