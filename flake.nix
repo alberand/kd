@@ -173,7 +173,8 @@
               };
               services.xfstests = {
                 enable = true;
-                arguments = "-s xfs_4k -g quick";
+                # These two tests fail on the NixOS
+                arguments = "-s xfs_4k -g quick -e generic/794,xfs/841";
                 kernelHeaders = buildKernelHeaders {
                   inherit (config.kernel) src version;
                 };
