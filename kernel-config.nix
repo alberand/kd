@@ -9,6 +9,7 @@
   flex,
   pahole,
   buildPackages,
+  writeText,
   kconfigs,
   path,
 }: {
@@ -21,18 +22,29 @@ stdenv.mkDerivation rec {
   inherit version src;
   pname = "linux-config";
 
-  ignoreConfigErrors = false;
-  generateConfig = path + "/pkgs/os-specific/linux/kernel/generate-config.pl";
+  # kd keeps auto-module selection disabled: every option sticks to its
+  # defconfig/explicit value instead of being turned into a module.
+  autoModules = false;
+  preferBuiltin = false;
+  kernelArch = stdenv.hostPlatform.linuxArch;
 
-  kernelConfig = passthru.moduleStructuredConfig.intermediateNixConfig;
-  passAsFile = ["kernelConfig"];
+  generateConfig = path + "/pkgs/os-specific/linux/kernel/generate-config.pl";
 
   depsBuildBuild = [buildPackages.stdenv.cc];
   nativeBuildInputs = [perl gmp libmpc mpfr bison flex pahole];
 
-  makeFlags =
-    lib.optionals (stdenv.hostPlatform.linux-kernel ? makeFlags)
-    stdenv.hostPlatform.linux-kernel.makeFlags;
+  # These are read from the environment by generate-config.pl. With
+  # __structuredAttrs enabled, plain attributes are not exported to the
+  # environment, so they have to go through `env`.
+  env = {
+    # kd does not build the kernel with Rust support.
+    RUST_LIB_SRC = "";
+    ignoreConfigErrors = false;
+  };
+
+  makeFlags = import (path + "/pkgs/os-specific/linux/kernel/common-flags.nix") {
+    inherit lib stdenv buildPackages;
+  };
 
   postPatch = ''
     # Ensure that depmod gets resolved through PATH
@@ -73,46 +85,46 @@ stdenv.mkDerivation rec {
     sed -e '/fflush(stdout);/i\printf("###");' -i scripts/kconfig/conf.c
   '';
 
-  buildPhase = ''
-    export buildRoot="''${buildRoot:-build}"
-    export HOSTCC=$CC_FOR_BUILD
-    export HOSTCXX=$CXX_FOR_BUILD
-    export HOSTAR=$AR_FOR_BUILD
-    export HOSTLD=$LD_FOR_BUILD
+  buildPhase = let
+    kernelIntermediateConfig =
+      writeText "kernel-intermediate-config"
+      passthru.moduleStructuredConfig.intermediateNixConfig;
+  in
+    ''
+      export buildRoot="''${buildRoot:-build}"
 
-    # Get a basic config file for later refinement with $generateConfig.
-    echo "Generating 'olddefconfig' config"
-    make $makeFlags \
-        -C . \
-        O="$buildRoot" \
-        ARCH=x86_64 \
-        HOSTCC=$HOSTCC \
-        HOSTCXX=$HOSTCXX \
-        HOSTAR=$HOSTAR \
-        HOSTLD=$HOSTLD \
-        CC=$CC \
-        OBJCOPY=$OBJCOPY \
-        OBJDUMP=$OBJDUMP \
-        READELF=$READELF \
-        $makeFlags \
-        olddefconfig
+      # Get a basic config file for later refinement with $generateConfig.
+      make "''${makeFlags[@]}" \
+          -C . O="$buildRoot" defconfig \
+          ARCH=$kernelArch CROSS_COMPILE=${stdenv.cc.targetPrefix} \
 
-    # Create the config file.
-    echo "Generating kernel configuration"
-    ln -s "$kernelConfigPath" "$buildRoot/kernel-config"
-    DEBUG=1 \
-      ARCH=x86_64 \
-      KERNEL_CONFIG="$buildRoot/kernel-config" \
-      PREFER_BUILTIN=false \
-      BUILD_ROOT="$buildRoot" \
-      SRC=. \
-      MAKE_FLAGS="$makeFlags" \
-      perl -w $generateConfig
-  '';
+      # Create the config file.
+      echo "generating kernel configuration..."
+      ln -s "${kernelIntermediateConfig}" "$buildRoot/kernel-config"
+      DEBUG=1 ARCH=$kernelArch CROSS_COMPILE=${stdenv.cc.targetPrefix} \
+        KERNEL_CONFIG="$buildRoot/kernel-config" AUTO_MODULES=$autoModules \
+        PREFER_BUILTIN=$preferBuiltin BUILD_ROOT="$buildRoot" SRC=. MAKE_FLAGS="''${makeFlags[*]@Q}" \
+        perl -w $generateConfig
+    ''
+    + lib.optionalString stdenv.cc.isClang ''
+      if ! grep -Fq CONFIG_CC_IS_CLANG=y $buildRoot/.config; then
+        echo "Kernel config didn't recognize the clang compiler?"
+        exit 1
+      fi
+    ''
+    + lib.optionalString stdenv.cc.bintools.isLLVM ''
+      if ! grep -Fq CONFIG_LD_IS_LLD=y $buildRoot/.config; then
+        echo "Kernel config didn't recognize the LLVM linker?"
+        exit 1
+      fi
+    '';
 
   installPhase = "mv $buildRoot/.config $out";
 
   enableParallelBuilding = true;
+
+  __structuredAttrs = true;
+  strictDeps = true;
 
   passthru = rec {
     # The result is a set of two attributes
