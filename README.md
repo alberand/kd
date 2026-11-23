@@ -155,6 +155,9 @@ xfstests {
     test "/dev/vdb"
     scratch "/dev/vdc"
   }
+
+  // Path to an xfstests configuration file (local.config)
+  testconfig "./local.config"
 }
 
 xfsprogs {

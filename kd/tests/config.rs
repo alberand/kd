@@ -77,6 +77,7 @@ Config {
                     },
                 ),
                 extra_env: None,
+                testconfig: None,
             },
         ),
         xfsprogs: Some(
@@ -139,6 +140,7 @@ Config {
                         kernel_headers: None,
                         devices: None,
                         extra_env: None,
+                        testconfig: None,
                     },
                 ),
                 xfsprogs: Some(
@@ -210,6 +212,7 @@ Config {
                                 kernel_headers: None,
                                 devices: None,
                                 extra_env: None,
+                                testconfig: None,
                             },
                         ),
                         xfsprogs: Some(
@@ -265,6 +268,14 @@ fn named_without_kernel_block_keeps_inherited_prebuild() {
     let verity = config.select(Some("verity")).unwrap();
     let kernel = verity.kernel.expect("verity should inherit a kernel");
     assert_eq!(kernel.prebuild.as_deref(), Some("arch/x86/boot/bzImage"));
+}
+
+#[test]
+fn xfstests_testconfig_is_parsed() {
+    let config = Config::load("tests/assets/testconfig.kdl").unwrap();
+    let system = config.select(None).unwrap();
+    let xfstests = system.xfstests.expect("xfstests section should exist");
+    assert_eq!(xfstests.testconfig.as_deref(), Some("./local.config"));
 }
 
 //#[test]

@@ -36,6 +36,9 @@
 //   rev "c25f471bc76bff506e15403d7832eb64783d8a39"
 //   args "-s xfs_4k xfs/633"
 //   extra-env "export MOUNT_OPTIONS='-o uquota,gquota,pquota'"
+//
+//   // Path to an xfstests configuration file (local.config)
+//   testconfig "./local.config"
 // }
 //
 // // This matrix execution setup for testing of multiple configurations. The

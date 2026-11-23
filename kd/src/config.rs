@@ -265,6 +265,8 @@ pub struct Xfstests {
     pub devices: Option<XfstestsDevices>,
     #[knuffel(child, unwrap(argument))]
     pub extra_env: Option<String>,
+    #[knuffel(child, unwrap(argument))]
+    pub testconfig: Option<String>,
 }
 
 #[derive(knuffel::Decode, Default, Clone, Debug, PartialEq, Eq)]
@@ -285,11 +287,22 @@ pub struct XfstestsPart {
     pub devices: Option<XfstestsDevicesPart>,
     #[knuffel(child, unwrap(argument))]
     pub extra_env: Option<String>,
+    #[knuffel(child, unwrap(argument))]
+    pub testconfig: Option<String>,
 }
 
 impl Merge<XfstestsPart> for Xfstests {
     fn merge_with(&mut self, part: &XfstestsPart) {
-        merge_clone_opt!((self, part), repo, rev, args, filesystem, hooks, extra_env);
+        merge_clone_opt!(
+            (self, part),
+            repo,
+            rev,
+            args,
+            filesystem,
+            hooks,
+            extra_env,
+            testconfig
+        );
         merge_opt!((self, part), (KernelHeaders, kernel_headers), (XfstestsDevices, devices));
     }
 }
@@ -305,6 +318,7 @@ impl From<Xfstests> for XfstestsPart {
             kernel_headers: val.kernel_headers.map(|h| h.into()),
             devices: val.devices.map(|d| d.into()),
             extra_env: val.extra_env,
+            testconfig: val.testconfig,
         }
     }
 }

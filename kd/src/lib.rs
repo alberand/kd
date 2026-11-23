@@ -77,6 +77,7 @@ pub struct State {
     pub debug: bool,
     pub skip_hooks: bool,
     pub curdir: PathBuf,
+    pub config_dir: PathBuf,
     pub config: config::Config,
     pub args: Vec<String>,
     pub envs: HashMap<String, String>,
@@ -89,6 +90,7 @@ impl Default for State {
             debug: false,
             skip_hooks: false,
             curdir: PathBuf::default(),
+            config_dir: PathBuf::default(),
             config: config::Config::default(),
             args: Vec::<String>::default(),
             envs: HashMap::<String, String>::default(),
@@ -108,15 +110,50 @@ impl State {
 
         let config = config::Config::load(&config_path).map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
+        // Directory containing the config file; user-provided relative paths in
+        // the config (e.g. xfstests.testconfig) are resolved against it.
+        let config_dir = path::absolute(&config_path)
+            .ok()
+            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+            .unwrap_or_else(|| curdir.clone());
+
         Ok(Self {
             debug: false,
             skip_hooks: false,
             curdir,
+            config_dir,
             config,
             args: vec![],
             envs: HashMap::new(),
             name: vec![],
         })
+    }
+
+    /// Resolve a user-provided path from the config file into an absolute path.
+    ///
+    /// - A leading `~/` is expanded to the user's home directory.
+    /// - Absolute paths are returned normalized.
+    /// - Relative paths are resolved against the directory containing the
+    ///   config file (not the current working directory).
+    fn resolve_config_path(&self, value: &str) -> Result<String> {
+        let path = if let Some(rest) = value.strip_prefix("~/") {
+            let home = std::env::var("HOME").context("HOME is not set, cannot expand '~'")?;
+            PathBuf::from(home).join(rest)
+        } else {
+            let candidate = PathBuf::from(value);
+            if candidate.is_absolute() {
+                candidate
+            } else {
+                self.config_dir.join(candidate)
+            }
+        };
+
+        let abs =
+            path::absolute(&path).with_context(|| format!("Failed to absolutize {:?}", path))?;
+
+        abs.to_str()
+            .map(|s| s.to_string())
+            .with_context(|| format!("Path is not valid UTF-8: {:?}", abs))
     }
 
     pub fn uconfig(&mut self, index: usize) -> Result<String> {
@@ -165,6 +202,13 @@ impl State {
 
             if let Some(hooks) = &config.hooks {
                 xfstests = xfstests.entry("hooks", nix_path(hooks));
+            }
+
+            if let Some(testconfig) = &config.testconfig {
+                let abs = self
+                    .resolve_config_path(testconfig)
+                    .context("Failed to resolve xfstests testconfig path")?;
+                xfstests = xfstests.entry("testconfig", make::path_abs(&abs).into());
             }
 
             if let Some(headers) = &config.kernel_headers {
