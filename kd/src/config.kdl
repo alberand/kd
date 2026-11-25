@@ -41,6 +41,11 @@
 //   testconfig "./local.config"
 // }
 //
+// // Power off the VM once the xfstests run finishes (pass or fail). This is a
+// // system-level option; it can also be set inside a 'configs' common block or a
+// // named config below.
+// autoshutdown true
+//
 // // This matrix execution setup for testing of multiple configurations. The
 // // 'common' section is default configuration for all other sections. Then, you
 // // can add as many "named" variants as necessary.

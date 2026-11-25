@@ -93,6 +93,7 @@ Config {
         ),
         script: None,
         qemu: None,
+        autoshutdown: None,
     },
     configs: Some(
         Configs {
@@ -156,6 +157,7 @@ Config {
                 ),
                 script: None,
                 qemu: None,
+                autoshutdown: None,
             },
             config: [
                 NamedSystem {
@@ -228,6 +230,7 @@ Config {
                         ),
                         script: None,
                         qemu: None,
+                        autoshutdown: None,
                     },
                 },
             ],
@@ -276,6 +279,23 @@ fn xfstests_testconfig_is_parsed() {
     let system = config.select(None).unwrap();
     let xfstests = system.xfstests.expect("xfstests section should exist");
     assert_eq!(xfstests.testconfig.as_deref(), Some("./local.config"));
+}
+
+#[test]
+fn autoshutdown_is_parsed_and_merged() {
+    let config = Config::load("tests/assets/autoshutdown.kdl").unwrap();
+
+    // Top-level common value.
+    let top = config.select(None).unwrap();
+    assert_eq!(top.autoshutdown, Some(true));
+
+    // Named config overrides the configs' common value.
+    let stay_up = config.select(Some("stay-up")).unwrap();
+    assert_eq!(stay_up.autoshutdown, Some(false));
+
+    // Named config without its own autoshutdown inherits the configs' common.
+    let inherit = config.select(Some("inherit")).unwrap();
+    assert_eq!(inherit.autoshutdown, Some(true));
 }
 
 //#[test]

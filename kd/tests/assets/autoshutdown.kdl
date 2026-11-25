@@ -1,0 +1,15 @@
+autoshutdown true
+
+configs {
+  autoshutdown true
+
+  config "stay-up" {
+    autoshutdown false
+  }
+
+  config "inherit" {
+    xfstests {
+      args "-g auto"
+    }
+  }
+}

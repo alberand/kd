@@ -470,6 +470,8 @@ pub struct System {
     pub script: Option<Script>,
     #[knuffel(child)]
     pub qemu: Option<Qemu>,
+    #[knuffel(child, unwrap(argument))]
+    pub autoshutdown: Option<bool>,
 }
 
 #[derive(knuffel::Decode, Debug, Default, Clone, PartialEq, Eq)]
@@ -486,6 +488,8 @@ pub struct SystemPart {
     pub script: Option<ScriptPart>,
     #[knuffel(child)]
     pub qemu: Option<QemuPart>,
+    #[knuffel(child, unwrap(argument))]
+    pub autoshutdown: Option<bool>,
 }
 
 impl Merge<SystemPart> for System {
@@ -499,6 +503,7 @@ impl Merge<SystemPart> for System {
             (Script, script),
             (Qemu, qemu),
         );
+        merge_clone_opt!((self, part), autoshutdown);
     }
 }
 
@@ -511,6 +516,7 @@ impl From<System> for SystemPart {
             xfsprogs: val.xfsprogs.map(|x| x.into()),
             script: val.script.map(|s| s.into()),
             qemu: val.qemu.map(|q| q.into()),
+            autoshutdown: val.autoshutdown,
         }
     }
 }

@@ -339,15 +339,15 @@ in {
           "local-fs.target"
         ];
         wantedBy = ["multi-user.target"];
-        postStop =
-          ''
-            # Beep beep... Human... back to work
-            echo -ne '\007'
-          ''
-          + optionalString cfg.autoshutdown ''
-            # Auto poweroff
-            ${pkgs.systemd}/bin/systemctl poweroff;
-          '';
+        # When autoshutdown is enabled let systemd pull in poweroff.target once
+        # the xfstests unit finishes (regardless of whether the run passed or
+        # failed) instead of calling `systemctl poweroff` from postStop.
+        onSuccess = optionals cfg.autoshutdown ["poweroff.target"];
+        onFailure = optionals cfg.autoshutdown ["poweroff.target"];
+        postStop = ''
+          # Beep beep... Human... back to work
+          echo -ne '\007'
+        '';
         script = let
           mkfs-options = getAttr "${cfg.filesystem}" {
             xfs = "-f";

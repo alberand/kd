@@ -215,7 +215,19 @@ impl State {
                 xfstests = xfstests.entry("kernelHeaders", kernel_headers_expr(headers)?);
             }
 
+            if let Some(autoshutdown) = merged.autoshutdown {
+                xfstests = xfstests.entry("autoshutdown", nix::bool(autoshutdown));
+            }
+
             set = set.entry("services.xfstests", xfstests.into());
+        } else if let Some(autoshutdown) = merged.autoshutdown {
+            // No xfstests { } config section, but autoshutdown is requested.
+            // The xfstests service is always enabled, so set the option on its
+            // own (no full services.xfstests set exists to conflict with).
+            set = set.entry(
+                "services.xfstests.autoshutdown",
+                nix::bool(autoshutdown),
+            );
         }
 
         if let Some(config) = &merged.xfsprogs {
